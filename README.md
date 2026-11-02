@@ -1,6 +1,6 @@
 # Aloong Planet
 
-A personal homepage with Apps, a Blog layout, an interactive golden retriever, and an anonymous visitor ordinal. The Blog currently contains clearly labeled layout examples, not real articles. Portrait refinement remains paused.
+A personal homepage with Apps, a Blog layout, an interactive golden retriever, and an anonymous visitor ordinal. The Blog currently contains clearly labeled layout examples, not real articles. The supplied seated portrait and interactive dog sit together on the right, with the introduction beneath them. The left third stays clear; recent blog entries are not connected. Small screens use a centered, full-width group.
 
 ## Develop and verify
 

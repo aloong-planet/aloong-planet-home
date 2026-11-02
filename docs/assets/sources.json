@@ -1,7 +1,7 @@
 {
   "aloong-cartoon.png": {
-    "source": "Approved cartoon portrait based on a user-provided photo; prompt in docs/assets/portrait-prompt.txt",
-    "sha256": "ef925913125a0317b07130fe0cec2ee5e9e224763421c74b7ed133cf4fc1f792"
+    "source": "User-supplied transparent seated blue-shirt illustration, codex-clipboard-abe933ed-e006-47cc-8157-7c1c8b0f3601.png; copied without image edits. The retained portrait-prompt.txt describes the earlier portrait, not this supplied asset.",
+    "sha256": "7d6e12ee5f82e2927910b3b5a677bbee75c98236565298e72530035293bd5866"
   },
   "apps/transfer-main-light.jpg": {
     "source": "White-theme Transfer renderer with tools/screenshots/transfer-fixture.js synthetic data",

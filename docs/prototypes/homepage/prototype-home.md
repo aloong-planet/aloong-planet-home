@@ -1,14 +1,15 @@
-## 问题
-卡通人物与原有互动金毛能否在留白首屏形成协调组合，下方双列作品区是否合适？
+## Question
+Does the supplied seated portrait work with the interactive golden retriever on the right side of the homepage, leaving the left third available for future recent blog entries?
 
-## 结构依据
-用户选定 astapable.com 的固定浅色、留白首屏和双列作品结构，要求加入卡通本人和已有金毛互动，以及 Blog 导航。已确认单一语言原型。作品展示统一为 Apps 区域，顶部导航为 Apps / Blog / About。本目录保留设计原型；正式实现位于 public/，工程能力声明位于根目录 capabilities.toml。按项目能力声明，i18n 未启用，该项跳过；theming 未启用，该项跳过。无既有图标模块，使用文字链接。
+## Structural basis
+The user specified the supplied transparent blue-shirt portrait, a right-side portrait and dog group, and a reserved left third for future blog information. The dog sits close beside the portrait; the group is biased toward the right edge while the left third remains clear. The introductory text and illustrative visitor ordinal sit beneath the group to keep that reserved column clear. The existing light homepage, Apps grid, and Apps / Blog / About navigation provide the surrounding context. On narrow screens, the group occupies the full width and stays centered; the empty reserved column is hidden.
 
-## 演示基建
-无页面内演示控制。原型画廊仅用于预览，非设计的一部分，勿实现。
+The supplied PNG is copied without image edits as the shared portrait asset. Its SHA-256 is recorded in the construction verification record. The source attachment is `codex-clipboard-abe933ed-e006-47cc-8157-7c1c8b0f3601.png`.
 
-## 未覆盖维度
-未接入真实博客、CMS、域名或生产部署。作品卡片使用 Transfer 真实界面的白色主题演示数据截图，以及 Agentshed 的近 90 天截图，并链接到各自官网。两张截图按原比例铺满卡片，无外围留边。仅固定浅色和单一语言。人物相似度仍待用户确认。
+Per the project capabilities, i18n and theming are disabled; their dictionary and theme-anchor checks are skipped. The page uses text navigation and no icon module.
 
-## Visitor counter preview
-The introductory text is followed by a small anonymous visitor ordinal. The example number 1,024 is illustrative, not a live count. During loading or failure the same line stays visually empty; the homepage remains usable. The counter does not add an icon, button, or new section.
+## Demonstration infrastructure
+There are no in-page demonstration controls. The prototype gallery is review infrastructure, not part of the product. The visitor ordinal 1,024 is illustrative and makes no network request or registration.
+
+## Uncovered dimensions
+The reserved column contains no sample posts or publishing integration. Only fixed light appearance and the existing single language are covered. The app screenshots link to their existing websites. Loading and failure of the live visitor counter are outside this visual preview.
