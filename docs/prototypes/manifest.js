@@ -1,0 +1,1 @@
+window.PROTOTYPE_APP={name:'Aloong Planet',icon:null};window.PROTOTYPES=[{module:'homepage',type:'ui',id:'home',name:'首页',path:'homepage/prototype-home.html'},{module:'homepage',type:'ui',id:'blog',name:'Blog',path:'homepage/prototype-blog.html'}];
