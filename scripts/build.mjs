@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { cp, mkdir, rm } from 'node:fs/promises';
+import { cp, mkdir, rm, writeFile } from 'node:fs/promises';
 await rm('dist',{recursive:true,force:true});
 await mkdir('dist',{recursive:true});
 await cp('public','dist',{recursive:true});
@@ -9,8 +9,12 @@ for (const asset of ['aloong-cartoon.png','golden-interaction.js','golden-wag','
 }
 console.log('Built homepage, blog, visitor client and approved assets.');
 
-const worker = spawnSync('pnpm',['exec','wrangler','pages','functions','build','--outdir','.wrangler/pages-worker'],{stdio:'inherit'});
+const worker = spawnSync('pnpm',['exec','wrangler','pages','functions','build','--outdir','.wrangler/pages-worker'],{stdio:'inherit',env:{...process.env,WRANGLER_LOG_PATH:'.wrangler/logs'}});
 if (worker.status !== 0) process.exit(worker.status || 1);
 await cp('.wrangler/pages-worker/index.js','dist/_worker.js');
 const syntax = spawnSync(process.execPath,['--check','dist/_worker.js'],{stdio:'inherit'});
 if (syntax.status !== 0) process.exit(syntax.status || 1);
+
+const revision = spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'});
+if (revision.status !== 0) throw new Error('Build must run inside the source repository.');
+await writeFile('dist/deployment.json', JSON.stringify({revision:revision.stdout.trim()})+'\n');
