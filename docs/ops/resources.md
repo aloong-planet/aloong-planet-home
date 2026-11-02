@@ -14,7 +14,7 @@
 | D1 database ID | f588c63e-74d6-4ede-abb3-efd5548d44a3 | Bound as VISITORS in production |
 | Visitor endpoint | /api/visitor | Cookie bootstrap and idempotent registration |
 
-These IDs are resource identifiers, not credentials. The authoritative deployment settings are in wrangler.jsonc. No paid subscription is required or enabled. Production visitor data is not part of this repository.
+These IDs are resource identifiers, not credentials. The project and binding settings are in wrangler.jsonc; the account and public verification hosts are in deployment.config.json. No paid subscription is required or enabled. Production visitor data is not part of this repository.
 
 The initial production table was created through the dashboard using migrations/0001_visitors.sql. Its CREATE TABLE IF NOT EXISTS statement is safe to apply through migration tracking without resetting existing rows. Future schema changes must be additive/backward-compatible during deployment.
 

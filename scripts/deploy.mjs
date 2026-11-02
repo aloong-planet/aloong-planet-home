@@ -38,9 +38,10 @@ export function deploy({config, execute, dryRun = false}) {
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
   try {
     if (process.argv.slice(2).some(arg => arg !== '--dry-run')) throw new Error('Usage: pnpm cf:deploy [--dry-run]');
-    const config = JSON.parse(readFileSync('wrangler.jsonc', 'utf8'));
+    const settings = JSON.parse(readFileSync('deployment.config.json', 'utf8'));
+    const config = {...JSON.parse(readFileSync('wrangler.jsonc', 'utf8')), account_id: settings.accountId};
     if (process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_ACCOUNT_ID !== config.account_id) {
-      throw new Error('CLOUDFLARE_ACCOUNT_ID differs from wrangler.jsonc.');
+      throw new Error('CLOUDFLARE_ACCOUNT_ID differs from deployment.config.json.');
     }
     const env = {...process.env, CLOUDFLARE_ACCOUNT_ID: config.account_id,
       WRANGLER_LOG_PATH: '.wrangler/logs', CI: 'true'};

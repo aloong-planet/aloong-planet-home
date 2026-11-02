@@ -13,7 +13,7 @@ pnpm cf:deploy
 
 The login command opens Cloudflare OAuth, requests account/user read plus Pages/D1 write, and stores the credential in the OS keychain. Login is a one-time setup until authorization expires. Never paste credentials into source files or chat. CI uses an API token instead of interactive OAuth.
 
-`cf:deploy` requires a clean Git checkout and uses the existing account/project/database in `wrangler.jsonc`. It runs type checking, all tests and the build; confirms the project and database exist; applies pending migrations; uploads `dist` to production branch `main`; and checks the deployed revision, pages, images and visitor cookie endpoint on all three hosts. An error stops subsequent steps and returns nonzero. It never creates projects or databases. The dry run checks local configuration and Git state only; it does not authenticate or execute deployment steps.
+`cf:deploy` requires a clean Git checkout and uses the existing project/database in `wrangler.jsonc` and account in `deployment.config.json`. It runs type checking, all tests and the build; confirms the project and database exist; applies pending migrations; uploads `dist` to production branch `main`; and checks the deployed revision, pages, images and visitor cookie endpoint on all three hosts. An error stops subsequent steps and returns nonzero. It never creates projects or databases. The dry run checks local configuration and Git state only; it does not authenticate or execute deployment steps.
 
 Public smoke checks do not register synthetic visitors. They check cookie bootstrap and reject a POST without a cookie. Database registration/concurrency is tested against disposable local SQLite/D1; smoke checks alone do not prove production database writes. A public verification error can occur after an upload has already changed production; inspect the deployment in Cloudflare before retrying. No automatic rollback or database reset is performed.
 
@@ -34,6 +34,8 @@ Create the token through the Cloudflare dashboard, selecting only the existing a
 Without the secret, checks still run but the production deploy job fails with a setup message. Automatic deployment also requires this workflow to be merged into main and GitHub Actions to be available under the account's current allowance. There is no paid-plan upgrade or spending-limit change in this setup.
 
 Require the `checks` job for merging where the GitHub plan supports private-repository branch protection. Deployment is not a required pull-request check. The PR merge itself requires explicit owner approval.
+
+The Pages configuration schema does not accept `account_id`. The deployment command reads the account from `deployment.config.json` and supplies `CLOUDFLARE_ACCOUNT_ID` to Wrangler. Public verification hosts are defined in that same deployment settings file.
 
 ## Build output and environments
 

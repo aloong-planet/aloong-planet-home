@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {setTimeout} from 'node:timers/promises';
 const expected=JSON.parse(readFileSync('dist/deployment.json','utf8')).revision;
-const origins=['https://aloong-planet-home.pages.dev','https://aloongplanet.com','https://www.aloongplanet.com'];
+const {origins}=JSON.parse(readFileSync('deployment.config.json','utf8'));
 async function request(url, options={}) {
   return fetch(url,{...options,signal:AbortSignal.timeout(5000),cache:'no-store'});
 }
