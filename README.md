@@ -4,7 +4,7 @@ A personal homepage with Apps, a Blog layout, an interactive golden retriever, a
 
 ## Develop and verify
 
-Use pnpm and Node 26+.
+Use pnpm 9.12.3 and Node 26.7.0 or later.
 
 ```sh
 pnpm install --frozen-lockfile
@@ -16,7 +16,7 @@ pnpm dev
 The local preview runs at http://127.0.0.1:8793. Do not restart an existing dev server unnecessarily. The earlier design-only preview remains under `docs/prototypes/homepage/`. See [resource inventory](docs/ops/resources.md) and [asset provenance](docs/assets/README.md).
 
 ```sh
-node scripts/verify.mjs docs/.workings/visitor-counter/final-verification.log
+pnpm check
 node scripts/verify-local-api.mjs
 ```
 
@@ -30,6 +30,20 @@ Production binding `VISITORS` points to `aloong-planet-visitors`; schema is in `
 
 Apex and www share the one-year anonymous cookie. The homepage declares the apex canonical URL. The number is the browser's original ordinal, not the current total or a verified person count. Clearing cookies, changing browsers/devices or opening a fresh private session creates a new identity. No IP address, fingerprint or user agent is persisted by this feature.
 
-No paid subscription is enabled. Free-plan exhaustion causes the counter to disappear while the static homepage stays usable. This repository preserves the deployed source. Releases currently use the existing Direct Upload Pages project; deployment automation is being added in a separate review branch.
+No paid subscription is enabled. Free-plan exhaustion causes the counter to disappear while the static homepage stays usable. This repository preserves the deployed source. Releases use the existing Direct Upload Pages project through `pnpm cf:deploy`. GitHub checks run on pull requests; main pushes deploy after checks when the repository Actions secret is configured. See [deployment setup and recovery](docs/ops/deployment.md).
 
 [Visitor behavior](docs/features/visitor-counter.md) · [Specification](docs/specs/visitor-counter.md)
+
+## Repository map
+
+| Directory | Contents |
+|---|---|
+| public/ | Production pages and browser code |
+| assets/ | Shipping portrait, dog animation and app screenshots |
+| functions/, migrations/ | Visitor API and D1 schema |
+| scripts/, tests/ | Build, validation, deployment and regression tests |
+| docs/ | Accepted prototypes, feature descriptions, resource inventory and operations |
+| tools/screenshots/ | Synthetic Transfer screenshot fixture |
+| .github/workflows/ | Pull-request checks and main deployment |
+
+Generated output and local state are ignored. The original prototype workspace remains separate and unchanged.
