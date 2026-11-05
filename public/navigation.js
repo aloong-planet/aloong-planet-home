@@ -7,5 +7,7 @@ for (const mount of document.querySelectorAll('[data-site-navigation]')) {
   </header>`;
   if (location.pathname === '/blog' || location.pathname === '/blog.html') {
     mount.querySelector('a[href="/blog"]')?.setAttribute('aria-current','page');
+  } else if (location.pathname.startsWith('/blog/')) {
+    mount.querySelector('a[href="/blog"]')?.setAttribute('aria-current','true');
   }
 }

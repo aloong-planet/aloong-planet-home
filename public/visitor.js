@@ -23,7 +23,7 @@ export async function displayVisitor(element, browser = navigator) {
     const ordinal = browser.locks
       ? await browser.locks.request('aloong-visitor-bootstrap',{signal},register)
       : await register();
-    element.textContent = `你是第 ${ordinal.toLocaleString('zh-CN')} 位访客`;
+    element.textContent = `你好朋友，你是第 ${ordinal.toLocaleString('zh-CN')} 位访客`;
   } catch {
     element.textContent = '';
   }

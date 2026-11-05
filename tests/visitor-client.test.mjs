@@ -1,7 +1,7 @@
 // Native cookie persistence, Web Locks and rendered placement require browser checks.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { getVisitorOrdinal } from '../public/visitor.js';
+import { displayVisitor, getVisitorOrdinal } from '../public/visitor.js';
 
 test('client uses a cookie roundtrip and returns a validated ordinal',async()=>{
  const calls=[];
@@ -27,4 +27,18 @@ test('client stops after setup failure and propagates aborted requests',async()=
  assert.equal(calls,1);
  const controller=new AbortController();controller.abort();
  await assert.rejects(getVisitorOrdinal(async(_url,options)=>{options.signal.throwIfAborted();},controller.signal),{name:'AbortError'});
+});
+test('the homepage greets the visitor with their ordinal, and stays empty when counting fails',async()=>{
+ const realFetch=globalThis.fetch;
+ const browser=/** @type {Navigator} */({});
+ try{
+  globalThis.fetch=async(_url,options)=>Response.json(options.method==='POST'?{ordinal:1024}:{ready:true});
+  const shown={textContent:'old'};
+  await displayVisitor(/** @type {Element} */(shown),browser);
+  assert.equal(shown.textContent,'你好朋友，你是第 1,024 位访客');
+  globalThis.fetch=async()=>new Response('',{status:503});
+  const failed={textContent:'old'};
+  await displayVisitor(/** @type {Element} */(failed),browser);
+  assert.equal(failed.textContent,'');
+ }finally{globalThis.fetch=realFetch;}
 });

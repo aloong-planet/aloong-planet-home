@@ -1,0 +1,13 @@
+[
+  {
+    "slug": "super-agent-architecture",
+    "title": "Super-agent 架构图解",
+    "date": "2026-11-05",
+    "summary": "DeepSeek 提出的 Super-agent 架构怎么运转？跟一条事件走完全程，再对照公开原型，看哪些已经实现。",
+    "source": {
+      "label": "DeepSeek Harness 团队《Super-agent 设计探索》",
+      "url": "https://mp.weixin.qq.com/s/zoS7GlReWPhfCjENGxXCdg"
+    },
+    "note": "原文发表于 2026-10-31，是架构探讨，不是产品发布。下文的「文章」「作者」都指这篇原文。"
+  }
+]

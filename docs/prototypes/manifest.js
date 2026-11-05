@@ -1,1 +1,1 @@
-window.PROTOTYPE_APP={name:'Aloong Planet',icon:null};window.PROTOTYPES=[{module:'homepage',type:'ui',id:'home',name:'首页',path:'homepage/prototype-home.html'},{module:'homepage',type:'ui',id:'blog',name:'Blog',path:'homepage/prototype-blog.html'}];
+window.PROTOTYPE_APP={name:'Aloong Planet',icon:null};window.PROTOTYPES=[{module:'homepage',type:'ui',id:'home',name:'首页',path:'homepage/prototype-home.html'},{module:'blog',type:'ui',id:'blog',name:'Blog 列表',path:'blog/prototype-blog.html'},{module:'blog',type:'ui',id:'post',name:'文章页',path:'blog/prototype-post.html'}];

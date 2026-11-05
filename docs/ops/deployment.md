@@ -15,7 +15,7 @@ The login command opens Cloudflare OAuth, requests account/user read plus Pages/
 
 `cf:deploy` requires a clean Git checkout and uses the existing project/database in `wrangler.jsonc` and account in `deployment.config.json`. It runs type checking, all tests and the build; confirms the project and database exist; applies pending migrations; uploads `dist` to production branch `main`; and checks the deployed revision, pages, images and visitor cookie endpoint on all three hosts. An error stops subsequent steps and returns nonzero. It never creates projects or databases. The dry run checks local configuration and Git state only; it does not authenticate or execute deployment steps.
 
-Public smoke checks do not register synthetic visitors. They check cookie bootstrap and reject a POST without a cookie. Database registration/concurrency is tested against disposable local SQLite/D1; smoke checks alone do not prove production database writes. A public verification error can occur after an upload has already changed production; inspect the deployment in Cloudflare before retrying. No automatic rollback or database reset is performed.
+Public smoke checks do not register synthetic visitors. They check cookie bootstrap and reject a POST without a cookie. Blog pages must also serve their expected text, because the host answers an unknown address with the homepage and status 200, so a status code cannot reveal a missing page. Database registration/concurrency is tested against disposable local SQLite/D1; smoke checks alone do not prove production database writes. A public verification error can occur after an upload has already changed production; inspect the deployment in Cloudflare before retrying. No automatic rollback or database reset is performed.
 
 Migrations run before upload. Keep them additive and compatible with the previously deployed site. A failed upload may leave a successfully applied schema migration in place. The initial `CREATE TABLE IF NOT EXISTS` migration preserves the table created through the dashboard. Do not drop, truncate or reseed production visitor data. `pnpm db:local` changes only the local database.
 
@@ -39,7 +39,7 @@ The Pages configuration schema does not accept `account_id`. The deployment comm
 
 ## Build output and environments
 
-- `public`, the selected `assets`, and the compiled function become `dist`.
+- `public`, the selected `assets`, the blog generated from `content`, and the compiled function become `dist`. A post the build refuses stops the build, and so the deployment.
 - Build emits a plain JavaScript `_worker.js`, checks its syntax and records the Git revision in `deployment.json`. Never upload Wrangler's multipart `--outfile` output as JavaScript.
 - `_routes.json` restricts function execution to `/api/visitor`; the rest is static.
 - Only production binds the existing D1 database. `env.preview.d1_databases` is explicitly empty. No preview deployment is automated. Configure a separate preview database before testing its counter.
