@@ -26,7 +26,7 @@ The initial production table was created through the dashboard using migrations/
 - functions/: Pages Functions request handler.
 - migrations/: versioned D1 schema migrations.
 - scripts/: build, verification and release automation.
-- tests/: visitor contracts using SQLite and Fetch boundaries, deployment orchestration, and the blog build run on temporary fixture sites.
+- tests/: visitor contracts using SQLite and Fetch boundaries, deployment orchestration, and the blog build and its scripts run in temporary folders.
 - docs/prototypes/: retained design references, including illustrative counts. Never deploy this directory.
 - docs/assets/: source descriptions and portrait prompt.
 - tools/screenshots/: isolated synthetic Transfer fixture, retained for reproducibility; renderer bundles come from the Transfer app and are not duplicated here.

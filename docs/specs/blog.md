@@ -3,7 +3,7 @@
 > Related: [features](../features/blog.md) · [visitor line](visitor-counter.md)
 
 ## Problem Statement
-The site has a Blog link, but the page holds labeled layout examples and the homepage cannot show writing. Aloong wants to publish long, figure-heavy explainers, starting with an analysis of DeepSeek's Super-agent article, and have every later post look the same without restyling each one.
+Aloong wants to publish long, figure-heavy explainers, starting with an analysis of DeepSeek's Super-agent article, show recent writing on the homepage, and have every later post look the same without restyling each one.
 
 ## Solution
 Publish posts as HTML bodies listed in one manifest. The build turns them into static post pages with a shared layout and table of contents, the full list on the Blog page, and the newest entries in the homepage's first screen. The build refuses a post that would bring its own fonts, dark appearance, or global styles.
@@ -138,14 +138,15 @@ Existing features:
 
 - A build step reads the manifest and post files, validates them, writes one static page per post, and fills marked slots in the homepage and Blog templates. Rendering at build time keeps pages static and readable without scripting.
 - Post pages load the site stylesheet, then a shared article stylesheet and a shared article script that only post pages use, then the post's own files if it has them. Site-wide smooth scrolling is overridden in the shared article stylesheet, because the browser gives no control over its duration.
-- A post's own styles are written under a `post-<slug>` class placed on the post's content, leaving the title block and contents outside its reach. The validation reads the shared tokens from the site and article stylesheets, so a token added there is protected automatically.
+- A post's own styles are written under a `post-<slug>` class placed on the post's content, leaving the title block and contents outside its reach. The validation reads the shared tokens from the site and article stylesheets, so a token added there is protected automatically. It reads stylesheet structure with strings emptied, and allows named at-rules and font values rather than refusing named ones, because refusing named forms kept leaving others open.
 - The post sections appear in the contents through `section` or `footer` elements with an `id`. An optional `data-toc` attribute supplies a shorter label; it is the only way a `footer` joins the contents.
 - The homepage list's width runs from the window edge to the dog, which sits at a fixed offset from the portrait group's center. Auto margins center the list so that it stops at the top when too tall.
 - Contents are generated once at build time and the current-section mark is a small script; the mark is `aria-current`.
+- Status marks in a post are drawn in its stylesheet. Typed symbols are not used as icons.
 
 ## Testing Decisions
 
-A good test here builds a real site from fixture posts in a temporary folder and asserts on the written pages and on the build's refusals, without looking inside the build step. The seams are the blog build module's exported build function, the build and deployment-check scripts run as processes in a temporary folder, and the visitor client's exported display function with a stubbed network. Deployment checks are tested against the real site and a local server that answers unknown addresses with the homepage, as the host does. Existing precedent is `tests/deploy.test.mjs` and `tests/visitor-client.test.mjs`.
+A good test here builds a real site from fixture posts in a temporary folder and asserts on the written pages and on the build's refusals, without looking inside the build step. The seams are the blog build module's exported build function, the build and deployment-check scripts run as processes in a temporary folder, and the visitor client's exported display function with a stubbed network. Deployment checks are tested against the real site and local servers that answer unknown addresses with the homepage, as the host does; the `SMOKE_DEADLINE_MS` environment variable shortens their retry window so a failing test ends in seconds, and nothing in deployment sets it. Existing precedent is `tests/deploy.test.mjs` and `tests/visitor-client.test.mjs`.
 
 Layout, type sizes, scrolling, and interactive figures are checked in a real browser against the built site at the window sizes this spec names; per the project capabilities the browser suite is not enabled, so these are recorded runs, not automated tests.
 

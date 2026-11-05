@@ -32,7 +32,7 @@ Page layout, type sizes, contents, immediate section jumps, new-tab external lin
 
 ## A post's own figures
 
-Figures only one post uses may have `content/posts/<slug>.css` and `content/posts/<slug>.js`, which load on that post's page alone.
+Figures only one post uses may have `content/posts/<slug>.css` and `content/posts/<slug>.js`, which load on that post's page alone. Draw icons and status marks in the stylesheet or as SVG; do not type symbols as icons.
 
 The build refuses a stylesheet that would break the shared look. Every selector starts with `.post-<slug>`, and:
 
