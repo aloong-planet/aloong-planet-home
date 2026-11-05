@@ -263,6 +263,18 @@ test('the build refuses a post stylesheet that would break the shared look', asy
     ['.post-bad .a{color-scheme:dark}', /dark/],
     ['.post-bad .a{color:light-dark(#000,#fff)}', /dark/],
     ['.post-bad .a{background:image-set("https://example.com/a.png" 1x)}', /remote/],
+    ['.post-bad .a{background:image-set("a.png" 1x,"https://example.com/a.png" 2x)}', /remote/],
+    ['.post-bad .a{background:image-set("a.png" 1x,"//example.com/a.png" 2x)}', /remote/],
+    ['.post-bad .a{background:-webkit-image-set("a.png" 1x,"https://example.com/a.png" 2x)}', /remote/],
+    ['.post-bad .a{background:image-set(url("a.png") 1x,"https://example.com/a.png" 2x)}', /remote/],
+    ['@keyframes f{to{font-family:Georgia}}.post-bad .a{animation:f 1s forwards}', /font/],
+    ['@keyframes f{to{font:500 13px Georgia}}.post-bad .a{animation:f 1s forwards}', /font/],
+    ['@keyframes g{to{--sans:Georgia}}.post-bad .b{animation:g 1s forwards}', /shared token/],
+    ['@keyframes g{to{--ink:red}}.post-bad .b{animation:g 1s forwards}', /shared token/],
+    ['@media (min-width:1px){@keyframes f{to{font-family:Georgia}}}', /font/],
+    ['.post-bad p:not(.a:not(.b)){color:red}', /base element/],
+    ['.post-bad li:has(.a:nth-child(2)){color:red}', /base element/],
+    ['.post-bad .a::before{content:"{"}body{color:red}', /scoped/],
     ['.post-bad .a{font-family:Georgia var(--sans)}', /font/],
     ['.post-bad .a{font:500 13px Georgia var(--sans)}', /font/],
     ['.post-bad p:not(.a){color:red}', /base element/],
@@ -303,6 +315,22 @@ test('real article stylesheet shapes pass the check', async () => {
 @keyframes march{to{stroke-dashoffset:-15}}
 @media (max-width:760px){.post-fine .traits{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @supports (display:grid){.post-fine .grid{display:grid}}
+.post-fine .f1{font:500 12pt var(--sans)}
+.post-fine .f2{font:500 1.5vw var(--sans)}
+.post-fine .f3{font:500 calc(1em + 1px) var(--sans)}
+.post-fine .f4{font:small var(--sans)}
+.post-fine .f5{font:500 13px/normal var(--sans)}
+.post-fine .f6{font:condensed 13px var(--mono)}
+.post-fine .f7{font:500 clamp(12px,2vw,14px)/1.5 var(--sans)}
+.post-fine .f8{font-family:inherit}
+.post-fine .f9{font:500 13px var(--sans)!important}
+.post-fine .brace::before{content:"{"}
+.post-fine .color-scheme-demo{color:red}
+.post-fine .data-theme-demo{color:red}
+.post-fine .prefers-color-scheme-demo{color:red}
+.post-fine .i1{background:image-set("a.png" 1x,"b.png" 2x)}
+.post-fine .i2{background:image-set("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" 1x)}
+.post-fine .i3{mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E")}
 @container (min-width:1px){.post-fine .wide{color:red}}
 @media (prefers-reduced-motion:reduce){.post-fine .edge{transition:none}}`}});
   await s.build();
@@ -407,6 +435,11 @@ test('the deployment-check script passes on the whole site and fails when any ho
     const failed = await runScript('smoke.mjs', cwd, {SMOKE_DEADLINE_MS: '1'});
     assert.equal(failed.code, 1);
     assert.ok(failed.stderr.includes(`${hosts[1].origin}/blog is missing`), failed.stderr);
+    hosts[1].missing.clear();
+    hosts[0].missing.add('/blog');
+    const failedFirst = await runScript('smoke.mjs', cwd, {SMOKE_DEADLINE_MS: '1'});
+    assert.equal(failedFirst.code, 1);
+    assert.ok(failedFirst.stderr.includes(`${hosts[0].origin}/blog is missing`), failedFirst.stderr);
   } finally {
     for (const host of hosts) host.server.close();
   }

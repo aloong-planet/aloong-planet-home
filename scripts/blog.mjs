@@ -83,15 +83,28 @@ function namesOwnMark(selector) {
 const SELECTOR_LIST_FUNCTION = /:(?:is|where|matches|-\w+-any)\(/i;
 const ALLOWED_GROUPING_RULE = /^@(?:media|supports|container)\b/i;
 const SHARED_FONT_FAMILY = /^(?:inherit|var\(--(?:sans|mono)\))\s*(?:!important)?$/i;
-/** The shorthand may add style, weight, size and line height to a shared token, and nothing else. */
-const SHARED_FONT = /^(?:inherit|(?:(?:normal|italic|oblique|small-caps|bold|bolder|lighter|\d{3})\s+)*[\d.]+(?:px|r?em|%)(?:\/[\d.]+(?:px|r?em|%)?)?\s+var\(--(?:sans|mono)\))\s*(?:!important)?$/i;
+const FONT_SIZE = String.raw`(?:[\d.]+[a-z%]*|(?:calc|clamp|min|max)\((?:[^()]|\([^()]*\))*\)|xx-small|x-small|small|medium|large|x-large|xx-large|smaller|larger)(?:\/\S+)?`;
+/** In the shorthand the family is what follows the size, so a shared token must come straight after it. */
+const SHARED_FONT = new RegExp(String.raw`^(?:inherit|(?:[^,"']*\s)?${FONT_SIZE}\s+var\(--(?:sans|mono)\))\s*(?:!important)?$`, 'i');
+const DARK_APPEARANCE = /\(\s*prefers-color-scheme\b|(?:^|[;{\s])color-scheme\s*:|light-dark\(|\[\s*data-theme\b/i;
+
+function checkDeclarations(slug, body, tokens) {
+  for (const [, name] of body.matchAll(/(?:^|[;\s])(--[\w-]+)\s*:/g)) if (tokens.has(name)) refuse(slug, `stylesheet redefines the shared token ${name}.`);
+  for (const [, property, value] of body.matchAll(/(?:^|[;\s])(font-family|font)\s*:\s*([^;}]+)/gi)) {
+    const family = property.toLowerCase() === 'font-family';
+    if (!(family ? SHARED_FONT_FAMILY : SHARED_FONT).test(value.trim())) refuse(slug, `${property} "${value.trim()}" must be ${family ? 'one shared font token, var(--sans) or var(--mono),' : 'a size followed by one shared font token, var(--sans) or var(--mono),'} or inherit.`);
+  }
+}
 /** The rest of the compound selector that starts with the post's class: it still targets the post's own element. */
 const SAME_ELEMENT = /^(?:[.#][\w-]+|\[[^\]]*\]|:{1,2}[\w-]+(?:\((?:[^()]|\([^()]*\))*\))?)*/;
 
 function checkRules(slug, rules, tokens) {
   const scope = `.post-${slug}`;
   for (const {head, body} of rules) {
-    if (/^@keyframes\b/i.test(head)) continue;
+    if (/^@keyframes\b/i.test(head)) {
+      for (const frame of cssRules(body)) checkDeclarations(slug, frame.body, tokens);
+      continue;
+    }
     if (head.startsWith('@')) {
       if (!ALLOWED_GROUPING_RULE.test(head)) refuse(slug, `stylesheet must not use the at-rule "${head}"; only @media, @supports, @container and @keyframes are allowed.`);
       checkRules(slug, cssRules(body), tokens);
@@ -109,19 +122,26 @@ function checkRules(slug, rules, tokens) {
       } else if (/^\s*[+~]/.test(beyond)) refuse(slug, `selector "${selector}" must be scoped inside ${scope}, not beside it.`);
       else if (!namesOwnMark(beyond)) refuse(slug, `selector "${selector}" styles a base element; the shared stylesheet owns those.`);
     }
-    for (const [, name] of body.matchAll(/(?:^|[;\s])(--[\w-]+)\s*:/g)) if (tokens.has(name)) refuse(slug, `stylesheet redefines the shared token ${name}.`);
-    for (const [, property, value] of body.matchAll(/(?:^|[;\s])(font-family|font)\s*:\s*([^;}]+)/gi)) {
-      if (!(property.toLowerCase() === 'font' ? SHARED_FONT : SHARED_FONT_FAMILY).test(value.trim())) refuse(slug, `${property} "${value.trim()}" must use the shared font tokens.`);
-    }
+    checkDeclarations(slug, body, tokens);
   }
 }
 
+/** The stylesheet without comments, with each string passed through the given function. A string can hold anything, including braces, so structure is read with strings emptied. */
+const withStrings = (source, handle) => source.replace(/\/\*[\s\S]*?\*\/|"(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*'/g, match => match.startsWith('/*') ? '' : handle(match));
+
+/** Whether a stylesheet loads a file from another host, through url() or any candidate of image-set(). */
+function loadsRemoteFile(css) {
+  if (/url\(\s*['"]?(?:https?:)?\/\//i.test(css)) return true;
+  const sets = css.matchAll(/image-set\(((?:[^()]|\((?:[^()]|\([^()]*\))*\))*)\)/gi);
+  return [...sets].some(([, candidates]) => /["'](?:https?:)?\/\//i.test(candidates.replace(/(["'])data:[\s\S]*?\1/gi, '""')));
+}
+
 function checkStylesheet(slug, source, tokens) {
-  const css = source.replace(/\/\*[\s\S]*?\*\//g, '');
+  const css = withStrings(source, () => '""');
   if (/@import\b/i.test(css)) refuse(slug, 'stylesheet must not use @import.');
   if (/@font-face\b/i.test(css)) refuse(slug, 'stylesheet must not declare fonts with @font-face.');
-  if (/(?:url|image-set)\(\s*['"]?(?:https?:)?\/\//i.test(css)) refuse(slug, 'stylesheet must not load remote files.');
-  if (/color-scheme|light-dark\(|data-theme/i.test(css)) refuse(slug, 'stylesheet must not add a dark appearance; the site has one light appearance.');
+  if (loadsRemoteFile(withStrings(source, text => text))) refuse(slug, 'stylesheet must not load remote files.');
+  if (DARK_APPEARANCE.test(css)) refuse(slug, 'stylesheet must not add a dark appearance; the site has one light appearance.');
   checkRules(slug, cssRules(css), tokens);
 }
 
