@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {setTimeout} from 'node:timers/promises';
+import {blogChecks, readManifest} from './blog.mjs';
 const expected=JSON.parse(readFileSync('dist/deployment.json','utf8')).revision;
 const {origins}=JSON.parse(readFileSync('deployment.config.json','utf8'));
+const posts=await readManifest('content');
 async function request(url, options={}) {
   return fetch(url,{...options,signal:AbortSignal.timeout(5000),cache:'no-store'});
 }
-const deadline=Date.now()+120000;
+const deadline=Date.now()+Number(process.env.SMOKE_DEADLINE_MS ?? 120000);
 let lastError;
 do {
   try {
@@ -14,6 +16,11 @@ do {
       const manifest=await request(`${origin}/deployment.json?revision=${expected}`);
       assert.equal(manifest.status,200);
       assert.equal((await manifest.json()).revision,expected);
+      for(const {path,contains} of blogChecks(posts)) {
+        const response=await request(origin+path);
+        assert.equal(response.status,200,origin+path);
+        assert.ok((await response.text()).includes(contains),`${origin}${path} is missing ${contains}`);
+      }
       for(const path of ['/','/blog.html','/assets/apps/transfer-main-light.jpg','/assets/apps/agentshed-main-90days.png']) {
         const response=await request(origin+path);
         assert.equal(response.status,200,origin+path);

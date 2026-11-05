@@ -1,6 +1,6 @@
 # Aloong Planet
 
-A personal homepage with Apps, a Blog layout, an interactive golden retriever, and an anonymous visitor ordinal. The Blog currently contains clearly labeled layout examples, not real articles. The supplied seated portrait and interactive dog sit together on the right, with the introduction beneath them. The left third stays clear; recent blog entries are not connected. Small screens use a centered, full-width group.
+A personal homepage with Apps, a Blog, an interactive golden retriever, and an anonymous visitor ordinal. The supplied seated portrait and interactive dog sit together on the right, with the introduction beneath them and the newest posts beside them. Small screens use a centered, full-width group followed by the posts. See [publishing a post](docs/ops/publishing-posts.md).
 
 ## Develop and verify
 
@@ -13,7 +13,7 @@ pnpm build
 pnpm dev
 ```
 
-The local preview runs at http://127.0.0.1:8793. Do not restart an existing dev server unnecessarily. The earlier design-only preview remains under `docs/prototypes/homepage/`. See [resource inventory](docs/ops/resources.md) and [asset provenance](docs/assets/README.md).
+The local preview runs at http://127.0.0.1:8793. Do not restart an existing dev server unnecessarily. Design references remain under `docs/prototypes/`. See [resource inventory](docs/ops/resources.md) and [asset provenance](docs/assets/README.md).
 
 ```sh
 pnpm check
@@ -24,7 +24,7 @@ The HTTP check is hardcoded to the local server and creates local disposable tes
 
 ## Cloudflare Pages
 
-Project: `aloong-planet-home`. Build output: `dist`. The build compiles Pages Functions into a plain JavaScript `_worker.js` suitable for dashboard upload and validates its syntax. Do not use Wrangler's multipart `--outfile` as a dashboard JavaScript upload. Only `/api/visitor` invokes the function; static pages and assets remain static.
+Project: `aloong-planet-home`. Build output: `dist`. The build compiles Pages Functions into a plain JavaScript `_worker.js` suitable for dashboard upload and validates its syntax. Do not use Wrangler's multipart `--outfile` as a dashboard JavaScript upload. Only `/api/visitor` invokes the function; static pages, including blog posts, and assets remain static.
 
 Production binding `VISITORS` points to `aloong-planet-visitors`; schema is in `migrations/0001_visitors.sql`. The production database ID is in wrangler.jsonc. Local runtime state is isolated under .wrangler; no local database is included in the upload. Preview deployments have no production binding; bind a separate database before testing their counter. A production deployment's pages.dev aliases use production data but have separate host cookies.
 
@@ -32,17 +32,18 @@ Apex and www share the one-year anonymous cookie. The homepage declares the apex
 
 No paid subscription is enabled. Free-plan exhaustion causes the counter to disappear while the static homepage stays usable. This repository preserves the deployed source. Releases use the existing Direct Upload Pages project through `pnpm cf:deploy`. GitHub checks run on pull requests; main pushes deploy after checks when the repository Actions secret is configured. See [deployment setup and recovery](docs/ops/deployment.md).
 
-[Visitor behavior](docs/features/visitor-counter.md) · [Specification](docs/specs/visitor-counter.md)
+[Visitor behavior](docs/features/visitor-counter.md) · [Specification](docs/specs/visitor-counter.md) · [Blog behavior](docs/features/blog.md) · [Specification](docs/specs/blog.md)
 
 ## Repository map
 
 | Directory | Contents |
 |---|---|
 | public/ | Production pages and browser code |
+| content/ | Blog post list and post bodies |
 | assets/ | Shipping portrait, dog animation and app screenshots |
 | functions/, migrations/ | Visitor API and D1 schema |
 | scripts/, tests/ | Build, validation, deployment and regression tests |
-| docs/ | Accepted prototypes, feature descriptions, resource inventory and operations |
+| docs/ | Accepted prototypes, specs, feature descriptions, resource inventory and operations |
 | tools/screenshots/ | Synthetic Transfer screenshot fixture |
 | .github/workflows/ | Pull-request checks and main deployment |
 

@@ -8,7 +8,7 @@ Identify an anonymous browser with a first-party, one-year cookie and allocate a
 
 ## Functional Requirements
 ### visitor-counter::REQ-001 First visit (direct acceptance)
-A browser with accepted cookies receives one positive ordinal and the homepage displays “你是第 N 位访客”.
+A browser with accepted cookies receives one positive ordinal and the homepage displays “你好朋友，你是第 N 位访客”.
 ### visitor-counter::REQ-002 Returning visit (direct acceptance)
 Refreshes, later visits and new tabs with the same cookie return the original ordinal without adding a visitor.
 ### visitor-counter::REQ-003 Concurrent requests (direct acceptance)

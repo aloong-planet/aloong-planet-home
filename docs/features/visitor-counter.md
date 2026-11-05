@@ -4,7 +4,7 @@
 The homepage shows your original anonymous visitor number beneath its introduction. Returning to the site preserves that number.
 
 ## Capabilities
-- See “你是第 N 位访客” after your first visit completes.
+- See “你好朋友，你是第 N 位访客” after your first visit completes.
 - Refresh, reopen the page or use another tab in the same browser without increasing your count.
 - Keep the same identity between the main and www website addresses.
 - Continue using the homepage when counting is unavailable; the number remains hidden.

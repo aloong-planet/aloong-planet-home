@@ -20,12 +20,13 @@ The initial production table was created through the dashboard using migrations/
 
 ## Source layout
 
-- public/: shipping HTML, styles, navigation and visitor client.
+- public/: shipping HTML, styles, navigation, the shared article look, and visitor client.
+- content/: the blog's post list and post bodies, with any post's own stylesheet and script. See [publishing a post](publishing-posts.md).
 - assets/: one copy of each shipping portrait, dog animation and app screenshot.
 - functions/: Pages Functions request handler.
 - migrations/: versioned D1 schema migrations.
 - scripts/: build, verification and release automation.
-- tests/: visitor contracts using SQLite and Fetch boundaries.
+- tests/: visitor contracts using SQLite and Fetch boundaries, deployment orchestration, and the blog build and its scripts run in temporary folders.
 - docs/prototypes/: retained design references, including illustrative counts. Never deploy this directory.
 - docs/assets/: source descriptions and portrait prompt.
 - tools/screenshots/: isolated synthetic Transfer fixture, retained for reproducibility; renderer bundles come from the Transfer app and are not duplicated here.

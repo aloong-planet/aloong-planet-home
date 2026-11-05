@@ -1,16 +1,19 @@
 # Homepage
 
 ## Overview
-The homepage introduces Aloong and showcases personal apps in a light layout.
+The homepage introduces Aloong, shows recent writing, and showcases personal apps in a light layout.
 
 ## Capabilities
 - See the seated blue-shirt portrait and golden retriever together on the right of a wide screen, with the introduction and visitor number beneath them.
+- Read the newest 4 blog posts in a list beside them, each with its date, title, and summary, vertically centered in the first screen with equal space on its left and between it and the dog.
+- Open a post by selecting anywhere on its entry, or open the Blog page with "全部文章".
 - Move the pointer close to the dog, hold it on a touch screen, or focus it and hold Space to greet it.
-- View a centered portrait and dog group on a small screen without a reserved side column.
+- On a small screen, see a centered portrait and dog group followed by the post list.
 - Open the Transfer and Agentshed websites from their screenshots or text links.
 - Navigate to Apps, Blog, and About from the top menu.
 
-## Boundaries
-- The left third of the wide-screen introduction area is empty; it does not display recent articles.
-- Blog entries are labeled layout examples, not published articles.
+## Boundaries and non-goals
+- Long titles and summaries are cut to two lines each; the Blog page shows them in full.
+- With fewer than 4 posts, the list shows them all; older posts stay on the Blog page.
+- On a small laptop screen, four posts that all use two-line titles and summaries can run slightly past the first screen.
 - The visitor number stays hidden when counting is unavailable.
