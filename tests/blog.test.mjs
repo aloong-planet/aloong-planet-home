@@ -1,12 +1,18 @@
-// Layout, type sizes, centering, scrolling, the contents mark and interactive figures need a real browser;
-// they are checked by recorded browser runs because the project has no browser test suite.
+// These have no DOM here and are checked by recorded real-browser runs, because the project has no browser test suite:
+// layout, type sizes, centering, shared table and figure styles, hover states, the keyboard focus ring,
+// jumps and scrolling including figure and contents-column scrolling, the homepage's kept smooth scroll,
+// the contents mark, interactive figures, scripting unavailable, a throwing post script, long text in full
+// on the Blog page, and fonts requested. Test them here once the browser suite capability is enabled.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp, mkdir, readFile, writeFile} from 'node:fs/promises';
+import {execFile} from 'node:child_process';
+import {createServer} from 'node:http';
+import {appendFile, cp, mkdtemp, mkdir, readFile, writeFile} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import {tmpdir} from 'node:os';
-import {join} from 'node:path';
-import {buildBlog, blogChecks} from '../scripts/blog.mjs';
+import {extname, join} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {buildBlog, blogChecks, readManifest} from '../scripts/blog.mjs';
 
 const BODY = '<section id="s2"><h2><span class="sec">§2</span>双层架构：把连续性和吞吐量拆开</h2><p>正文</p></section>';
 const post = (slug, date = '2026-11-05', extra = {}) => ({slug, title: `标题 ${slug}`, date, summary: `摘要 ${slug}`, ...extra});
@@ -31,6 +37,21 @@ async function site(posts, {files = {}, bodies = {}, home = '<main><!-- blog:hom
   const read = name => readFile(join(outDir, name), 'utf8');
   return {build, read, outDir};
 }
+const repo = fileURLToPath(new URL('..', import.meta.url));
+let builtRealSite;
+/** The repository's own templates, shared files and posts, built once for tests that only read it. */
+const realSite = () => builtRealSite ??= (async () => {
+  const outDir = join(await mkdtemp(join(tmpdir(), 'blog-real-')), 'out');
+  await cp(join(repo, 'public'), outDir, {recursive: true});
+  await buildBlog({contentDir: join(repo, 'content'), outDir});
+  return outDir;
+})();
+/** The file a public path serves in a built site. */
+const servedFile = path => ({'/': 'index.html', '/blog': 'blog.html'})[path] ?? (extname(path) ? path.slice(1) : `${path.slice(1)}.html`);
+/** Runs a repository script as a process in the given folder; it never rejects, so callers read the exit code. */
+const runScript = (script, cwd, env = {}) => new Promise(resolve => {
+  execFile(process.execPath, [join(repo, 'scripts', script)], {cwd, env: {...process.env, ...env}}, (error, stdout, stderr) => resolve({code: error ? error.code : 0, stdout, stderr}));
+});
 const hrefs = (html, cls) => [...html.matchAll(new RegExp(`<a class="${cls}" href="([^"]+)"`, 'g'))].map(m => m[1]);
 
 test('a manifest entry and a body produce the post page, the homepage entry and the Blog row', async () => {
@@ -61,24 +82,24 @@ test('the homepage shows the newest 4 posts, or all of them when there are fewer
 });
 
 test('the Blog page lists every post newest first, and equal dates keep manifest order', async () => {
-  const s = await site([post('old', '2026-01-01'), post('same-one', '2026-03-01'), post('same-two', '2026-03-01'), post('new', '2026-05-01'), post('mid', '2026-02-01')]);
+  const s = await site([post('old', '2026-01-01'), post('same-two', '2026-03-01'), post('same-one', '2026-03-01'), post('new', '2026-05-01'), post('mid', '2026-02-01')]);
   await s.build();
-  assert.deepEqual(hrefs(await s.read('blog.html'), 'ap-post-link'), ['/blog/new', '/blog/same-one', '/blog/same-two', '/blog/mid', '/blog/old']);
+  assert.deepEqual(hrefs(await s.read('blog.html'), 'ap-post-link'), ['/blog/new', '/blog/same-two', '/blog/same-one', '/blog/mid', '/blog/old']);
 });
 
 test('titles and summaries are shown as text, never parsed as markup', async () => {
-  const s = await site([post('x', '2026-11-05', {title: 'a<b>&"c', summary: 's<i>&"t'})]);
+  const s = await site([post('x', '2026-11-05', {title: 'a<b>&"c $& end', summary: "s<i>&\"t $' end"})]);
   await s.build();
   for (const name of ['index.html', 'blog.html']) {
     const html = await s.read(name);
-    assert.match(html, /a&lt;b&gt;&amp;&quot;c/);
-    assert.match(html, /s&lt;i&gt;&amp;&quot;t/);
-    assert.doesNotMatch(html, /<b>|<i>/);
+    assert.ok(html.includes('a&lt;b&gt;&amp;&quot;c $&amp; end'), name);
+    assert.ok(html.includes("s&lt;i&gt;&amp;&quot;t $' end"), name);
+    assert.doesNotMatch(html, /<b>|<i>|blog:(home|list)/);
   }
   const page = await s.read('blog/x.html');
-  assert.match(page, /<h1>a&lt;b&gt;&amp;&quot;c<\/h1>/);
-  assert.match(page, /<title>a&lt;b&gt;&amp;&quot;c · Aloong Planet<\/title>/);
-  assert.match(page, /content="s&lt;i&gt;&amp;&quot;t"/);
+  assert.ok(page.includes('<h1>a&lt;b&gt;&amp;&quot;c $&amp; end</h1>'));
+  assert.ok(page.includes('<title>a&lt;b&gt;&amp;&quot;c $&amp; end · Aloong Planet</title>'));
+  assert.ok(page.includes(`content="s&lt;i&gt;&amp;&quot;t $' end"`));
 });
 
 test('a post loads its own files only when it has them, and unlisted files are not deployed', async () => {
@@ -88,7 +109,7 @@ test('a post loads its own files only when it has them, and unlisted files are n
   }});
   await s.build();
   const rich = await s.read('blog/with-files.html'), plain = await s.read('blog/plain.html');
-  assert.match(rich, /<link rel="stylesheet" href="\/blog\/with-files\.css">/);
+  assert.deepEqual([...rich.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m => m[1]), ['/site.css', '/article.css', '/blog/with-files.css']);
   assert.match(rich, /<script src="\/blog\/with-files\.js" defer><\/script>/);
   assert.equal(await s.read('blog/with-files.css'), '.post-with-files .fig-a{color:red}');
   assert.equal(await s.read('blog/with-files.js'), 'console.log(1)');
@@ -123,13 +144,14 @@ test('the contents come from the sections, with optional shorter labels', async 
 <section id='single'><h2>单引号标识</h2></section>
 <section id=bare><h2>无引号标识</h2></section>
 <section id="named" data-toc='单引号短名'><h2>很长的标题</h2></section>
+<section data-id="wrong" id="right"><h2>相近的属性</h2></section>
 <footer class="foot" id="sources" data-toc="来源">来源</footer>`,
     flat: '<p>只有段落</p>',
   }});
   await s.build();
   const nav = (await s.read('blog/full.html')).match(/<nav class="ap-toc"[\s\S]*?<\/nav>/)[0];
   const entries = [...nav.matchAll(/<a href="#([^"]+)">([^<]+)<\/a>/g)].map(m => [m[1], m[2]]);
-  assert.deepEqual(entries, [['s2', '§2 双层架构'], ['proto', '公开原型实现了多少'], ['ideas', '借用的系统思想'], ['single', '单引号标识'], ['bare', '无引号标识'], ['named', '单引号短名'], ['sources', '来源']]);
+  assert.deepEqual(entries, [['s2', '§2 双层架构'], ['proto', '公开原型实现了多少'], ['ideas', '借用的系统思想'], ['single', '单引号标识'], ['bare', '无引号标识'], ['named', '单引号短名'], ['right', '相近的属性'], ['sources', '来源']]);
   assert.doesNotMatch(await s.read('blog/flat.html'), /ap-toc/);
 });
 
@@ -146,7 +168,9 @@ test('links to other sites open a new tab and every other link stays', async () 
     <a href='https://example.com/single'>single</a>
     <a href=https://example.com/bare>bare</a>
     <a href="//example.com/relative">relative</a>
-    <a href="//aloongplanet.com/blog">own relative</a>`}});
+    <a href="//aloongplanet.com/blog">own relative</a>
+    <a href="https://aloongplanet.com.example.org/x">lookalike</a>
+    <a data-href="https://example.com/y" href="/blog">near attribute</a>`}});
   await s.build();
   const page = await s.read('blog/x.html');
   assert.match(page, /<a href="https:\/\/github\.com\/a" target="_blank" rel="noreferrer">other<\/a>/);
@@ -161,6 +185,8 @@ test('links to other sites open a new tab and every other link stays', async () 
   assert.match(page, /<a href=https:\/\/example\.com\/bare target="_blank" rel="noreferrer">bare<\/a>/);
   assert.match(page, /<a href="\/\/example\.com\/relative" target="_blank" rel="noreferrer">relative<\/a>/);
   assert.match(page, /<a href="\/\/aloongplanet\.com\/blog">own relative<\/a>/);
+  assert.match(page, /<a href="https:\/\/aloongplanet\.com\.example\.org\/x" target="_blank" rel="noreferrer">lookalike<\/a>/);
+  assert.match(page, /<a data-href="https:\/\/example\.com\/y" href="\/blog">near attribute<\/a>/);
   assert.match(page, /<a href="https:\/\/example\.com\/source" target="_blank" rel="noreferrer">来源<\/a>/);
 });
 
@@ -219,6 +245,14 @@ test('the build refuses a post stylesheet that would break the shared look', asy
     ['.post-bad a:hover{color:red}', /base element/],
     ['.post-bad *{color:red}', /base element/],
     ['.post-bad:hover p{color:red}', /base element/],
+    ['.post-bad a[href]{color:red}', /base element/],
+    ['.post-bad p[class]{color:red}', /base element/],
+    ['.post-bad :is(p,h2){color:red}', /base element/],
+    ['.post-bad > :where(p){color:red}', /base element/],
+    ['.post-bad p:not(.a){color:red}', /base element/],
+    ['.post-bad p:NOT(.a){color:red}', /base element/],
+    ['.post-bad p:has(.a){color:red}', /base element/],
+    ['.post-bad a[href=".x"]{color:red}', /base element/],
     ['.post-bad{color:red}', /custom properties/],
     ['.post-bad:hover{color:red}', /custom properties/],
     ['.post-bad.b{color:red}', /custom properties/],
@@ -226,6 +260,10 @@ test('the build refuses a post stylesheet that would break the shared look', asy
     ['.post-bad .a{--panel:red}', /shared token/],
     ['.post-bad .a{font-family:Georgia}', /font/],
     ['.post-bad .a{font:500 13px Georgia}', /font/],
+    ['.post-bad .a{font-family:"Playfair Display",var(--sans)}', /font/],
+    ['.post-bad .a{font:500 13px Georgia,var(--sans)}', /font/],
+    ['.post-bad .a{font:500 13px Georgia, var(--sans)}', /font/],
+    ['.post-bad .a{FONT-FAMILY:Georgia}', /font/i],
   ]) {
     const s = await site([post('bad')], {files: {'bad.css': css}});
     await assert.rejects(s.build(), e => /"bad"/.test(e.message) && reason.test(e.message), css);
@@ -234,6 +272,8 @@ test('the build refuses a post stylesheet that would break the shared look', asy
 
 test('real article stylesheet shapes pass the check', async () => {
   const s = await site([post('fine')], {files: {'fine.css': `/* comment with body{} and @import */
+.post-fine .imp{font-family:var(--sans)!important}
+.post-fine p.own:not(.other){color:red}
 .post-fine{--fast:#007A87;--c-fill:#fff}
 .post-fine .seg button[aria-pressed="true"],.post-fine .next:hover{background:var(--ink);font:500 13.5px/1.3 var(--sans)}
 .post-fine #map .node>rect:first-child{fill:var(--c-fill)}
@@ -258,11 +298,14 @@ test('the build refuses a bad manifest', async () => {
     [[post('-edge')], /slug/],
     [[post('x', '2026-02-30')], /date/],
     [[post('x', '2026/11/05')], /date/],
+    [[post('x', '2026-13-01')], /"x".*date/],
     [[{...post('x'), title: ''}], /title/],
     [[{...post('x'), summary: '  '}], /summary/],
     [[{...post('x'), title: 5}], /title/],
     [[post('x'), post('x')], /duplicate/i],
     [[post('x', '2026-11-05', {source: {label: 'a'}})], /source/],
+    [[post('x', '2026-11-05', {source: {label: '', url: 'https://example.com/a'}})], /source/],
+    [[post('x', '2026-11-05', {note: '  '})], /note/],
     [[post('x', '2026-11-05', {source: {label: 'a', url: 'javascript:alert(1)'}})], /source/],
   ]) {
     const s = await site(posts);
@@ -277,13 +320,65 @@ test('a template without its slot stops the build instead of dropping the list',
   await assert.rejects((await site([post('x')], {list: '<main></main>'})).build(), /blog\.html/);
 });
 
-test('deployment checks tell every blog page from the homepage the host serves for unknown addresses', async () => {
-  const s = await site([post('a'), post('b')], {home: '<main><!-- blog:home --></main>'});
-  await s.build();
-  const checks = blogChecks([post('a'), post('b')]);
-  const homepage = await s.read('index.html');
-  for (const {path, contains} of checks) if (path !== '/') assert.equal(homepage.includes(contains), false, path);
-  const served = {'/': 'index.html', '/blog': 'blog.html', '/blog/a': 'blog/a.html', '/blog/b': 'blog/b.html'};
-  assert.deepEqual([...new Set(checks.map(check => check.path))], ['/', '/article.css', '/article.js', '/blog', '/blog/a', '/blog/b']);
-  for (const {path, contains} of checks) if (served[path]) assert.ok((await s.read(served[path])).includes(contains), path);
+test('deployment checks tell every blog page of the real site from the homepage the host serves for unknown addresses', async () => {
+  const outDir = await realSite();
+  const posts = await readManifest(join(repo, 'content'));
+  assert.ok(posts.length > 0);
+  const checks = blogChecks(posts);
+  assert.deepEqual([...new Set(checks.map(check => check.path))], ['/', '/article.css', '/article.js', '/blog', ...posts.map(p => `/blog/${p.slug}`)]);
+  const homepage = await readFile(join(outDir, 'index.html'), 'utf8');
+  for (const {path, contains} of checks) {
+    assert.ok((await readFile(join(outDir, servedFile(path)), 'utf8')).includes(contains), `${path} serves ${contains}`);
+    if (path !== '/') assert.equal(homepage.includes(contains), false, `the homepage satisfies ${path}`);
+  }
+  assert.doesNotMatch(await readFile(join(outDir, 'blog.html'), 'utf8'), /排版示例/);
+});
+
+test('the build script writes the blog, and a refused post stops it', async () => {
+  const cwd = await mkdtemp(join(tmpdir(), 'blog-build-'));
+  for (const folder of ['public', 'assets', 'content']) await cp(join(repo, folder), join(cwd, folder), {recursive: true});
+  const [{slug}] = await readManifest(join(repo, 'content'));
+  const built = await runScript('build.mjs', cwd);
+  assert.match(built.stdout, /Built homepage/);
+  assert.match(await readFile(join(cwd, 'dist/blog', `${slug}.html`), 'utf8'), new RegExp(`post-${slug}"`));
+  const home = await readFile(join(cwd, 'dist/index.html'), 'utf8');
+  assert.ok(home.includes(`href="/blog/${slug}"`));
+  assert.doesNotMatch(home, /blog:home/);
+  await appendFile(join(cwd, 'content/posts', `${slug}.css`), '@font-face{font-family:X}');
+  const refused = await runScript('build.mjs', cwd);
+  assert.notEqual(refused.code, 0);
+  assert.ok(refused.stderr.includes(`Blog post "${slug}"`) && refused.stderr.includes('@font-face'), refused.stderr);
+  assert.doesNotMatch(refused.stdout, /Built homepage/);
+});
+
+test('the deployment-check script passes on the whole site and fails when the host answers a blog page with the homepage', async () => {
+  const outDir = await realSite();
+  const missing = new Set();
+  const server = createServer(async (request, response) => {
+    const path = new URL(request.url, 'http://host').pathname;
+    if (path === '/deployment.json') return response.end('{"revision":"abc"}');
+    if (path === '/api/visitor') {
+      response.writeHead(request.method === 'POST' ? 428 : 200, {'cache-control': 'no-store', 'set-cookie': 'visitor=1'});
+      return response.end('{"ready":true}');
+    }
+    const file = missing.has(path) ? 'index.html' : servedFile(path);
+    response.end(await readFile(join(outDir, file)).catch(() => readFile(join(outDir, 'index.html'))));
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const cwd = await mkdtemp(join(tmpdir(), 'blog-smoke-'));
+    await mkdir(join(cwd, 'dist'));
+    await writeFile(join(cwd, 'dist/deployment.json'), '{"revision":"abc"}');
+    await writeFile(join(cwd, 'deployment.config.json'), JSON.stringify({origins: [`http://127.0.0.1:${server.address().port}`]}));
+    await cp(join(repo, 'content'), join(cwd, 'content'), {recursive: true});
+    const whole = await runScript('smoke.mjs', cwd);
+    assert.equal(whole.code, 0, whole.stderr);
+    assert.match(whole.stdout, /Verified revision abc/);
+    missing.add('/blog');
+    const failed = await runScript('smoke.mjs', cwd, {SMOKE_DEADLINE_MS: '1'});
+    assert.equal(failed.code, 1);
+    assert.match(failed.stderr, /\/blog is missing/);
+  } finally {
+    server.close();
+  }
 });

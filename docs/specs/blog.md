@@ -69,9 +69,9 @@ Each case stops the build with a message naming the post and the problem; nothin
 - blog::REQ-004/AC-01: A body that is a whole page or brings its own resources: a doctype, `html`, `head`, `body`, `title`, `meta`, `link`, `style`, or `script` element, or an `h1`.
 - blog::REQ-004/AC-02: A post stylesheet that loads or declares fonts or external resources: `@import`, `@font-face`, or a remote `url()`.
 - blog::REQ-004/AC-03: A post stylesheet with a dark appearance: `prefers-color-scheme` or `data-theme`.
-- blog::REQ-004/AC-04: A post stylesheet rule whose selector is not scoped inside the post's own class (including one that reaches its siblings), or that styles a base element directly under it (such as `.post-x p`).
+- blog::REQ-004/AC-04: A post stylesheet rule whose selector is not scoped inside the post's own class (including one that reaches its siblings), or that names no class or id of the post's own beyond it and so styles base elements (such as `.post-x p`, `.post-x a[href]`, or `.post-x :is(p,h2)`).
 - blog::REQ-004/AC-05: A rule on the post's own class that sets anything other than custom properties, or a custom property that redefines a shared token.
-- blog::REQ-004/AC-06: A font declaration in a post stylesheet that names a family instead of the shared font tokens.
+- blog::REQ-004/AC-06: A font declaration in a post stylesheet that names a family, alone or beside the shared font tokens.
 - blog::REQ-004/AC-07: A manifest problem: no posts, a missing or empty field, a slug that is not lowercase words joined by hyphens, a date that is not a real `YYYY-MM-DD` date, a duplicate slug, or a listed body file that does not exist.
 
 ## Quality Requirements
@@ -145,7 +145,7 @@ Existing features:
 
 ## Testing Decisions
 
-A good test here builds a real site from fixture posts in a temporary folder and asserts on the written pages and on the build's refusals, without looking inside the build step. The seams are the blog build module's exported build function, and the visitor client's exported display function with a stubbed network. Existing precedent is `tests/deploy.test.mjs` and `tests/visitor-client.test.mjs`.
+A good test here builds a real site from fixture posts in a temporary folder and asserts on the written pages and on the build's refusals, without looking inside the build step. The seams are the blog build module's exported build function, the build and deployment-check scripts run as processes in a temporary folder, and the visitor client's exported display function with a stubbed network. Deployment checks are tested against the real site and a local server that answers unknown addresses with the homepage, as the host does. Existing precedent is `tests/deploy.test.mjs` and `tests/visitor-client.test.mjs`.
 
 Layout, type sizes, scrolling, and interactive figures are checked in a real browser against the built site at the window sizes this spec names; per the project capabilities the browser suite is not enabled, so these are recorded runs, not automated tests.
 

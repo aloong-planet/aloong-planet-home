@@ -70,7 +70,10 @@ const splitSelectors = head => {
   return [...parts, current].map(part => part.trim());
 };
 
-const ONLY_ELEMENTS = /^(?:\s*[>+~]?\s*(?:[a-z][a-z0-9]*|\*)(?::{1,2}[\w-]+(?:\([^)]*\))?)*)+$/i;
+/** Whether a selector names something the post marked itself: a class or id, outside attribute values and negations. */
+const namesOwnMark = selector => /[.#][\w-]/.test(selector.replace(/\[[^\]]*\]/g, '').replace(/:(?:not|has)\((?:[^()]|\([^()]*\))*\)/gi, ''));
+/** The only font values a post may set: the shared tokens, with size and weight in the shorthand, and no named family. */
+const SHARED_FONT = /^(?:inherit|(?:[^,"']*\s)?var\(--(?:sans|mono)\))\s*(?:!important)?$/i;
 /** The rest of the compound selector that starts with the post's class: it still targets the post's own element. */
 const SAME_ELEMENT = /^(?:[.#][\w-]+|\[[^\]]*\]|:{1,2}[\w-]+(?:\((?:[^()]|\([^()]*\))*\))?)*/;
 
@@ -87,11 +90,11 @@ function checkRules(slug, rules, tokens) {
         const other = body.split(';').map(part => part.trim()).find(part => part !== '' && !part.startsWith('--'));
         if (other) refuse(slug, `${scope} may only set custom properties, not "${other}".`);
       } else if (/^\s*[+~]/.test(beyond)) refuse(slug, `selector "${selector}" must be scoped inside ${scope}, not beside it.`);
-      else if (ONLY_ELEMENTS.test(beyond)) refuse(slug, `selector "${selector}" styles a base element; the shared stylesheet owns those.`);
+      else if (!namesOwnMark(beyond)) refuse(slug, `selector "${selector}" styles a base element; the shared stylesheet owns those.`);
     }
     for (const [, name] of body.matchAll(/(?:^|[;\s])(--[\w-]+)\s*:/g)) if (tokens.has(name)) refuse(slug, `stylesheet redefines the shared token ${name}.`);
-    for (const [, property, value] of body.matchAll(/(?:^|[;\s])(font-family|font)\s*:\s*([^;]+)/g)) {
-      if (!/var\(--(?:sans|mono)\)|^inherit\b/.test(value.trim())) refuse(slug, `${property} "${value.trim()}" must use the shared font tokens.`);
+    for (const [, property, value] of body.matchAll(/(?:^|[;\s])(font-family|font)\s*:\s*([^;}]+)/gi)) {
+      if (!SHARED_FONT.test(value.trim())) refuse(slug, `${property} "${value.trim()}" must use the shared font tokens.`);
     }
   }
 }

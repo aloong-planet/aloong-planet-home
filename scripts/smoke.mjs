@@ -8,7 +8,7 @@ const posts=await readManifest('content');
 async function request(url, options={}) {
   return fetch(url,{...options,signal:AbortSignal.timeout(5000),cache:'no-store'});
 }
-const deadline=Date.now()+120000;
+const deadline=Date.now()+Number(process.env.SMOKE_DEADLINE_MS ?? 120000);
 let lastError;
 do {
   try {
