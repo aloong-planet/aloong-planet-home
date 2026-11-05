@@ -37,8 +37,9 @@ Figures only one post uses may have `content/posts/<slug>.css` and `content/post
 The build refuses a stylesheet that would break the shared look. Every selector starts with `.post-<slug>`, and:
 
 - `.post-<slug>` itself may only set custom properties, and none may redefine a token from `public/site.css` or `public/article.css`.
-- A selector must target something of the post's own, such as `.post-<slug> .my-figure p`, not a base element like `.post-<slug> p`.
-- Fonts use `var(--sans)` or `var(--mono)`. No `@import`, `@font-face`, or remote `url()`.
-- No dark appearance: no `prefers-color-scheme` or `data-theme`.
+- A selector must target something of the post's own, such as `.post-<slug> .my-figure p`, not a base element like `.post-<slug> p`. Write selectors out: no `:is()`, `:where()`, or nested rules.
+- At-rules are limited to `@media`, `@supports`, `@container`, and `@keyframes`.
+- Fonts use one of `var(--sans)` or `var(--mono)`, with no other family beside it. No `@import`, `@font-face`, or remote files.
+- No dark appearance: no `prefers-color-scheme`, `color-scheme`, `light-dark()`, or `data-theme`.
 
 The body may not contain `style` or `script` elements or a whole page's shell. A complete page exported from elsewhere must be split into these parts first. Requirements and boundaries are in the [blog spec](../specs/blog.md).

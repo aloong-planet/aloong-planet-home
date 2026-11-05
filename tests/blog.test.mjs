@@ -222,6 +222,7 @@ test('real article body shapes are not mistaken for a whole page', async () => {
 });
 
 test('the build refuses a post stylesheet that would break the shared look', async () => {
+  const wrong = [];
   for (const [css, reason] of [
     ['@import url("/a.css");', /@import/],
     ['@font-face{font-family:X;src:url(/x.woff2)}', /@font-face/],
@@ -247,8 +248,23 @@ test('the build refuses a post stylesheet that would break the shared look', asy
     ['.post-bad:hover p{color:red}', /base element/],
     ['.post-bad a[href]{color:red}', /base element/],
     ['.post-bad p[class]{color:red}', /base element/],
-    ['.post-bad :is(p,h2){color:red}', /base element/],
-    ['.post-bad > :where(p){color:red}', /base element/],
+    ['.post-bad :is(p,h2){color:red}', /:is\(\)/],
+    ['.post-bad > :where(p){color:red}', /:is\(\)/],
+    ['.post-bad :is(.a,p){color:red}', /:is\(\)/],
+    ['.post-bad :where(.a,p){color:red}', /:is\(\)/],
+    ['.post-bad > :is(p,.a){color:red}', /:is\(\)/],
+    ['.post-bad p:not(:is(:where(.a))){color:red}', /:is\(\)/],
+    ['.post-bad p:not(:not(:not(.a))){color:red}', /base element/],
+    ['.post-bad .a{p{color:red}}', /nest/],
+    ['.post-bad .a{p{font-family:Georgia}}', /nest/],
+    ['@property --ink{syntax:"<color>";inherits:false;initial-value:red}', /at-rule/],
+    ['@page{margin:0}', /at-rule/],
+    ['@layer x{.post-bad .a{color:red}}', /at-rule/],
+    ['.post-bad .a{color-scheme:dark}', /dark/],
+    ['.post-bad .a{color:light-dark(#000,#fff)}', /dark/],
+    ['.post-bad .a{background:image-set("https://example.com/a.png" 1x)}', /remote/],
+    ['.post-bad .a{font-family:Georgia var(--sans)}', /font/],
+    ['.post-bad .a{font:500 13px Georgia var(--sans)}', /font/],
     ['.post-bad p:not(.a){color:red}', /base element/],
     ['.post-bad p:NOT(.a){color:red}', /base element/],
     ['.post-bad p:has(.a){color:red}', /base element/],
@@ -266,8 +282,10 @@ test('the build refuses a post stylesheet that would break the shared look', asy
     ['.post-bad .a{FONT-FAMILY:Georgia}', /font/i],
   ]) {
     const s = await site([post('bad')], {files: {'bad.css': css}});
-    await assert.rejects(s.build(), e => /"bad"/.test(e.message) && reason.test(e.message), css);
+    const message = await s.build().then(() => 'accepted', e => e.message);
+    if (!/"bad"/.test(message) || !reason.test(message)) wrong.push(`${css} -> ${message}`);
   }
+  assert.deepEqual(wrong, []);
 });
 
 test('real article stylesheet shapes pass the check', async () => {
@@ -284,6 +302,8 @@ test('real article stylesheet shapes pass the check', async () => {
 .post-fine .a{font-family:var(--mono);background:url("data:image/png;base64,AAA=")}
 @keyframes march{to{stroke-dashoffset:-15}}
 @media (max-width:760px){.post-fine .traits{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@supports (display:grid){.post-fine .grid{display:grid}}
+@container (min-width:1px){.post-fine .wide{color:red}}
 @media (prefers-reduced-motion:reduce){.post-fine .edge{transition:none}}`}});
   await s.build();
   assert.match(await s.read('blog/fine.html'), /\/blog\/fine\.css/);
@@ -331,7 +351,10 @@ test('deployment checks tell every blog page of the real site from the homepage 
     assert.ok((await readFile(join(outDir, servedFile(path)), 'utf8')).includes(contains), `${path} serves ${contains}`);
     if (path !== '/') assert.equal(homepage.includes(contains), false, `the homepage satisfies ${path}`);
   }
-  assert.doesNotMatch(await readFile(join(outDir, 'blog.html'), 'utf8'), /排版示例/);
+  const list = await readFile(join(outDir, 'blog.html'), 'utf8');
+  assert.doesNotMatch(list, /排版示例/);
+  assert.equal([...list.matchAll(/<article class="ap-post"/g)].length, posts.length);
+  assert.deepEqual([...homepage.matchAll(/<(h[1-6])\b/g)].map(m => m[1]).slice(0, 2), ['h1', 'h2']);
 });
 
 test('the build script writes the blog, and a refused post stops it', async () => {
@@ -351,8 +374,8 @@ test('the build script writes the blog, and a refused post stops it', async () =
   assert.doesNotMatch(refused.stdout, /Built homepage/);
 });
 
-test('the deployment-check script passes on the whole site and fails when the host answers a blog page with the homepage', async () => {
-  const outDir = await realSite();
+/** Serves a built site the way the host does: an unknown address gets the homepage with status 200. */
+async function startHost(outDir) {
   const missing = new Set();
   const server = createServer(async (request, response) => {
     const path = new URL(request.url, 'http://host').pathname;
@@ -365,20 +388,26 @@ test('the deployment-check script passes on the whole site and fails when the ho
     response.end(await readFile(join(outDir, file)).catch(() => readFile(join(outDir, 'index.html'))));
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  return {server, missing, origin: `http://127.0.0.1:${server.address().port}`};
+}
+
+test('the deployment-check script passes on the whole site and fails when any host answers a blog page with the homepage', async () => {
+  const outDir = await realSite();
+  const hosts = [await startHost(outDir), await startHost(outDir)];
   try {
     const cwd = await mkdtemp(join(tmpdir(), 'blog-smoke-'));
     await mkdir(join(cwd, 'dist'));
     await writeFile(join(cwd, 'dist/deployment.json'), '{"revision":"abc"}');
-    await writeFile(join(cwd, 'deployment.config.json'), JSON.stringify({origins: [`http://127.0.0.1:${server.address().port}`]}));
+    await writeFile(join(cwd, 'deployment.config.json'), JSON.stringify({origins: hosts.map(host => host.origin)}));
     await cp(join(repo, 'content'), join(cwd, 'content'), {recursive: true});
     const whole = await runScript('smoke.mjs', cwd);
     assert.equal(whole.code, 0, whole.stderr);
     assert.match(whole.stdout, /Verified revision abc/);
-    missing.add('/blog');
+    hosts[1].missing.add('/blog');
     const failed = await runScript('smoke.mjs', cwd, {SMOKE_DEADLINE_MS: '1'});
     assert.equal(failed.code, 1);
-    assert.match(failed.stderr, /\/blog is missing/);
+    assert.ok(failed.stderr.includes(`${hosts[1].origin}/blog is missing`), failed.stderr);
   } finally {
-    server.close();
+    for (const host of hosts) host.server.close();
   }
 });

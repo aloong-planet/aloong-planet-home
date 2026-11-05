@@ -70,10 +70,21 @@ const splitSelectors = head => {
   return [...parts, current].map(part => part.trim());
 };
 
-/** Whether a selector names something the post marked itself: a class or id, outside attribute values and negations. */
-const namesOwnMark = selector => /[.#][\w-]/.test(selector.replace(/\[[^\]]*\]/g, '').replace(/:(?:not|has)\((?:[^()]|\([^()]*\))*\)/gi, ''));
-/** The only font values a post may set: the shared tokens, with size and weight in the shorthand, and no named family. */
-const SHARED_FONT = /^(?:inherit|(?:[^,"']*\s)?var\(--(?:sans|mono)\))\s*(?:!important)?$/i;
+/** Whether a selector names something the post marked itself: a class or id, outside attribute values and pseudo-class arguments. */
+function namesOwnMark(selector) {
+  let text = selector.replace(/\[[^\]]*\]/g, ''), before;
+  do {
+    before = text;
+    text = text.replace(/\([^()]*\)/g, '');
+  } while (text !== before);
+  return /[.#][\w-]/.test(text);
+}
+/** These accept a list, so a class could hide a base element beside it; a post writes its selectors out instead. */
+const SELECTOR_LIST_FUNCTION = /:(?:is|where|matches|-\w+-any)\(/i;
+const ALLOWED_GROUPING_RULE = /^@(?:media|supports|container)\b/i;
+const SHARED_FONT_FAMILY = /^(?:inherit|var\(--(?:sans|mono)\))\s*(?:!important)?$/i;
+/** The shorthand may add style, weight, size and line height to a shared token, and nothing else. */
+const SHARED_FONT = /^(?:inherit|(?:(?:normal|italic|oblique|small-caps|bold|bolder|lighter|\d{3})\s+)*[\d.]+(?:px|r?em|%)(?:\/[\d.]+(?:px|r?em|%)?)?\s+var\(--(?:sans|mono)\))\s*(?:!important)?$/i;
 /** The rest of the compound selector that starts with the post's class: it still targets the post's own element. */
 const SAME_ELEMENT = /^(?:[.#][\w-]+|\[[^\]]*\]|:{1,2}[\w-]+(?:\((?:[^()]|\([^()]*\))*\))?)*/;
 
@@ -81,9 +92,15 @@ function checkRules(slug, rules, tokens) {
   const scope = `.post-${slug}`;
   for (const {head, body} of rules) {
     if (/^@keyframes\b/i.test(head)) continue;
-    if (head.startsWith('@')) { checkRules(slug, cssRules(body), tokens); continue; }
+    if (head.startsWith('@')) {
+      if (!ALLOWED_GROUPING_RULE.test(head)) refuse(slug, `stylesheet must not use the at-rule "${head}"; only @media, @supports, @container and @keyframes are allowed.`);
+      checkRules(slug, cssRules(body), tokens);
+      continue;
+    }
+    if (body.includes('{')) refuse(slug, `selector "${head}" nests rules; write each rule out in full.`);
     for (const selector of splitSelectors(head)) {
       if (!selector.startsWith(scope) || /^[\w-]/.test(selector.slice(scope.length))) refuse(slug, `stylesheet selector "${selector}" must be scoped under ${scope}.`);
+      if (SELECTOR_LIST_FUNCTION.test(selector)) refuse(slug, `selector "${selector}" must be written out rather than use :is() or :where().`);
       const rest = selector.slice(scope.length);
       const beyond = rest.slice(SAME_ELEMENT.exec(rest)[0].length);
       if (beyond === '') {
@@ -94,7 +111,7 @@ function checkRules(slug, rules, tokens) {
     }
     for (const [, name] of body.matchAll(/(?:^|[;\s])(--[\w-]+)\s*:/g)) if (tokens.has(name)) refuse(slug, `stylesheet redefines the shared token ${name}.`);
     for (const [, property, value] of body.matchAll(/(?:^|[;\s])(font-family|font)\s*:\s*([^;}]+)/gi)) {
-      if (!SHARED_FONT.test(value.trim())) refuse(slug, `${property} "${value.trim()}" must use the shared font tokens.`);
+      if (!(property.toLowerCase() === 'font' ? SHARED_FONT : SHARED_FONT_FAMILY).test(value.trim())) refuse(slug, `${property} "${value.trim()}" must use the shared font tokens.`);
     }
   }
 }
@@ -103,8 +120,8 @@ function checkStylesheet(slug, source, tokens) {
   const css = source.replace(/\/\*[\s\S]*?\*\//g, '');
   if (/@import\b/i.test(css)) refuse(slug, 'stylesheet must not use @import.');
   if (/@font-face\b/i.test(css)) refuse(slug, 'stylesheet must not declare fonts with @font-face.');
-  if (/url\(\s*['"]?(?:https?:)?\/\//i.test(css)) refuse(slug, 'stylesheet must not load remote files with url().');
-  if (/prefers-color-scheme|data-theme/i.test(css)) refuse(slug, 'stylesheet must not add a dark appearance; the site has one light appearance.');
+  if (/(?:url|image-set)\(\s*['"]?(?:https?:)?\/\//i.test(css)) refuse(slug, 'stylesheet must not load remote files.');
+  if (/color-scheme|light-dark\(|data-theme/i.test(css)) refuse(slug, 'stylesheet must not add a dark appearance; the site has one light appearance.');
   checkRules(slug, cssRules(css), tokens);
 }
 

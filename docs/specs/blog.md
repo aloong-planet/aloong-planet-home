@@ -67,11 +67,11 @@ As a reader, I can read a long post comfortably and move around it quickly.
 Each case stops the build with a message naming the post and the problem; nothing is deployed.
 
 - blog::REQ-004/AC-01: A body that is a whole page or brings its own resources: a doctype, `html`, `head`, `body`, `title`, `meta`, `link`, `style`, or `script` element, or an `h1`.
-- blog::REQ-004/AC-02: A post stylesheet that loads or declares fonts or external resources: `@import`, `@font-face`, or a remote `url()`.
-- blog::REQ-004/AC-03: A post stylesheet with a dark appearance: `prefers-color-scheme` or `data-theme`.
-- blog::REQ-004/AC-04: A post stylesheet rule whose selector is not scoped inside the post's own class (including one that reaches its siblings), or that names no class or id of the post's own beyond it and so styles base elements (such as `.post-x p`, `.post-x a[href]`, or `.post-x :is(p,h2)`).
+- blog::REQ-004/AC-02: A post stylesheet that loads or declares fonts or external resources: `@import`, `@font-face`, or a remote `url()` or `image-set()`.
+- blog::REQ-004/AC-03: A post stylesheet with a dark appearance: `prefers-color-scheme`, `color-scheme`, `light-dark()`, or `data-theme`.
+- blog::REQ-004/AC-04: A post stylesheet rule whose selector is not scoped inside the post's own class (including one that reaches its siblings), that names no class or id of the post's own beyond it and so styles base elements (such as `.post-x p` or `.post-x a[href]`), or that uses `:is()` or `:where()`, which can hide a base element beside a class. A stylesheet may also not nest rules, or use an at-rule other than `@media`, `@supports`, `@container`, and `@keyframes`.
 - blog::REQ-004/AC-05: A rule on the post's own class that sets anything other than custom properties, or a custom property that redefines a shared token.
-- blog::REQ-004/AC-06: A font declaration in a post stylesheet that names a family, alone or beside the shared font tokens.
+- blog::REQ-004/AC-06: A font declaration in a post stylesheet whose family is anything but one shared font token.
 - blog::REQ-004/AC-07: A manifest problem: no posts, a missing or empty field, a slug that is not lowercase words joined by hyphens, a date that is not a real `YYYY-MM-DD` date, a duplicate slug, or a listed body file that does not exist.
 
 ## Quality Requirements
