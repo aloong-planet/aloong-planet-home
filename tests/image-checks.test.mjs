@@ -1,5 +1,5 @@
 // These have no DOM here and are checked by recorded real-browser runs, because the project has no browser test suite:
-// the portrait fetched first at high priority, the sitting dog at low priority, the dog's motion sheets waiting for the
+// the portrait requested at high priority, the sitting dog at low priority, the dog's motion sheets waiting for the
 // page's load event, the dog still greeting a pointer that arrived before its motion sheets, and how the reduced
 // portrait looks at its displayed size. Test them here once the browser suite capability is enabled.
 import {test} from 'node:test';

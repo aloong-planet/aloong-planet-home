@@ -4,8 +4,8 @@
     "sha256": "7d6e12ee5f82e2927910b3b5a677bbee75c98236565298e72530035293bd5866"
   },
   "aloong-cartoon.webp": {
-    "source": "Reduced from aloong-cartoon.png for the homepage: sips -z 780 520 (sips-316), then cwebp -q 82 -alpha_q 100 -m 6 (libwebp 1.6.0).",
-    "sha256": "808e18f69953b014f4f413493da6e907bdd0bae3e40d53cc1e20eb882afe89f0"
+    "source": "Reduced from aloong-cartoon.png for the homepage: sips -z 1170 780 (sips-316), then cwebp -q 82 -alpha_q 100 -m 6 (libwebp 1.6.0).",
+    "sha256": "17a1def5fea148878beba7c1a500336aee3e9d4e7589831caed7b8d7d01bc890"
   },
   "apps/transfer-main-light.jpg": {
     "source": "White-theme Transfer renderer with tools/screenshots/transfer-fixture.js synthetic data",
