@@ -17,3 +17,4 @@ The homepage introduces Aloong, shows recent writing, and showcases personal app
 - With fewer than 4 posts, the list shows them all; older posts stay on the Blog page.
 - On a small laptop screen, four posts that all use two-line titles and summaries can run slightly past the first screen.
 - The visitor number stays hidden when counting is unavailable.
+- The portrait loads first. The dog wags only after the rest of the page has loaded; a greeting made earlier starts once it is ready.

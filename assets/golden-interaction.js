@@ -105,6 +105,10 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInput(
 window.addEventListener('resize',()=>{if(lastPointer)updateProximity(lastPointer.x,lastPointer.y);});
 window.addEventListener('scroll',()=>{if(lastPointer)updateProximity(lastPointer.x,lastPointer.y);},{passive:true});
 reduced.addEventListener('change',()=>{if(ready){stopIdle();respond(wanted,true);}});
-Promise.all([idle.decode(),...goldenConfig.sheets.map(async(sheet,index)=>{const image=new Image();images[index]=image;image.src=base+sheet.file;await image.decode();})])
- .then(()=>{ready=true;stopIdle();respond(wanted,true);})
- .catch(()=>{canvas.dataset.mode='unavailable';say('小狗先静静陪着你，刷新后再试试');});
+// The motion sheets wait for the page's load event, so the portrait and the sitting dog are fetched before them.
+function loadMotion(){
+ Promise.all([idle.decode(),...goldenConfig.sheets.map(async(sheet,index)=>{const image=new Image();images[index]=image;image.src=base+sheet.file;await image.decode();})])
+  .then(()=>{ready=true;stopIdle();respond(wanted,true);})
+  .catch(()=>{canvas.dataset.mode='unavailable';say('小狗先静静陪着你，刷新后再试试');});
+}
+if(document.readyState==='complete')loadMotion();else window.addEventListener('load',loadMotion,{once:true});
