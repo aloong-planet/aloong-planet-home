@@ -414,8 +414,8 @@ const CONTENT_TYPES = {'.html': 'text/html; charset=utf-8', '.css': 'text/css; c
 /**
  * Serves a built site the way the host does: an address the site does not have gets the not-found page with status 404,
  * and every file carries the content type of its extension. Images come from the repository's assets folder, where the
- * build copies them from. With `fallback` set to 'homepage' it answers such addresses as a host without the not-found
- * page does: with the homepage and status 200.
+ * build copies them from. `fallback` changes that answer: 'homepage' answers as a host without the not-found page does,
+ * with the homepage and status 200; 'soft' sends the not-found page with status 200; 'bare' sends status 404 with no page.
  */
 async function startHost(outDir) {
   const host = {missing: new Set(), fallback: 'not-found'};
@@ -428,8 +428,8 @@ async function startHost(outDir) {
     }
     const wanted = host.missing.has(path) ? null : servedFile(path);
     const found = wanted && await readFile(join(wanted.startsWith('assets/') ? repo : outDir, wanted)).then(body => [wanted, body, 200], () => null);
-    const [fallbackFile, fallbackStatus] = host.fallback === 'homepage' ? ['index.html', 200] : ['404.html', 404];
-    const [file, body, status] = found || [fallbackFile, await readFile(join(outDir, fallbackFile)), fallbackStatus];
+    const [fallbackFile, fallbackStatus] = {'not-found': ['404.html', 404], homepage: ['index.html', 200], soft: ['404.html', 200], bare: [null, 404]}[host.fallback];
+    const [file, body, status] = found || (fallbackFile ? [fallbackFile, await readFile(join(outDir, fallbackFile)), fallbackStatus] : ['bare.html', 'Not Found', fallbackStatus]);
     response.writeHead(status, {'content-type': CONTENT_TYPES[extname(file)]});
     response.end(body);
   });
@@ -468,6 +468,9 @@ test('the deployment-check script passes on the whole site and fails when a host
     await failsOn(hosts[1], missing('/assets/not-found/puzzled-dog.webp'), '/assets/not-found/puzzled-dog\\.webp answered 404');
     await failsOn(hosts[1], host => { host.fallback = 'homepage'; }, '/\\S+ is not the not-found page');
     await failsOn(hosts[1], host => { host.fallback = 'homepage'; host.missing.add('/assets/golden-wag/motion-2.webp'); }, '/assets/golden-wag/motion-2\\.webp is not an image');
+    await failsOn(hosts[1], host => { host.fallback = 'soft'; }, '/\\S+ is not the not-found page');
+    await failsOn(hosts[1], host => { host.fallback = 'bare'; }, '/\\S+ is not the not-found page');
+    await failsOn(hosts[1], host => { host.fallback = 'homepage'; host.missing.add('/blog'); }, '/blog is missing');
   } finally {
     for (const host of hosts) host.server.close();
   }

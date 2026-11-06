@@ -3,11 +3,12 @@ import {readFileSync} from 'node:fs';
 import {setTimeout} from 'node:timers/promises';
 import {blogChecks, readManifest} from './blog.mjs';
 import {pageImages, motionSheets} from './image-checks.mjs';
+import {isNotFoundAnswer, notFoundHeading} from './not-found-check.mjs';
 const expected=JSON.parse(readFileSync('dist/deployment.json','utf8')).revision;
 const {origins}=JSON.parse(readFileSync('deployment.config.json','utf8'));
 const posts=await readManifest('content');
 // The not-found page this build deploys, known by its heading.
-const notFoundHeading=readFileSync('dist/404.html','utf8').match(/<h1\b[^>]*>([^<]+)<\/h1>/)[1];
+const heading=notFoundHeading(readFileSync('dist/404.html','utf8'));
 async function request(url, options={}) {
   return fetch(url,{...options,signal:AbortSignal.timeout(5000),cache:'no-store'});
 }
@@ -42,7 +43,7 @@ do {
       const missingPath=`/deployment-check-missing-${expected}`;
       const notFound=await request(origin+missingPath);
       const notFoundPage=await notFound.text();
-      assert.ok(notFound.status===404 && notFoundPage.includes(notFoundHeading),`${origin}${missingPath} is not the not-found page`);
+      assert.ok(isNotFoundAnswer(notFound.status,notFoundPage,heading),`${origin}${missingPath} is not the not-found page`);
       for(const path of pageImages(notFoundPage)) await checkImage(origin,path);
       const bootstrap=await request(origin+'/api/visitor');
       assert.equal(bootstrap.status,200);
