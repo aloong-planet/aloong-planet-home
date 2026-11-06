@@ -18,5 +18,13 @@
   "golden-wag/idle.png": {
     "source": "Existing golden retriever interaction archive",
     "sha256": "ecb300d36765d5c3108456551b6842c2d2a30f7c68f2c710f9e6fb2ddee449c6"
+  },
+  "not-found/puzzled-dog.png": {
+    "source": "Generated for the not-found page by the built-in image generation of Codex CLI 0.166.0-alpha.6, with golden-wag/idle.png attached as the character and style reference and the prompt in not-found-dog-prompt.txt; 1254×1254 with transparency, used without edits. Kept as the source and not deployed.",
+    "sha256": "12831c5dd63d33809fe0bd69b09091c811020f1261d6cad31d168b7cac87cdef"
+  },
+  "not-found/puzzled-dog.webp": {
+    "source": "Reduced from not-found/puzzled-dog.png for the not-found page: cwebp -resize 480 480 -q 82 -alpha_q 100 -m 6 -sharp_yuv (libwebp 1.6.0).",
+    "sha256": "dd2c0f98a6bf006d7b2a0ea7c7c20fd55c0145c24620d2f29450890206ccbd22"
   }
 }

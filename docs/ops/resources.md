@@ -22,13 +22,13 @@ The initial production table was created through the dashboard using migrations/
 
 - public/: shipping HTML, styles, navigation, the shared article look, and visitor client.
 - content/: the blog's post list and post bodies, with any post's own stylesheet and script. See [publishing a post](publishing-posts.md).
-- assets/: one copy of each shipping portrait, dog animation and app screenshot, plus the supplied portrait illustration, which is kept as the source of the reduced portrait and is not deployed.
+- assets/: one copy of each shipping portrait, dog animation, not-found dog and app screenshot, plus the supplied portrait illustration and the generated not-found dog image, each kept as the source of its reduced copy and not deployed.
 - functions/: Pages Functions request handler.
 - migrations/: versioned D1 schema migrations.
 - scripts/: build, verification and release automation.
 - tests/: visitor contracts using SQLite and Fetch boundaries, deployment orchestration, and the blog build and its scripts run in temporary folders.
 - docs/prototypes/: retained design references, including illustrative counts. Never deploy this directory.
-- docs/assets/: source descriptions and portrait prompt.
+- docs/assets/: source descriptions, the portrait prompt and the not-found dog prompt.
 - tools/screenshots/: isolated synthetic Transfer fixture, retained for reproducibility; renderer bundles come from the Transfer app and are not duplicated here.
 - dist/, .wrangler/, artifacts/, docs/.workings/: generated output, local runtime, archives and work records, ignored by Git.
 

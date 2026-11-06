@@ -40,7 +40,7 @@ No paid subscription is enabled. Free-plan exhaustion causes the counter to disa
 |---|---|
 | public/ | Production pages and browser code |
 | content/ | Blog post list and post bodies |
-| assets/ | Shipping portrait, dog animation and app screenshots, plus the supplied illustration the portrait is reduced from |
+| assets/ | Shipping portrait, dog animation, not-found dog and app screenshots, plus the supplied illustration and the generated dog image they are reduced from |
 | functions/, migrations/ | Visitor API and D1 schema |
 | scripts/, tests/ | Build, validation, deployment and regression tests |
 | docs/ | Accepted prototypes, specs, feature descriptions, resource inventory and operations |
