@@ -1,5 +1,5 @@
-/** The address of every image the given homepage markup shows, in document order. */
-export const homepageImages = html => [...html.matchAll(/<img\b[^>]*?\ssrc="([^"]+)"/g)].map(match => match[1]);
+/** The address of every image the given page markup shows, in document order. */
+export const pageImages = html => [...html.matchAll(/<img\b[^>]*?\ssrc="([^"]+)"/g)].map(match => match[1]);
 
 /** The sprite settings the given dog script declares, and the folder it loads its sheets from. */
 export function dogSprites(script) {

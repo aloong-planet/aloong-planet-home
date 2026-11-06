@@ -65,6 +65,18 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 .ap-post h2 { font-size:24px; font-weight:500; letter-spacing:-.6px; margin:0 0 12px; }
 .ap-post p { font-size:13px; color:var(--muted); margin:0; line-height:1.8; }
 .ap-blog-back { margin-top:50px; }
+/* The not-found page fills the window below the header; the larger bottom padding lifts the group slightly above the middle. */
+.ap-notfound { min-height:calc(100svh - 76px); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px 32px 76px; }
+.ap-notfound-dog { display:block; width:160px; height:160px; object-fit:contain; }
+.ap-notfound-code { margin:4px 0 0; font-size:clamp(64px,9vw,96px); font-weight:500; letter-spacing:-.05em; line-height:1; font-variant-numeric:tabular-nums; }
+.ap-notfound h1 { margin:14px 0 12px; font-size:24px; font-weight:500; letter-spacing:-.6px; }
+.ap-notfound-text { margin:0; font-size:14px; line-height:1.9; color:var(--muted); }
+.ap-notfound-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-top:32px; }
+.ap-button { display:inline-flex; align-items:center; justify-content:center; height:36px; padding:0 16px; border:1px solid var(--ink); border-radius:6px; font-size:13px; transition:background-color .15s, opacity .15s; }
+.ap-button-primary { background:var(--ink); color:var(--paper); }
+.ap-button-primary:hover { opacity:.85; }
+.ap-button-secondary { background:transparent; color:var(--ink); }
+.ap-button-secondary:hover { background:var(--tag); }
 @media(min-width:701px) and (max-width:960px) {
  .ap-scene { transform:translate(-50%,-50%) scale(.9); }
  .ap-home-blog { width:calc(70% - 128px); }
@@ -85,8 +97,9 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
  .ap-footer { padding:60px 20px 25px; } .ap-bottom { margin-top:60px; }
  .ap-blog { padding:70px 20px; } .ap-blog h1 { letter-spacing:-4px; }
  .ap-post-link { grid-template-columns:1fr; gap:12px; } .ap-post h2 { font-size:22px; }
+ .ap-notfound { min-height:calc(100svh - 96px); padding:32px 20px 96px; }
 }
 @media(max-width:380px) {
  .ap-scene { transform:translate(-50%,-50%) scale(.64); }
 }
-@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .ap-art,.ap-nav a { transition:none; } }
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .ap-art,.ap-nav a,.ap-button { transition:none; } }

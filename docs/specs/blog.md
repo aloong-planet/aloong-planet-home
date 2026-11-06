@@ -121,8 +121,8 @@ Build and publishing:
 - Publishing no posts at all fails the build rather than showing an unprototyped empty page (blog::REQ-004/AC-07).
 - A stylesheet or script file with no manifest entry is ignored and is not deployed.
 - A title or summary containing HTML characters is shown as text, never parsed as markup.
-- A removed post's address shows the homepage with status 200, like any unknown address on this site, because the site has no not-found page. No redirect is kept.
-- Deployment checks request the homepage, the Blog page, every post page, and the shared stylesheet and script on all public hosts, and each must serve its own expected text: a status code cannot show a missing page, because the host answers unknown addresses with the homepage.
+- A removed post's address shows the [not-found page](not-found.md) with status 404, like any address the site does not have. No redirect is kept.
+- Deployment checks request the homepage, the Blog page, every post page, and the shared stylesheet and script on all public hosts, and each must answer with status 200 and its own expected text, so neither the not-found page nor another page passes for it.
 
 Content a post brings in:
 - Other-site links, including scheme-relative ones, open a new tab with no referrer. Site links and in-page links stay in the tab. A link that already names a target keeps it, and a link that names its own `rel` keeps that instead of gaining no-referrer.
@@ -146,7 +146,7 @@ Existing features:
 
 ## Testing Decisions
 
-A good test here builds a real site from fixture posts in a temporary folder and asserts on the written pages and on the build's refusals, without looking inside the build step. The seams are the blog build module's exported build function, the build and deployment-check scripts run as processes in a temporary folder, and the visitor client's exported display function with a stubbed network. Deployment checks are tested against the real site and local servers that answer unknown addresses with the homepage, as the host does; the `SMOKE_DEADLINE_MS` environment variable shortens their retry window so a failing test ends in seconds, and nothing in deployment sets it. Existing precedent is `tests/deploy.test.mjs` and `tests/visitor-client.test.mjs`.
+A good test here builds a real site from fixture posts in a temporary folder and asserts on the written pages and on the build's refusals, without looking inside the build step. The seams are the blog build module's exported build function, the build and deployment-check scripts run as processes in a temporary folder, and the visitor client's exported display function with a stubbed network. Deployment checks are tested against the real site and local servers that answer an address the site does not have with the not-found page and status 404, as the host does; the `SMOKE_DEADLINE_MS` environment variable shortens their retry window so a failing test ends in seconds, and nothing in deployment sets it. Existing precedent is `tests/deploy.test.mjs` and `tests/visitor-client.test.mjs`.
 
 Layout, type sizes, scrolling, and interactive figures are checked in a real browser against the built site at the window sizes this spec names; per the project capabilities the browser suite is not enabled, so these are recorded runs, not automated tests.
 

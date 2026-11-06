@@ -233,7 +233,7 @@ export const readManifest = async contentDir => JSON.parse(await readFile(join(c
 
 /**
  * What each public blog path must serve; deployment checks request these.
- * Each has its own expected text because the host answers an unknown address with the homepage and status 200.
+ * Each has its own expected text, so neither the not-found page nor another page passes for it.
  */
 export const blogChecks = posts => [
   {path: '/', contains: 'class="ap-home-blog"'},

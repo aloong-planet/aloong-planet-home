@@ -7,17 +7,17 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {dogSprites, homepageImages, motionSheets} from '../scripts/image-checks.mjs';
+import {dogSprites, pageImages, motionSheets} from '../scripts/image-checks.mjs';
 
 test('the deployment check finds every image the real homepage shows, in page order', async () => {
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
-  assert.deepEqual(homepageImages(html), [
+  assert.deepEqual(pageImages(html), [
     '/assets/aloong-cartoon.webp',
     '/assets/golden-wag/idle.png',
     '/assets/apps/transfer-main-light.jpg',
     '/assets/apps/agentshed-main-90days.png',
   ]);
-  assert.equal(homepageImages(html).length, html.match(/<img\b/g).length, 'an image the check cannot read would go unchecked');
+  assert.equal(pageImages(html).length, html.match(/<img\b/g).length, 'an image the check cannot read would go unchecked');
 });
 
 test('the deployment check finds every motion sheet the real dog script loads, at the address the homepage requests', async () => {

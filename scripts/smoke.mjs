@@ -2,12 +2,21 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {setTimeout} from 'node:timers/promises';
 import {blogChecks, readManifest} from './blog.mjs';
-import {homepageImages, motionSheets} from './image-checks.mjs';
+import {pageImages, motionSheets} from './image-checks.mjs';
 const expected=JSON.parse(readFileSync('dist/deployment.json','utf8')).revision;
 const {origins}=JSON.parse(readFileSync('deployment.config.json','utf8'));
 const posts=await readManifest('content');
+// The not-found page this build deploys, known by its heading.
+const notFoundHeading=readFileSync('dist/404.html','utf8').match(/<h1\b[^>]*>([^<]+)<\/h1>/)[1];
 async function request(url, options={}) {
   return fetch(url,{...options,signal:AbortSignal.timeout(5000),cache:'no-store'});
+}
+/** Requires an image file, not a page, at the given address. */
+async function checkImage(origin,path) {
+  const response=await request(origin+path);
+  assert.equal(response.status,200,`${origin}${path} answered ${response.status}`);
+  assert.match(response.headers.get('content-type') || '',/^image\//,`${origin}${path} is not an image`);
+  await response.body?.cancel();
 }
 const deadline=Date.now()+Number(process.env.SMOKE_DEADLINE_MS ?? 120000);
 let lastError;
@@ -19,22 +28,22 @@ do {
       assert.equal((await manifest.json()).revision,expected);
       for(const {path,contains} of blogChecks(posts)) {
         const response=await request(origin+path);
-        assert.equal(response.status,200,origin+path);
+        assert.equal(response.status,200,`${origin}${path} answered ${response.status}`);
         assert.ok((await response.text()).includes(contains),`${origin}${path} is missing ${contains}`);
       }
       const blogFile=await request(origin+'/blog.html');
-      assert.equal(blogFile.status,200,origin+'/blog.html');
+      assert.equal(blogFile.status,200,`${origin}/blog.html answered ${blogFile.status}`);
       await blogFile.body?.cancel();
-      // The host answers a missing file with the homepage and status 200, so only the content type tells a file apart.
+      // A missing file gets the not-found page with status 404. Content types are checked as well, because a host
+      // without the not-found page answers a missing file with the homepage and status 200.
       const dogScript=await request(origin+'/assets/golden-interaction.js');
       assert.match(dogScript.headers.get('content-type') || '',/javascript/,`${origin}/assets/golden-interaction.js is not a script`);
-      const images=[...homepageImages(await (await request(origin+'/')).text()),...motionSheets(await dogScript.text())];
-      for(const path of images) {
-        const response=await request(origin+path);
-        assert.equal(response.status,200,origin+path);
-        assert.match(response.headers.get('content-type') || '',/^image\//,`${origin}${path} is not an image`);
-        await response.body?.cancel();
-      }
+      for(const path of [...pageImages(await (await request(origin+'/')).text()),...motionSheets(await dogScript.text())]) await checkImage(origin,path);
+      const missingPath=`/deployment-check-missing-${expected}`;
+      const notFound=await request(origin+missingPath);
+      const notFoundPage=await notFound.text();
+      assert.ok(notFound.status===404 && notFoundPage.includes(notFoundHeading),`${origin}${missingPath} is not the not-found page`);
+      for(const path of pageImages(notFoundPage)) await checkImage(origin,path);
       const bootstrap=await request(origin+'/api/visitor');
       assert.equal(bootstrap.status,200);
       assert.deepEqual(await bootstrap.json(),{ready:true});
@@ -48,7 +57,8 @@ do {
     console.log(`Verified revision ${expected} on all three public hosts; no visitor registrations created.`);
     process.exit(0);
   } catch(error) {lastError=error;}
+  if(Date.now()>=deadline) break;
   await setTimeout(3000);
-} while(Date.now()<deadline);
+} while(true);
 console.error('Public deployment verification failed:',lastError);
 process.exitCode=1;

@@ -5,6 +5,8 @@ for (const mount of document.querySelectorAll('[data-site-navigation]')) {
     <nav class="ap-nav" aria-label="主导航"><a href="/#apps">Apps</a><a href="/blog">Blog</a><a href="/#about">About</a></nav>
     <a class="ap-social" href="https://github.com/aloong-planet" target="_blank" rel="noreferrer">GitHub</a>
   </header>`;
+  // The not-found page belongs to no section, even when it answers an address under /blog/.
+  if (mount.hasAttribute('data-no-section')) continue;
   if (location.pathname === '/blog' || location.pathname === '/blog.html') {
     mount.querySelector('a[href="/blog"]')?.setAttribute('aria-current','page');
   } else if (location.pathname.startsWith('/blog/')) {
