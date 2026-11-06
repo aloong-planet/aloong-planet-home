@@ -285,8 +285,8 @@
       "rows": 8,
       "width": 2560,
       "height": 2560,
-      "bytes": 2902818,
-      "sha256": "d8f009cea7fa0c6c11cfc2039b18d42fcbdcdcfbef30732b047ab34f625c7c2e"
+      "bytes": 902926,
+      "sha256": "cc21f5849841f2986065b85ba8011114ae64ca42e9cc9c65476cdbd1e2ed3ffd"
     },
     {
       "file": "motion-1.webp",
@@ -296,8 +296,8 @@
       "rows": 8,
       "width": 2560,
       "height": 2560,
-      "bytes": 2575906,
-      "sha256": "7ae61b12aeb4349a47bf6a7ddd6aceaf02e351f2e614fb5005dc30d840e4bc12"
+      "bytes": 877358,
+      "sha256": "3936f871f8d77856c5919677293acf1e215e69710d258cdd61f46513529ba63c"
     },
     {
       "file": "motion-2.webp",
@@ -307,8 +307,8 @@
       "rows": 1,
       "width": 2560,
       "height": 320,
-      "bytes": 196852,
-      "sha256": "eee2a907edb05f85f065589bdea9e9d51691a7ac527953f35d7c5a296e05cefc"
+      "bytes": 70996,
+      "sha256": "37f789d200bdd58eae8250da33ea19e75029ab3285e224b4660c71a26e7a8516"
     }
   ],
   "idle": "idle.png",

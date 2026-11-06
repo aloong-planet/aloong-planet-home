@@ -13,7 +13,7 @@ import {tmpdir} from 'node:os';
 import {extname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {buildBlog, blogChecks, readManifest} from '../scripts/blog.mjs';
-import {homepageImages} from '../scripts/image-checks.mjs';
+import {homepageImages, motionSheets} from '../scripts/image-checks.mjs';
 
 const BODY = '<section id="s2"><h2><span class="sec">§2</span>双层架构：把连续性和吞吐量拆开</h2><p>正文</p></section>';
 const post = (slug, date = '2026-11-05', extra = {}) => ({slug, title: `标题 ${slug}`, date, summary: `摘要 ${slug}`, ...extra});
@@ -396,7 +396,7 @@ test('the build script writes the blog and ships every homepage image, and a ref
   const home = await readFile(join(cwd, 'dist/index.html'), 'utf8');
   assert.ok(home.includes(`href="/blog/${slug}"`));
   assert.doesNotMatch(home, /blog:home/);
-  const images = homepageImages(home);
+  const images = [...homepageImages(home), ...motionSheets(await readFile(join(cwd, 'dist/assets/golden-interaction.js'), 'utf8'))];
   assert.ok(images.length > 0);
   for (const image of images) assert.ok(existsSync(join(cwd, 'dist', image)), `the build does not ship ${image}`);
   await appendFile(join(cwd, 'content/posts', `${slug}.css`), '@font-face{font-family:X}');
@@ -431,7 +431,7 @@ async function startHost(outDir) {
   return {server, missing, origin: `http://127.0.0.1:${server.address().port}`};
 }
 
-test('the deployment-check script passes on the whole site and fails when any host answers a blog page or an image with the homepage', async () => {
+test('the deployment-check script passes on the whole site and fails when any host answers a blog page, an image or the dog script with the homepage', async () => {
   const outDir = await realSite();
   const hosts = [await startHost(outDir), await startHost(outDir)];
   try {
@@ -457,6 +457,16 @@ test('the deployment-check script passes on the whole site and fails when any ho
     const imageMissing = await runScript('smoke.mjs', cwd, {SMOKE_DEADLINE_MS: '1'});
     assert.equal(imageMissing.code, 1, imageMissing.stdout);
     assert.ok(imageMissing.stderr.includes(`${hosts[1].origin}/assets/apps/agentshed-main-90days.png is not an image`), imageMissing.stderr);
+    hosts[1].missing.clear();
+    hosts[1].missing.add('/assets/golden-wag/motion-2.webp');
+    const sheetMissing = await runScript('smoke.mjs', cwd, {SMOKE_DEADLINE_MS: '1'});
+    assert.equal(sheetMissing.code, 1, sheetMissing.stdout);
+    assert.ok(sheetMissing.stderr.includes(`${hosts[1].origin}/assets/golden-wag/motion-2.webp is not an image`), sheetMissing.stderr);
+    hosts[1].missing.clear();
+    hosts[1].missing.add('/assets/golden-interaction.js');
+    const scriptMissing = await runScript('smoke.mjs', cwd, {SMOKE_DEADLINE_MS: '1'});
+    assert.equal(scriptMissing.code, 1, scriptMissing.stdout);
+    assert.ok(scriptMissing.stderr.includes(`${hosts[1].origin}/assets/golden-interaction.js is not a script`), scriptMissing.stderr);
   } finally {
     for (const host of hosts) host.server.close();
   }

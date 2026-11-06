@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {setTimeout} from 'node:timers/promises';
 import {blogChecks, readManifest} from './blog.mjs';
-import {homepageImages} from './image-checks.mjs';
+import {homepageImages, motionSheets} from './image-checks.mjs';
 const expected=JSON.parse(readFileSync('dist/deployment.json','utf8')).revision;
 const {origins}=JSON.parse(readFileSync('deployment.config.json','utf8'));
 const posts=await readManifest('content');
@@ -25,8 +25,11 @@ do {
       const blogFile=await request(origin+'/blog.html');
       assert.equal(blogFile.status,200,origin+'/blog.html');
       await blogFile.body?.cancel();
-      // The host answers a missing file with the homepage and status 200, so only the content type tells an image apart.
-      for(const path of homepageImages(await (await request(origin+'/')).text())) {
+      // The host answers a missing file with the homepage and status 200, so only the content type tells a file apart.
+      const dogScript=await request(origin+'/assets/golden-interaction.js');
+      assert.match(dogScript.headers.get('content-type') || '',/javascript/,`${origin}/assets/golden-interaction.js is not a script`);
+      const images=[...homepageImages(await (await request(origin+'/')).text()),...motionSheets(await dogScript.text())];
+      for(const path of images) {
         const response=await request(origin+path);
         assert.equal(response.status,200,origin+path);
         assert.match(response.headers.get('content-type') || '',/^image\//,`${origin}${path} is not an image`);
