@@ -7,8 +7,8 @@
 // layout; a short window scrolling without covering the navigation; browser back returning to the previous page;
 // status 404 for addresses the site does not have; an existing address written with a trailing slash or `.html`
 // still redirecting to its plain address; the page's own address /404 answering 200 and /404.html redirecting there;
-// an existing page with a query string or hash unchanged; and no visitor request. Test them here once the browser
-// suite capability is enabled.
+// an existing page with a query string unchanged (a hash never reaches the host, so it needs no run); and no visitor
+// request. Test them here once the browser suite capability is enabled.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
