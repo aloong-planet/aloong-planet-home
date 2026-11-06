@@ -6,3 +6,4 @@ Each spec is the current requirement picture for one feature, for people changin
 |---|---|
 | [Blog](blog.md) | Posts, the Blog page, and recent posts on the homepage. |
 | [Anonymous visitor ordinal](visitor-counter.md) | A stable anonymous ordinal that survives refreshes. |
+| [Not-found page](not-found.md) | What an address the site does not have shows, and its status. |

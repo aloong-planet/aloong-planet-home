@@ -17,4 +17,4 @@ Readers who want more than the app showcase can read Aloong's long-form writing.
 - Pages come in one light appearance and one language.
 - There are no comments, tags, search, or subscriptions.
 - Text and figures stay readable without scripting, but the top navigation, the contents marker, and interactive figures need it.
-- An address that does not match a post shows the homepage.
+- An address that does not match a post shows the [not-found page](not-found.md).

@@ -13,7 +13,7 @@ import {tmpdir} from 'node:os';
 import {extname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {buildBlog, blogChecks, readManifest} from '../scripts/blog.mjs';
-import {homepageImages, motionSheets} from '../scripts/image-checks.mjs';
+import {pageImages, motionSheets} from '../scripts/image-checks.mjs';
 
 const BODY = '<section id="s2"><h2><span class="sec">§2</span>双层架构：把连续性和吞吐量拆开</h2><p>正文</p></section>';
 const post = (slug, date = '2026-11-05', extra = {}) => ({slug, title: `标题 ${slug}`, date, summary: `摘要 ${slug}`, ...extra});
@@ -369,16 +369,18 @@ test('a template without its slot stops the build instead of dropping the list',
   await assert.rejects((await site([post('x')], {list: '<main></main>'})).build(), /blog\.html/);
 });
 
-test('deployment checks tell every blog page of the real site from the homepage the host serves for unknown addresses', async () => {
+test('deployment checks tell every blog page of the real site from the homepage and from the not-found page', async () => {
   const outDir = await realSite();
   const posts = await readManifest(join(repo, 'content'));
   assert.ok(posts.length > 0);
   const checks = blogChecks(posts);
   assert.deepEqual([...new Set(checks.map(check => check.path))], ['/', '/article.css', '/article.js', '/blog', ...posts.map(p => `/blog/${p.slug}`)]);
   const homepage = await readFile(join(outDir, 'index.html'), 'utf8');
+  const notFound = await readFile(join(outDir, '404.html'), 'utf8');
   for (const {path, contains} of checks) {
     assert.ok((await readFile(join(outDir, servedFile(path)), 'utf8')).includes(contains), `${path} serves ${contains}`);
     if (path !== '/') assert.equal(homepage.includes(contains), false, `the homepage satisfies ${path}`);
+    assert.equal(notFound.includes(contains), false, `the not-found page satisfies ${path}`);
   }
   const list = await readFile(join(outDir, 'blog.html'), 'utf8');
   assert.doesNotMatch(list, /排版示例/);
@@ -386,7 +388,7 @@ test('deployment checks tell every blog page of the real site from the homepage 
   assert.deepEqual([...homepage.matchAll(/<(h[1-6])\b/g)].map(m => m[1]).slice(0, 2), ['h1', 'h2']);
 });
 
-test('the build script writes the blog and ships every homepage image, and a refused post stops it', async () => {
+test('the build script writes the blog and ships every image the homepage and the not-found page show, and a refused post stops it', async () => {
   const cwd = await mkdtemp(join(tmpdir(), 'blog-build-'));
   for (const folder of ['public', 'assets', 'content']) await cp(join(repo, folder), join(cwd, folder), {recursive: true});
   const [{slug}] = await readManifest(join(repo, 'content'));
@@ -396,7 +398,8 @@ test('the build script writes the blog and ships every homepage image, and a ref
   const home = await readFile(join(cwd, 'dist/index.html'), 'utf8');
   assert.ok(home.includes(`href="/blog/${slug}"`));
   assert.doesNotMatch(home, /blog:home/);
-  const images = [...homepageImages(home), ...motionSheets(await readFile(join(cwd, 'dist/assets/golden-interaction.js'), 'utf8'))];
+  const notFound = await readFile(join(cwd, 'dist/404.html'), 'utf8');
+  const images = [...pageImages(home), ...motionSheets(await readFile(join(cwd, 'dist/assets/golden-interaction.js'), 'utf8')), ...pageImages(notFound)];
   assert.ok(images.length > 0);
   for (const image of images) assert.ok(existsSync(join(cwd, 'dist', image)), `the build does not ship ${image}`);
   await appendFile(join(cwd, 'content/posts', `${slug}.css`), '@font-face{font-family:X}');
@@ -409,11 +412,13 @@ test('the build script writes the blog and ships every homepage image, and a ref
 const CONTENT_TYPES = {'.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript',
   '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp'};
 /**
- * Serves a built site the way the host does: an unknown address gets the homepage with status 200, and every file
- * carries the content type of its extension. Images come from the repository's assets folder, where the build copies them from.
+ * Serves a built site the way the host does: an address the site does not have gets the not-found page with status 404,
+ * and every file carries the content type of its extension. Images come from the repository's assets folder, where the
+ * build copies them from. `fallback` changes that answer: 'homepage' answers as a host without the not-found page does,
+ * with the homepage and status 200; 'soft' sends the not-found page with status 200; 'bare' sends status 404 with no page.
  */
 async function startHost(outDir) {
-  const missing = new Set();
+  const host = {missing: new Set(), fallback: 'not-found'};
   const server = createServer(async (request, response) => {
     const path = new URL(request.url, 'http://host').pathname;
     if (path === '/deployment.json') return response.end('{"revision":"abc"}');
@@ -421,52 +426,51 @@ async function startHost(outDir) {
       response.writeHead(request.method === 'POST' ? 428 : 200, {'cache-control': 'no-store', 'set-cookie': 'visitor=1'});
       return response.end('{"ready":true}');
     }
-    const wanted = missing.has(path) ? 'index.html' : servedFile(path);
-    const [file, body] = await readFile(join(wanted.startsWith('assets/') ? repo : outDir, wanted)).then(body => [wanted, body])
-      .catch(async () => ['index.html', await readFile(join(outDir, 'index.html'))]);
-    response.writeHead(200, {'content-type': CONTENT_TYPES[extname(file)]});
+    const wanted = host.missing.has(path) ? null : servedFile(path);
+    const found = wanted && await readFile(join(wanted.startsWith('assets/') ? repo : outDir, wanted)).then(body => [wanted, body, 200], () => null);
+    const [fallbackFile, fallbackStatus] = {'not-found': ['404.html', 404], homepage: ['index.html', 200], soft: ['404.html', 200], bare: [null, 404]}[host.fallback];
+    const [file, body, status] = found || (fallbackFile ? [fallbackFile, await readFile(join(outDir, fallbackFile)), fallbackStatus] : ['bare.html', 'Not Found', fallbackStatus]);
+    response.writeHead(status, {'content-type': CONTENT_TYPES[extname(file)]});
     response.end(body);
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  return {server, missing, origin: `http://127.0.0.1:${server.address().port}`};
+  return Object.assign(host, {server, origin: `http://127.0.0.1:${server.address().port}`});
 }
 
-test('the deployment-check script passes on the whole site and fails when any host answers a blog page, an image or the dog script with the homepage', async () => {
+test('the deployment-check script passes on the whole site and fails when a host answers a blog page, an image, the dog script or a missing address wrongly', async () => {
   const outDir = await realSite();
   const hosts = [await startHost(outDir), await startHost(outDir)];
   try {
     const cwd = await mkdtemp(join(tmpdir(), 'blog-smoke-'));
     await mkdir(join(cwd, 'dist'));
     await writeFile(join(cwd, 'dist/deployment.json'), '{"revision":"abc"}');
+    await cp(join(outDir, '404.html'), join(cwd, 'dist/404.html'));
     await writeFile(join(cwd, 'deployment.config.json'), JSON.stringify({origins: hosts.map(host => host.origin)}));
     await cp(join(repo, 'content'), join(cwd, 'content'), {recursive: true});
     const whole = await runScript('smoke.mjs', cwd);
     assert.equal(whole.code, 0, whole.stderr);
     assert.match(whole.stdout, /Verified revision abc/);
-    hosts[1].missing.add('/blog');
-    const failed = await runScript('smoke.mjs', cwd, {SMOKE_DEADLINE_MS: '1'});
-    assert.equal(failed.code, 1);
-    assert.ok(failed.stderr.includes(`${hosts[1].origin}/blog is missing`), failed.stderr);
-    hosts[1].missing.clear();
-    hosts[0].missing.add('/blog');
-    const failedFirst = await runScript('smoke.mjs', cwd, {SMOKE_DEADLINE_MS: '1'});
-    assert.equal(failedFirst.code, 1);
-    assert.ok(failedFirst.stderr.includes(`${hosts[0].origin}/blog is missing`), failedFirst.stderr);
-    hosts[0].missing.clear();
-    hosts[1].missing.add('/assets/apps/agentshed-main-90days.png');
-    const imageMissing = await runScript('smoke.mjs', cwd, {SMOKE_DEADLINE_MS: '1'});
-    assert.equal(imageMissing.code, 1, imageMissing.stdout);
-    assert.ok(imageMissing.stderr.includes(`${hosts[1].origin}/assets/apps/agentshed-main-90days.png is not an image`), imageMissing.stderr);
-    hosts[1].missing.clear();
-    hosts[1].missing.add('/assets/golden-wag/motion-2.webp');
-    const sheetMissing = await runScript('smoke.mjs', cwd, {SMOKE_DEADLINE_MS: '1'});
-    assert.equal(sheetMissing.code, 1, sheetMissing.stdout);
-    assert.ok(sheetMissing.stderr.includes(`${hosts[1].origin}/assets/golden-wag/motion-2.webp is not an image`), sheetMissing.stderr);
-    hosts[1].missing.clear();
-    hosts[1].missing.add('/assets/golden-interaction.js');
-    const scriptMissing = await runScript('smoke.mjs', cwd, {SMOKE_DEADLINE_MS: '1'});
-    assert.equal(scriptMissing.code, 1, scriptMissing.stdout);
-    assert.ok(scriptMissing.stderr.includes(`${hosts[1].origin}/assets/golden-interaction.js is not a script`), scriptMissing.stderr);
+    /** Changes one host, expects the check to fail with a message naming that host, then restores the host. */
+    const failsOn = async (host, change, message) => {
+      change(host);
+      const run = await runScript('smoke.mjs', cwd, {SMOKE_DEADLINE_MS: '1'});
+      host.missing.clear();
+      host.fallback = 'not-found';
+      assert.equal(run.code, 1, run.stdout);
+      assert.match(run.stderr, new RegExp(host.origin.replaceAll('.', '\\.') + message), run.stderr);
+    };
+    const missing = path => host => host.missing.add(path);
+    await failsOn(hosts[1], missing('/blog'), '/blog answered 404');
+    await failsOn(hosts[0], missing('/blog'), '/blog answered 404');
+    await failsOn(hosts[1], missing('/assets/apps/agentshed-main-90days.png'), '/assets/apps/agentshed-main-90days\\.png answered 404');
+    await failsOn(hosts[1], missing('/assets/golden-wag/motion-2.webp'), '/assets/golden-wag/motion-2\\.webp answered 404');
+    await failsOn(hosts[1], missing('/assets/golden-interaction.js'), '/assets/golden-interaction\\.js is not a script');
+    await failsOn(hosts[1], missing('/assets/not-found/puzzled-dog.webp'), '/assets/not-found/puzzled-dog\\.webp answered 404');
+    await failsOn(hosts[1], host => { host.fallback = 'homepage'; }, '/\\S+ is not the not-found page');
+    await failsOn(hosts[1], host => { host.fallback = 'homepage'; host.missing.add('/assets/golden-wag/motion-2.webp'); }, '/assets/golden-wag/motion-2\\.webp is not an image');
+    await failsOn(hosts[1], host => { host.fallback = 'soft'; }, '/\\S+ is not the not-found page');
+    await failsOn(hosts[1], host => { host.fallback = 'bare'; }, '/\\S+ is not the not-found page');
+    await failsOn(hosts[1], host => { host.fallback = 'homepage'; host.missing.add('/blog'); }, '/blog is missing');
   } finally {
     for (const host of hosts) host.server.close();
   }
