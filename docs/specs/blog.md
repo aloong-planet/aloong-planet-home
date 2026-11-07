@@ -142,10 +142,10 @@ Post page:
 
 Build and publishing:
 - Publishing no posts at all fails the build rather than showing an unprototyped empty page (blog::REQ-004/AC-07).
-- A stylesheet or script file with no manifest entry is ignored and is not deployed.
+- A stylesheet, script, or cover file with no manifest entry is ignored and is not deployed.
 - A title or summary containing HTML characters is shown as text, never parsed as markup.
 - A removed post's address shows the [not-found page](not-found.md) with status 404, like any address the site does not have. No redirect is kept.
-- Deployment checks request the homepage, the Blog page, every post page, and the shared stylesheet and script on all public hosts, and each must answer with status 200 and its own expected text, so neither the not-found page nor another page passes for it.
+- Deployment checks request the homepage, the Blog page, every post page, and the shared stylesheet and script on all public hosts, and each must answer with status 200 and its own expected text, so neither the not-found page nor another page passes for it. Every cover the Blog page shows must answer with status 200 and an image content type.
 
 Content a post brings in:
 - Other-site links, including scheme-relative ones, open a new tab with no referrer. Site links and in-page links stay in the tab. A link that already names a target keeps it, and a link that names its own `rel` keeps that instead of gaining no-referrer.
@@ -155,7 +155,8 @@ Content a post brings in:
 
 Existing features:
 - The homepage list stays a text list with no covers (blog::US-001/AC-01).
-- Homepage portrait, dog interaction, visitor line, Apps, footer, and the visitor API behave as before, apart from the narrow-screen spacing that makes room for the list and the [visitor line wording](visitor-counter.md).
+- Homepage portrait, dog interaction, visitor line, Apps cards, and the visitor API behave as before, apart from the narrow-screen spacing that makes room for the list and the [visitor line wording](visitor-counter.md).
+- The homepage footer has no Blog link: the list's "全部文章" and the top navigation lead to the Blog page.
 - The homepage's Apps and About links keep their smooth scroll; only post pages drop it.
 
 ## Implementation Decisions
@@ -164,7 +165,7 @@ Existing features:
 - Post pages load the site stylesheet, then a shared article stylesheet and a shared article script that only post pages use, then the post's own files if it has them. Site-wide smooth scrolling is overridden in the shared article stylesheet, because the browser gives no control over its duration.
 - A post's own styles are written under a `post-<slug>` class placed on the post's content, leaving the title block and contents outside its reach. The validation reads the shared tokens from the site and article stylesheets, so a token added there is protected automatically. It reads stylesheet structure with strings emptied, and allows named at-rules and font values rather than refusing named ones, because refusing named forms kept leaving others open.
 - The post sections appear in the contents through `section` or `footer` elements with an `id`. An optional `data-toc` attribute supplies a shorter label; it is the only way a `footer` joins the contents.
-- Each post's cover is an image file kept with the post's other files, reduced to web size before it is added. The build checks that it exists and copies it, but converts nothing, so no image dependency is added (blog::CON-001). The Blog page writes the lead and the cards into the built page like the other lists. Each cover frame keeps its 2.35:1 shape before its image loads, so nothing shifts as covers arrive, and covers below the lead load lazily.
+- Each post's cover is a WebP file named after the post and kept with the post's other files, reduced to web size before it is added; a cover under another name or format counts as missing. The build checks that it exists and copies it, but converts nothing, so no image dependency is added (blog::CON-001). The Blog page writes the lead and the cards into the built page like the other lists. Each cover frame keeps its 2.35:1 shape before its image loads, so nothing shifts as covers arrive, and covers below the lead load lazily.
 - The homepage list's width runs from the window edge to the dog, which sits at a fixed offset from the portrait group's center. Auto margins center the list so that it stops at the top when too tall.
 - Contents are generated once at build time and the current-section mark is a small script; the mark is `aria-current`.
 - Status marks in a post are drawn in its stylesheet. Typed symbols are not used as icons.

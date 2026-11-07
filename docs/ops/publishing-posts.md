@@ -1,6 +1,6 @@
 # Publishing a post
 
-A post is an entry in `content/posts.json` plus an HTML body in `content/posts/`. The build does the rest: the post page, its table of contents, the Blog row, and the homepage entry. Merging to main deploys it. Posts stay HTML only, so figures and interaction need no extra tooling.
+A post is an entry in `content/posts.json` plus an HTML body and a cover in `content/posts/`. The build does the rest: the post page, its table of contents, the Blog card, and the homepage entry. Merging to main deploys it. Posts stay HTML only, so figures and interaction need no extra tooling.
 
 ## Steps
 
@@ -24,7 +24,9 @@ A post is an entry in `content/posts.json` plus an HTML body in `content/posts/`
    - Each `<section id="…"><h2>…</h2>…</section>` becomes a contents entry. The label is the heading up to its first `：`; set `data-toc="短标题"` on the section to replace it.
    - A `footer` joins the contents only with both an `id` and `data-toc`.
 
-3. Run `pnpm build`, then `pnpm dev`, and read the post at http://127.0.0.1:8793/blog/<slug>.
+3. Add the cover as `content/posts/<slug>.webp`. Make it 2.35:1, the shape of a WeChat cover, and reduce it to about 1200×511 first: the build copies it unchanged. A post republished from WeChat uses that article's cover. A cover of another shape is cropped from the center to fill its frame. The build refuses a post without a cover.
+
+4. Run `pnpm build`, then `pnpm dev`, and read the post at http://127.0.0.1:8793/blog/<slug> and its card at http://127.0.0.1:8793/blog.
 
 ## What a post gets without any styles of its own
 

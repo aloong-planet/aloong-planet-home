@@ -21,7 +21,7 @@ The initial production table was created through the dashboard using migrations/
 ## Source layout
 
 - public/: shipping HTML, styles, navigation, the shared article look, and visitor client.
-- content/: the blog's post list and post bodies, with any post's own stylesheet and script. See [publishing a post](publishing-posts.md).
+- content/: the blog's post list, post bodies and covers, with any post's own stylesheet and script. See [publishing a post](publishing-posts.md).
 - assets/: one copy of each shipping portrait, dog animation, not-found dog and app screenshot, plus the supplied portrait illustration and the generated not-found dog image, each kept as the source of its reduced copy and not deployed.
 - functions/: Pages Functions request handler.
 - migrations/: versioned D1 schema migrations.
