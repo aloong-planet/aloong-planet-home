@@ -215,7 +215,9 @@ ${markExternalLinks(body)}
 }
 
 const homeEntry = post => `<li><a class="ap-home-post" href="/blog/${post.slug}">${timeTag(post.date)}<h2>${escapeHtml(post.title)}</h2><p>${escapeHtml(post.summary)}</p></a></li>`;
-const listEntry = post => `<article class="ap-post"><a class="ap-post-link" href="/blog/${post.slug}"><small>${timeTag(post.date)}</small><div><h2>${escapeHtml(post.title)}</h2><p>${escapeHtml(post.summary)}</p></div></a></article>`;
+/** A Blog card. The newest post leads; the covers below it load lazily. A cover carries no text alternative, since the title beside it names the post. */
+const listEntry = (post, index) => `<article${index === 0 ? ' class="ap-post-lead"' : ''}><a class="ap-post-card" href="/blog/${post.slug}"><div class="ap-post-cover"><img src="/blog/${post.slug}.webp" alt=""${index === 0 ? '' : ' loading="lazy"'}></div><div class="ap-post-text">${timeTag(post.date)}<h2>${escapeHtml(post.title)}</h2><p>${escapeHtml(post.summary)}</p></div></a></article>`;
+const renderList = posts => `<div class="ap-post-list">${posts.map(listEntry).join('')}</div>`;
 const renderHome = posts => `<section class="ap-home-blog" aria-label="最新文章"><div class="ap-home-blog-inner"><ol class="ap-home-posts">${posts.slice(0, HOME_POSTS).map(homeEntry).join('')}</ol><a class="ap-link ap-home-blog-all" href="/blog">全部文章</a></div></section>`;
 
 async function fillSlot(path, slot, html) {
@@ -240,7 +242,7 @@ export const blogChecks = posts => [
   {path: '/article.css', contains: '.ap-article-page'},
   {path: '/article.js', contains: '.ap-toc'},
   ...posts.flatMap(post => [
-    {path: '/blog', contains: `class="ap-post-link" href="/blog/${post.slug}"`},
+    {path: '/blog', contains: `class="ap-post-card" href="/blog/${post.slug}"`},
     {path: `/blog/${post.slug}`, contains: `class="ap-article-body post-${post.slug}"`},
   ]),
 ];
@@ -255,6 +257,7 @@ export async function buildBlog({contentDir, outDir}) {
   for (const post of manifest) {
     const bodyPath = join(postsDir, `${post.slug}.html`);
     if (!await exists(bodyPath)) refuse(post.slug, `the body file ${post.slug}.html does not exist.`);
+    if (!await exists(join(postsDir, `${post.slug}.webp`))) refuse(post.slug, `the cover ${post.slug}.webp does not exist; every post needs a WebP cover for the Blog page.`);
     const body = await readFile(bodyPath, 'utf8');
     checkBody(post.slug, body);
     const stylesheet = await exists(join(postsDir, `${post.slug}.css`));
@@ -268,8 +271,9 @@ export async function buildBlog({contentDir, outDir}) {
     await writeFile(join(blogDir, `${post.slug}.html`), renderPost(post, body, {stylesheet, script}));
     if (stylesheet) await copyFile(join(postsDir, `${post.slug}.css`), join(blogDir, `${post.slug}.css`));
     if (script) await copyFile(join(postsDir, `${post.slug}.js`), join(blogDir, `${post.slug}.js`));
+    await copyFile(join(postsDir, `${post.slug}.webp`), join(blogDir, `${post.slug}.webp`));
   }
   const newest = [...manifest].sort((a, b) => b.date.localeCompare(a.date));
   await fillSlot(join(outDir, 'index.html'), HOME_SLOT, renderHome(newest));
-  await fillSlot(join(outDir, 'blog.html'), LIST_SLOT, newest.map(listEntry).join(''));
+  await fillSlot(join(outDir, 'blog.html'), LIST_SLOT, renderList(newest));
 }

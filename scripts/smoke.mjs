@@ -39,7 +39,7 @@ do {
       // without the not-found page answers a missing file with the homepage and status 200.
       const dogScript=await request(origin+'/assets/golden-interaction.js');
       assert.match(dogScript.headers.get('content-type') || '',/javascript/,`${origin}/assets/golden-interaction.js is not a script`);
-      for(const path of [...pageImages(await (await request(origin+'/')).text()),...motionSheets(await dogScript.text())]) await checkImage(origin,path);
+      for(const path of [...pageImages(await (await request(origin+'/')).text()),...motionSheets(await dogScript.text()),...pageImages(await (await request(origin+'/blog')).text())]) await checkImage(origin,path);
       const missingPath=`/deployment-check-missing-${expected}`;
       const notFound=await request(origin+missingPath);
       const notFoundPage=await notFound.text();
