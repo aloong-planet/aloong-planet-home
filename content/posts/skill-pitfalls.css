@@ -1,0 +1,36 @@
+/* Code blocks, quotes, lists and the three figures of this post. The shared look is in public/article.css. */
+/* Figure roles: each box role has a fill, a line and an ink of one hue, so a box title matches its border. */
+.post-skill-pitfalls { --gate-fill:#EEF5FE; --gate-line:#5A97E2; --gate-ink:#0F468A; --fail-fill:#FDF0EF; --fail-line:#DA6E62; --fail-ink:#842015; --pass-fill:#F0FCF5; --pass-line:#72CA98; --pass-ink:#1D633B; --skill-fill:#F5EFFD; --skill-line:#9769D3; --skill-ink:#461B7E; --agent-fill:#EFFBFD; --agent-line:#64C9D8; --agent-ink:#13606C; --phase-fill:#FEF7EE; --phase-line:#E2A75A; --phase-ink:#8A550F; --cmp-fill:#F7F7F6; --cmp-line:#909089; --cmp-ink:#40403A; }
+
+.post-skill-pitfalls .codeblock { margin:0; padding:14px 16px; overflow-x:auto; background:var(--panel); border:1px solid var(--line); border-radius:5px; font:400 13px/1.65 var(--mono); white-space:pre; }
+.post-skill-pitfalls .codeblock code { font-size:inherit; }
+.post-skill-pitfalls .quote { margin:0; padding:2px 0 2px 16px; border-left:3px solid var(--line); color:var(--muted); display:grid; gap:10px; max-width:46em; }
+
+/* Numbered lists get the same spacing as the shared ul.plain. */
+.post-skill-pitfalls .numbered { margin:0; padding-left:1.4em; display:grid; gap:8px; max-width:50em; }
+/* The reference address is one unbroken string; it wraps instead of widening a phone screen. */
+.post-skill-pitfalls .ref-url { overflow-wrap:anywhere; }
+
+/* Figures are 940 wide with 13-unit text at the smallest: 940 × 11 ÷ 13 keeps that text at 11px or more where the figure scrolls on a phone. */
+.post-skill-pitfalls .figw { min-width:796px; }
+.post-skill-pitfalls .sp-gate { fill:var(--gate-fill); stroke:var(--gate-line); stroke-width:1.25; }
+.post-skill-pitfalls .sp-fail { fill:var(--fail-fill); stroke:var(--fail-line); stroke-width:1.25; }
+.post-skill-pitfalls .sp-pass { fill:var(--pass-fill); stroke:var(--pass-line); stroke-width:1.25; }
+.post-skill-pitfalls .sp-skill { fill:var(--skill-fill); stroke:var(--skill-line); stroke-width:1.25; }
+.post-skill-pitfalls .sp-agent { fill:var(--agent-fill); stroke:var(--agent-line); stroke-width:1.25; }
+.post-skill-pitfalls .sp-phase { fill:var(--phase-fill); stroke:var(--phase-line); stroke-width:1.25; }
+.post-skill-pitfalls .sp-cmp { fill:var(--cmp-fill); stroke:var(--cmp-line); stroke-width:1.25; }
+.post-skill-pitfalls .sp-tt { font-size:15px; font-weight:600; }
+.post-skill-pitfalls .sp-hd { font-size:14px; font-weight:600; }
+.post-skill-pitfalls .sp-tx { font-size:14px; }
+.post-skill-pitfalls .sp-sm { font-size:13px; fill:var(--muted); }
+.post-skill-pitfalls .sp-lb { font-size:13px; fill:var(--muted); paint-order:stroke; stroke:var(--panel); stroke-width:4px; stroke-linejoin:round; }
+.post-skill-pitfalls .sp-c-gate { fill:var(--gate-ink); }
+.post-skill-pitfalls .sp-c-fail { fill:var(--fail-ink); }
+.post-skill-pitfalls .sp-c-pass { fill:var(--pass-ink); }
+.post-skill-pitfalls .sp-c-skill { fill:var(--skill-ink); }
+.post-skill-pitfalls .sp-c-agent { fill:var(--agent-ink); }
+.post-skill-pitfalls .sp-c-phase { fill:var(--phase-ink); }
+.post-skill-pitfalls .sp-c-cmp { fill:var(--cmp-ink); }
+.post-skill-pitfalls .sp-ln { fill:none; stroke:var(--edge); stroke-width:1.5; }
+.post-skill-pitfalls .sp-mk { fill:var(--edge); }

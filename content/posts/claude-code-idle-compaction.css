@@ -1,0 +1,49 @@
+/* Figures, code blocks and reference lines for this post. The shared look is in public/article.css.
+   Series colors are the first two categorical slots of the dataviz reference palette; -ink and -wash are the
+   same hues for box titles and box fills in the timeline diagram. One meaning, one hue, across all three figures. */
+.post-claude-code-idle-compaction{--ic-save:#2a78d6;--ic-save-ink:#1c5cab;--ic-save-wash:#eef5fd;--ic-cost:#eb6834;--ic-cost-ink:#b3461a;--ic-cost-wash:#fdf1ec}
+
+.post-claude-code-idle-compaction .codeblock { margin:0; padding:14px 16px; overflow-x:auto; background:var(--panel); border:1px solid var(--line); border-radius:5px; font:400 13px/1.65 var(--mono); white-space:pre; }
+.post-claude-code-idle-compaction .codeblock code { font-size:inherit; }
+
+/* Long reference URLs wrap instead of widening the page on a phone. */
+.post-claude-code-idle-compaction .ic-ref{overflow-wrap:anywhere}
+
+/* Every figure is 940 units wide with 14-unit text at the smallest: 940 × 11 ÷ 14 keeps that text at 11px or more
+   when a phone scrolls the figure inside its box. */
+.post-claude-code-idle-compaction .figw{min-width:739px}
+
+/* Timeline diagram: boxes are colored by role (event, cost, save); titles and key amounts take their box's hue. */
+.post-claude-code-idle-compaction .ic-lane{font-size:19px;font-weight:600}
+.post-claude-code-idle-compaction .ic-note{font-size:14px;fill:var(--muted)}
+.post-claude-code-idle-compaction .ic-total{font-size:22px;font-weight:700}
+.post-claude-code-idle-compaction .ic-ttl{font-size:17px;font-weight:600}
+.post-claude-code-idle-compaction .ic-txt{font-size:15px}
+.post-claude-code-idle-compaction .ic-strong{font-weight:600}
+.post-claude-code-idle-compaction .ic-key{font-size:24px;font-weight:700}
+.post-claude-code-idle-compaction .ic-ink-ev{fill:var(--muted)}
+.post-claude-code-idle-compaction .ic-ink-cost{fill:var(--ic-cost-ink)}
+.post-claude-code-idle-compaction .ic-ink-save{fill:var(--ic-save-ink)}
+.post-claude-code-idle-compaction .ic-box{stroke-width:1.5}
+.post-claude-code-idle-compaction .ic-box-ev{fill:var(--bg);stroke:var(--edge)}
+.post-claude-code-idle-compaction .ic-box-cost{fill:var(--ic-cost-wash);stroke:var(--ic-cost)}
+.post-claude-code-idle-compaction .ic-box-save{fill:var(--ic-save-wash);stroke:var(--ic-save)}
+.post-claude-code-idle-compaction .ic-bar-cost{fill:var(--ic-cost)}
+.post-claude-code-idle-compaction .ic-bar-save{fill:var(--ic-save)}
+.post-claude-code-idle-compaction .ic-arrow{fill:none;stroke:var(--edge);stroke-width:2}
+.post-claude-code-idle-compaction .ic-head{fill:var(--edge)}
+.post-claude-code-idle-compaction .ic-callout{fill:var(--band)}
+.post-claude-code-idle-compaction .ic-callout-bar{fill:var(--mark)}
+
+/* Charts: thin marks in the series hues, a 2px ring in the surface color, text in text tokens. */
+.post-claude-code-idle-compaction .ic-grid{stroke:var(--line);stroke-width:1}
+.post-claude-code-idle-compaction .ic-base{stroke:var(--mark);stroke-width:1}
+.post-claude-code-idle-compaction .ic-tick{font-size:14px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.post-claude-code-idle-compaction .ic-legend{font-size:15px}
+.post-claude-code-idle-compaction .ic-label{font-size:16px;font-weight:600}
+.post-claude-code-idle-compaction .ic-end{font-size:17px;font-weight:700}
+.post-claude-code-idle-compaction .ic-endname{font-size:14px;fill:var(--muted)}
+.post-claude-code-idle-compaction .ic-dot-cost{fill:var(--ic-cost);stroke:var(--panel);stroke-width:2}
+.post-claude-code-idle-compaction .ic-dot-save{fill:var(--ic-save);stroke:var(--panel);stroke-width:2}
+.post-claude-code-idle-compaction .ic-line-cost{fill:none;stroke:var(--ic-cost);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.post-claude-code-idle-compaction .ic-line-save{fill:none;stroke:var(--ic-save);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}

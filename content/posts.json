@@ -9,5 +9,41 @@
       "url": "https://mp.weixin.qq.com/s/zoS7GlReWPhfCjENGxXCdg"
     },
     "note": "原文发表于 2026-10-31，是架构探讨，不是产品发布。下文的「文章」「作者」都指这篇原文。"
+  },
+  {
+    "slug": "claude-code-idle-compaction",
+    "title": "省钱提醒-马上升级你的 claudecode 到最新版以使用idleCompaction功能",
+    "date": "2026-11-05",
+    "summary": "离开超过一小时再回来，Claude Code 要把整段上下文重写进缓存。新版的 idleCompaction 赶在缓存过期前先压缩。按 API 价折算，我的 28 次真实记录里回来这一下少花 73%，整张账单估计省 8% 到 14%。"
+  },
+  {
+    "slug": "subagent-review-token-postmortem",
+    "title": "惨痛教训-复盘用子 agent 做对抗性测试后一个晚上多花掉 2.6 亿 token",
+    "date": "2026-10-30",
+    "summary": "把测试审查换成独立子 agent 做对抗性测试后，一个需求跑一晚上用掉 18 亿 token。拆开会话记录才发现，2.6 亿（14.4%）花在了「等」上：一个子 agent 每 4 秒查一次进度。这篇讲怎么查出来、怎么用一条规则解决。"
+  },
+  {
+    "slug": "agent-live-model-e2e-testing",
+    "title": "聊一聊 Agent 开发中的真模型端到端回归测试",
+    "date": "2026-10-20",
+    "summary": "刚开始用 Codex 开发微信插件时，测试通过并不意味着实际交付符合预期。后来，我让真实模型参与端到端回归，把用户交互、工具决策和执行结果一起验证。这篇介绍为什么原来的测试会漏掉问题，以及怎样把反复修复的过程提前到交付之前。"
+  },
+  {
+    "slug": "agent-opentelemetry",
+    "title": "聊一聊 OpenTelemetry 在 Agent 开发中的作用",
+    "date": "2026-10-08",
+    "summary": "我开发了一个以微信 Clawbot 为入口的 Codex 插件。权限、沙箱与职责分离让执行链路更复杂，也增加了 Agent 排障的难度。我通过 OpenTelemetry Tracing 和集中 instrumentation 串起执行过程，让 Agent 更快定位故障，更准确地分析耗时。"
+  },
+  {
+    "slug": "agent-structured-result-testing",
+    "title": "聊一聊Agent开发中的语义化测试替代方案",
+    "date": "2026-09-16",
+    "summary": "模型换了一种说法，测试就失败，是否应该再请一个模型来评分？评分器不难接，但会增加调用、校准和维护成本。我的做法是用结构化结果和真实执行记录验证业务结论，把语义评分留给确实需要理解语言的部分。"
+  },
+  {
+    "slug": "skill-pitfalls",
+    "title": "你的 skill 为什么没有按预期工作——聊一聊如何评估和优化 skills",
+    "date": "2026-09-08",
+    "summary": "skill 失效不报错——agent 只是安静地执行出另一种行为,而那不是随机的。触发、记忆、执行三道关,每道关都有确定的失效机制:歧义被默认值填满、每个词都过它自己的解释器、没被要求的内容从未被生成。懂了机制,评估和优化才有抓手。"
   }
 ]

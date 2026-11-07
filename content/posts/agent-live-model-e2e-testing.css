@@ -1,0 +1,31 @@
+/* Quotes and figures for this post. The shared look is in public/article.css. */
+.post-agent-live-model-e2e-testing{--lm-test-fill:#EDF4FE;--lm-test-line:#7FA8E6;--lm-test-ink:#174A97;--lm-app-fill:#E6F6F6;--lm-app-line:#57B5BD;--lm-app-ink:#005F6B;--lm-model-fill:#FEF3E2;--lm-model-line:#DFA355;--lm-model-ink:#8A4500;--lm-dev-fill:#F3EEFD;--lm-dev-line:#A78FE3;--lm-dev-ink:#5330A8;--lm-user-fill:#EAF7EE;--lm-user-line:#74BE8F;--lm-user-ink:#17653A;--lm-gap:#B3261E}
+.post-agent-live-model-e2e-testing .quote { margin:0; padding:2px 0 2px 16px; border-left:3px solid var(--line); color:var(--muted); display:grid; gap:10px; max-width:46em; }
+
+/* Figures: 940 wide with 13px as the smallest text, so 796px keeps that text at 11px or more where the figure scrolls on a phone. */
+.post-agent-live-model-e2e-testing .figw{min-width:796px}
+.post-agent-live-model-e2e-testing .lm-t{font-size:14px;font-weight:600}
+.post-agent-live-model-e2e-testing .lm-d{font-size:13px;fill:var(--muted)}
+.post-agent-live-model-e2e-testing .lm-h{font-size:14px;font-weight:600}
+.post-agent-live-model-e2e-testing .lm-z{font-size:13px;fill:var(--muted)}
+.post-agent-live-model-e2e-testing .lm-s{font-size:13px}
+.post-agent-live-model-e2e-testing .lm-gt{font-size:14px;font-weight:600;fill:var(--lm-gap)}
+.post-agent-live-model-e2e-testing .lm-gd{font-size:13px;fill:var(--lm-gap)}
+.post-agent-live-model-e2e-testing .lm-test{fill:var(--lm-test-fill);stroke:var(--lm-test-line);stroke-width:1.25}
+.post-agent-live-model-e2e-testing .lm-app{fill:var(--lm-app-fill);stroke:var(--lm-app-line);stroke-width:1.25}
+.post-agent-live-model-e2e-testing .lm-model{fill:var(--lm-model-fill);stroke:var(--lm-model-line);stroke-width:1.25}
+.post-agent-live-model-e2e-testing .lm-dev{fill:var(--lm-dev-fill);stroke:var(--lm-dev-line);stroke-width:1.25}
+.post-agent-live-model-e2e-testing .lm-user{fill:var(--lm-user-fill);stroke:var(--lm-user-line);stroke-width:1.25}
+.post-agent-live-model-e2e-testing .lm-test-ink{fill:var(--lm-test-ink)}
+.post-agent-live-model-e2e-testing .lm-app-ink{fill:var(--lm-app-ink)}
+.post-agent-live-model-e2e-testing .lm-model-ink{fill:var(--lm-model-ink)}
+.post-agent-live-model-e2e-testing .lm-dev-ink{fill:var(--lm-dev-ink)}
+.post-agent-live-model-e2e-testing .lm-user-ink{fill:var(--lm-user-ink)}
+.post-agent-live-model-e2e-testing .lm-band{fill:var(--band)}
+.post-agent-live-model-e2e-testing .lm-flow{fill:none;stroke:var(--edge);stroke-width:1.5}
+.post-agent-live-model-e2e-testing .lm-miss{fill:none;stroke:var(--lm-gap);stroke-width:1.5;stroke-dasharray:5 4}
+.post-agent-live-model-e2e-testing .lm-loop{fill:none;stroke:var(--lm-gap);stroke-width:1.75}
+.post-agent-live-model-e2e-testing .lm-cut{fill:none;stroke:var(--edge);stroke-width:1.25;stroke-dasharray:6 5}
+.post-agent-live-model-e2e-testing .lm-dot{fill:var(--lm-gap)}
+.post-agent-live-model-e2e-testing .lm-mk-edge{fill:var(--edge)}
+.post-agent-live-model-e2e-testing .lm-mk-gap{fill:var(--lm-gap)}

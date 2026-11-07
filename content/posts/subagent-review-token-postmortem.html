@@ -1,0 +1,219 @@
+<section>
+  <p>以前我的开发流程里，code review 和 test review 都是主 agent 自己做：写完代码，回头审自己的代码，再审自己写的测试。用久了就发现一个问题——审测试这一步，相当于自己给自己判卷。用例怎么设计、断言测的是什么，它写的时候怎么想，审的时候还是怎么想；测错了对象、根本红不了的假通过测试，往往被它自己合理化过去了。</p>
+  <p>所以最近我把 test review 改成了对抗性测试（code review 仍由主 agent 自己做）：实现完成后，派一个<b>不继承当前对话</b>的独立子 agent 来审写好的测试。交给它的只有规范、spec、测试审查记录和本次改动的提交范围，不给任何「我为什么这么写」的解释。它不知道作者的推理，也就没有替作者圆场的动机，找出来的问题明显多了，测试质量也上来了。</p>
+  <p>然后我用这套新流程做了一个大需求：给我的桌面应用接入一个新的 agent 来源，拆成六张票，每张票交给一个子 agent 在全新的上下文里实现，每张票做完再派复核子 agent 做对抗性复核，最后一张收口票做全量验收。睡前启动，让它自己跑一晚上。</p>
+  <p>早上起来一看用量，人傻了：<b>一个晚上，18 亿 token。</b></p>
+  <p>需求是做完了，六张票全部合并，质量也确实不错。但这个数字明显不对劲。于是我花了一天，把这一晚的账一笔一笔拆开。</p>
+  <p>先说结论：这 18 亿里，<b>有 2.6 亿 token（14.4%）是多花的，全花在了「等」上</b>——子 agent 在等测试跑完、等复核子 agent 交回的时候，一遍又一遍地查进度，最密的时候每 4 秒查一次。折成钱更扎眼：约 107 美元，占这一晚的 21%。下面讲这笔账是怎么算出来的、为什么会这样，以及怎么解决。</p>
+</section>
+
+<section id="bill">
+  <h2>先把账算清楚：18 亿 token 花在了哪</h2>
+  <p>Claude Code 会把每个会话（包括每个子 agent）的完整记录存成 jsonl 文件，每一次 API 请求都带着用量字段：读了多少缓存、写了多少缓存、输入输出各多少。所以不用猜，直接写脚本把这一晚所有记录汇总：</p>
+  <div class="scroll"><table class="mid">
+    <thead><tr><th>角色</th><th class="num">请求数</th><th class="num">缓存读（token）</th><th class="num">按 API 价折合（美元）</th></tr></thead>
+    <tbody>
+      <tr><td>收口 agent</td><td class="num">539</td><td class="num">3.75 亿</td><td class="num">80.0</td></tr>
+      <tr><td>做票 agent（5 个）</td><td class="num">1,920</td><td class="num">9.78 亿</td><td class="num">288.1</td></tr>
+      <tr><td>主会话</td><td class="num">519</td><td class="num">2.29 亿</td><td class="num">68.8</td></tr>
+      <tr><td>复核子 agent（11 个）</td><td class="num">799</td><td class="num">1.64 亿</td><td class="num">53.5</td></tr>
+      <tr><td>其他子 agent（2 个）</td><td class="num">182</td><td class="num">0.37 亿</td><td class="num">10.0</td></tr>
+      <tr><td><b>合计（20 个 agent）</b></td><td class="num"><b>3,959</b></td><td class="num"><b>17.82 亿</b></td><td class="num"><b>500.4</b></td></tr>
+    </tbody>
+  </table></div>
+  <p>我用的是订阅，不按美元扣费；订阅额度怎么折算 token，官方没有公开。这里的美元按 Opus 5.5 的 API 公开价折算，只用来比较各部分的相对大小。</p>
+  <p>第一个发现就很关键：<b>18.1 亿 token 里，98.5% 是缓存读。</b></p>
+  <p>这说明钱不是花在「生成」上，而是花在「重读」上。大模型没有记忆，每次工具调用，都要把整个上下文重新发一遍。prompt cache 只是把这部分的单价降到普通输入的二十分之一，读的量一点没少。所以：</p>
+  <blockquote class="quote"><p>消耗 ≈ 调用次数 × 每次的上下文大小</p></blockquote>
+  <p>做票 agent 的上下文从 4.3 万 token 起步，做完一张票涨到 89 到 97 万。越往后，哪怕只是执行一条 <code>wc -l</code>，也要为将近 100 万 token 的上下文付一次费。</p>
+  <p>再把每一次请求按用途分类：只为等待而发出的请求——查进度 328 次、等待命令 49 次——一共花掉 2.6 亿 token，占 14.4%，这就是开头说的多花的部分。其中收口 agent 一个就占了 1.75 亿，是它自己用量的 46.5%。</p>
+</section>
+
+<section id="polling">
+  <h2>最大的窟窿：一个子 agent 每 4 秒查一次进度</h2>
+  <p>按 agent 排，花得最多的不是写代码的做票 agent，而是收口 agent：80 美元，比最复杂的那张票还多。收口票几乎不写代码，主要是全量验收和文档回归，它到底在干什么？</p>
+  <p>把它的 539 次请求按时间线摊开，答案一目了然：<b>它在等。</b>它要等两次复核子 agent 交回结果，等两次全量门禁跑完。在这五段等待里，它一共查了 212 次进度，每一道竖线是一次查看：</p>
+  <figure class="fig" id="fig-polling-timeline">
+    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 330" role="img" aria-label="收口 agent 五段等待的查进度时间线：复核第 2 轮查了 96 次、全量门禁查了 94 次，中位间隔不到 5 秒。图中四行是其中四段，每一道竖线是一次查看，横轴是从这段等待开始算起的分钟数：复核前门禁，等自己的命令，4.0 分钟，查了 10 次；复核第 1 轮，等子 agent，15.5 分钟，查了 11 次；复核第 2 轮，等子 agent，15.4 分钟，查了 96 次，中位间隔 4.8 秒，后半段竖线越来越密；全量门禁，等自己的命令，6.8 分钟，查了 94 次，中位间隔 3.7 秒，竖线几乎从头密到尾。">
+      <text class="c-name" x="20" y="37">复核前门禁</text><text class="c-sub" x="20" y="57">等自己的命令 · 4.0 分钟</text>
+      <rect class="c-track" x="236" y="23" width="130" height="34" rx="3"/>
+      <path class="c-tick" d="M236.49 23V57M257.88 23V57M271.37 23V57M277.87 23V57M293.31 23V57M303.65 23V57M305.33 23V57M312.81 23V57M320.99 23V57M361.88 23V57"/>
+      <text class="c-big" x="790" y="46">10 次</text>
+      <text class="c-name" x="20" y="111">复核第 1 轮</text><text class="c-sub" x="20" y="131">等子 agent · 15.5 分钟</text>
+      <rect class="c-track" x="236" y="97" width="503.75" height="34" rx="3"/>
+      <path class="c-tick" d="M455.32 97V131M471.46 97V131M495.3 97V131M526.33 97V131M549.68 97V131M603.36 97V131M614.95 97V131M631.8 97V131M650.32 97V131M704.7 97V131M716.51 97V131"/>
+      <text class="c-big" x="790" y="120">11 次</text>
+      <text class="c-name" x="20" y="185">复核第 2 轮</text><text class="c-sub" x="20" y="205">等子 agent · 15.4 分钟</text>
+      <rect class="c-track" x="236" y="171" width="500.5" height="34" rx="3"/>
+      <path class="c-tick" d="M255.99 171V205M303.17 171V205M329.17 171V205M340.22 171V205M346.28 171V205M350.83 171V205M361.67 171V205M366.7 171V205M385.01 171V205M387.88 171V205M404.51 171V205M413.45 171V205M426.67 171V205M449.53 171V205M459.87 171V205M462.8 171V205M468.32 171V205M471.95 171V205M476.5 171V205M483.49 171V205M489.99 171V205M493.83 171V205M510.68 171V205M515.99 171V205M519.83 171V205M538.63 171V205M546.32 171V205M549.19 171V205M550.55 171V205M553.2 171V205M556.45 171V205M559.32 171V205M562.19 171V205M565.12 171V205M572.32 171V205M576.38 171V205M578.33 171V205M581.69 171V205M583.26 171V205M584.45 171V205M586.03 171V205M587.98 171V205M600.7 171V205M605.42 171V205M607.58 171V205M609.15 171V205M613 171V205M616.36 171V205M625.51 171V205M627.46 171V205M630.12 171V205M632.72 171V205M635.37 171V205M640.08 171V205M644.2 171V205M649.62 171V205M651.51 171V205M653.46 171V205M655.36 171V205M657.31 171V205M660.18 171V205M662.13 171V205M666.57 171V205M668.74 171V205M675.13 171V205M676.7 171V205M678 171V205M679.3 171V205M681.95 171V205M683.63 171V205M685.8 171V205M687.97 171V205M690.13 171V205M692.3 171V205M693.87 171V205M695.82 171V205M697.72 171V205M699.29 171V205M701.24 171V205M703.24 171V205M705.19 171V205M707.14 171V205M709.09 171V205M711.04 171V205M712.99 171V205M714.94 171V205M716.51 171V205M718.08 171V205M719.28 171V205M720.85 171V205M723.99 171V205M726.26 171V205M728.48 171V205M730.7 171V205M732.93 171V205M735.2 171V205"/>
+      <text class="c-big" x="790" y="187">96 次</text><text class="c-sub" x="790" y="206">中位间隔 4.8 秒</text>
+      <text class="c-name" x="20" y="259">全量门禁</text><text class="c-sub" x="20" y="279">等自己的命令 · 6.8 分钟</text>
+      <rect class="c-track" x="236" y="245" width="221" height="34" rx="3"/>
+      <path class="c-tick" d="M236.49 245V279M237.95 245V279M253.33 245V279M262.7 245V279M265.63 245V279M268.01 245V279M270.45 245V279M272.83 245V279M275.49 245V279M277.06 245V279M278.25 245V279M279.82 245V279M281.72 245V279M283.67 245V279M287.78 245V279M290.38 245V279M300.51 245V279M302.08 245V279M305.23 245V279M306.8 245V279M308.48 245V279M311.13 245V279M313.02 245V279M314.6 245V279M315.79 245V279M317.36 245V279M319.31 245V279M321.2 245V279M323.15 245V279M324.73 245V279M325.92 245V279M327.11 245V279M329.38 245V279M331.71 245V279M333.28 245V279M335.18 245V279M337.13 245V279M339.03 245V279M340.98 245V279M342.87 245V279M344.82 245V279M346.39 245V279M347.58 245V279M349.15 245V279M351.05 245V279M352.62 245V279M353.87 245V279M355.06 245V279M356.25 245V279M357.82 245V279M359.72 245V279M361.67 245V279M363.62 245V279M365.13 245V279M367.46 245V279M369.74 245V279M372.99 245V279M375.64 245V279M377.54 245V279M379.49 245V279M381.06 245V279M383.71 245V279M386.2 245V279M387.78 245V279M390.43 245V279M392 245V279M393.95 245V279M395.85 245V279M397.42 245V279M398.61 245V279M400.18 245V279M402.13 245V279M403.7 245V279M407.76 245V279M409.33 245V279M411.28 245V279M413.18 245V279M416.81 245V279M419.46 245V279M421.36 245V279M422.93 245V279M425.2 245V279M427.53 245V279M428.73 245V279M429.92 245V279M432.19 245V279M435.44 245V279M439.56 245V279M441.13 245V279M443.03 245V279M444.6 245V279M447.36 245V279M450.12 245V279M454.35 245V279"/>
+      <text class="c-big" x="790" y="261">94 次</text><text class="c-sub" x="790" y="280">中位间隔 3.7 秒</text>
+      <path class="c-axis" d="M236 293H756M236 293V298M366 293V298M496 293V298M626 293V298M756 293V298"/>
+      <text class="c-sub" x="236" y="315" text-anchor="middle">0 分钟</text><text class="c-sub" x="366" y="315" text-anchor="middle">4 分钟</text><text class="c-sub" x="496" y="315" text-anchor="middle">8 分钟</text><text class="c-sub" x="626" y="315" text-anchor="middle">12 分钟</text><text class="c-sub" x="756" y="315" text-anchor="middle">16 分钟</text>
+    </svg></div>
+    <figcaption><b>收口 agent 在等待时查了 212 次进度。</b>每一道竖线是一次查看；每查一次，都要把 49–96 万 token 的上下文完整读一遍。纯查看 193 次，约 35 美元，占收口 agent 全部花费的 44%。另有 1 次发生在等另一个子 agent 时，图中未画出。</figcaption>
+  </figure>
+  <p>按等待分段算钱：</p>
+  <div class="scroll"><table class="mid">
+    <thead><tr><th>在等什么</th><th class="num">时长</th><th class="num">查进度次数</th><th class="num">每次带的上下文</th><th class="num">折合（美元）</th></tr></thead>
+    <tbody>
+      <tr><td>复核子 agent 第 2 轮</td><td class="num">15.4 分钟</td><td class="num">96</td><td class="num">81–91 万</td><td class="num">26.8</td></tr>
+      <tr><td>全量门禁 <code>pnpm verify</code></td><td class="num">6.8 分钟</td><td class="num">94</td><td class="num">92–96 万</td><td class="num">18.8</td></tr>
+      <tr><td>复核子 agent 第 1 轮</td><td class="num">15.5 分钟</td><td class="num">11</td><td class="num">59–74 万</td><td class="num">11.8</td></tr>
+      <tr><td>复核前门禁</td><td class="num">4.0 分钟</td><td class="num">10</td><td class="num">49–58 万</td><td class="num">3.5</td></tr>
+    </tbody>
+  </table></div>
+  <p>复核那两行的金额里含有它同时在做的文档修改；单算纯查看的 193 次，约 35 美元，占它全部花费的 44%。</p>
+  <p>查的是什么？</p>
+  <ul class="plain">
+    <li><b>等复核子 agent 时</b>：数复核子 agent 正在写的测试审查记录有多少行。光 <code>date; wc -l &lt; 记录</code> 这一条就跑了 43 次。顺带还查进程、查构建产物的修改时间，看对方是不是在跑测试。</li>
+    <li><b>等全量门禁时</b>：<code>grep -c "✘" 日志</code> 数失败用例，同一条命令跑了 75 次，平均 4 秒一次。</li>
+  </ul>
+  <p>最讽刺的是，我的流程规范里早就写着：<b>复核以子 agent 的最终交回为准，不得以记录被写入作为结束信号。</b>它没有违反这条——它不是拿行数当结束信号，它只是一直盯着看。规范管住了结论，没管住「看」这个动作。</p>
+  <p>你可能会问：查得这么勤，缓存一直是热的，每次不是很便宜吗？确实，整个收口过程缓存一次都没过期。但每查一次，就是一次完整的 API 请求，要把 95 万 token 的上下文读一遍，约 0.19 美元。便宜的是单价，次数照乘。同样一段 6.8 分钟的门禁，三种等法的账：</p>
+  <figure class="fig" id="fig-wait-cost">
+    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 210" role="img" aria-label="同一段 6.8 分钟的门禁，三种等法的费用：高频轮询约 19 美元，结束本轮等通知约 4.8 美元，有界等待约 0.5 美元。上下文约 95 万 token，按 Opus 5.5 的 API 价折算。高频轮询约每 4 秒查一次，94 次缓存读；结束本轮、等完成通知时缓存已过期，整份重写 1 次；有界等待每次最多阻塞 3 分钟，2–3 次读。">
+      <text class="c-name" x="20" y="31">高频轮询</text><text class="c-sub" x="20" y="51">约每 4 秒查一次，94 次缓存读</text>
+      <path class="c-bar" d="M300 22H736a4 4 0 0 1 4 4V42a4 4 0 0 1 -4 4H300Z"/><text class="c-val" x="750" y="39">约 19 美元</text>
+      <text class="c-name" x="20" y="101">结束本轮，等完成通知</text><text class="c-sub" x="20" y="121">缓存已过期，整份重写 1 次</text>
+      <path class="c-bar" d="M300 92H407.16a4 4 0 0 1 4 4V112a4 4 0 0 1 -4 4H300Z"/><text class="c-val" x="421.16" y="109">约 4.8 美元</text>
+      <text class="c-name" x="20" y="171">有界等待</text><text class="c-sub" x="20" y="191">每次最多阻塞 3 分钟，2–3 次读</text>
+      <path class="c-bar" d="M300 162H307.58a4 4 0 0 1 4 4V182a4 4 0 0 1 -4 4H300Z"/><text class="c-val" x="321.58" y="179">约 0.5 美元</text>
+      <path class="c-axis" d="M300 12V196"/>
+    </svg></div>
+    <figcaption><b>同一段 6.8 分钟的门禁，三种等法的费用。</b>上下文约 95 万 token，按 Opus 5.5 的 API 价折算。便宜的是单价，次数照乘：缓存一直有效，每查一次仍要读一遍 95 万 token。</figcaption>
+  </figure>
+  <p>而且这个轮询是它<b>自发</b>的。记录里没有任何外部消息催它，是它自己挂上监视器和循环去盯记录变长。Claude Code 内置的 Agent 工具说明里本来就写着「不要 sleep、不要轮询、不要主动查进度」，没拦住。我后来查社区，发现这不是个例：好几个 issue 都报告过，把「不要轮询」写进提示词能减少轮询，但杜绝不了。</p>
+</section>
+
+<section id="cache">
+  <h2>第二个窟窿：子 agent 的缓存只有 5 分钟</h2>
+  <p>查完收口 agent，我有个疑问：主会话在等子 agent 的时候，也经常空闲一二十分钟，为什么主会话就没这个问题？</p>
+  <p>答案在缓存时效上。Claude Code 的文档写得很清楚：订阅额度内，<b>主会话的缓存保留 1 小时，子 agent 只有 5 分钟</b>，订阅也一样。我用主会话的记录验证了一遍：空闲 60 分钟以内醒来，50 次全部是缓存读；超过 66 分钟的 5 次，全部整份重写。分界线正好在 1 小时。</p>
+  <p>子 agent 空闲超过 5 分钟再调用，就要把整个上下文重写进缓存，单价是读的 25 倍（token 数不变，所以没算进前面的 2.6 亿，但钱要多付）。这一晚子 agent 一共重写了 18 次，都发生在 5.8 到 12.9 分钟的等待之后，约 54 美元：</p>
+  <table>
+    <thead><tr><th>在等什么</th><th class="num">次数</th><th class="num">折合（美元）</th></tr></thead>
+    <tbody>
+      <tr><td>自己派出的复核子 agent</td><td class="num">9</td><td class="num">26.4</td></tr>
+      <tr><td>自己的门禁和 CI</td><td class="num">7</td><td class="num">25.3</td></tr>
+      <tr><td>复核 agent 交回后被再次唤醒</td><td class="num">2</td><td class="num">3.5</td></tr>
+    </tbody>
+  </table>
+  <p>等复核的那 9 次，多数是做票 agent 在前台挂一条 10 分钟的命令，等复核记录里出现某一节——既是在盯记录，又因为阻塞超过 5 分钟，醒来要整份重写。</p>
+  <p>到这里，问题的结构就清楚了。切到对抗性测试之前，test review 在主 agent 自己的上下文里做，不用等另一个 agent。切过来之后，形成了三层：主会话派出做票 agent，做票 agent 再派出复核子 agent。<b>等待被夹在了中间那一层</b>：它是子 agent，缓存只有 5 分钟；它又要等另一个子 agent，一等就是十几分钟。轮询和缓存过期，全部发生在这一层。</p>
+  <figure class="fig" id="fig-waiting-layers">
+    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 460" role="img" aria-label="切换前后的结构对比：切换后，做票和收口 agent 作为子 agent 夹在主会话与复核子 agent 之间，轮询 212 次、缓存过期 18 次都发生在这一层。切换前：主会话，缓存 1 小时，派出做票 agent；做票 agent 写代码、自己审自己的测试，不用等另一个 agent。切换后：主会话，缓存 1 小时，结束本轮等通知，醒来只付一次读，派出做票或收口 agent；做票和收口 agent 是子 agent，缓存只有 5 分钟，要等复核交回、等门禁跑完，轮询 212 次查进度、缓存过期 18 次整份重写都发生在这里；它们再派出复核子 agent，做不继承对话的对抗性测试，一跑十几分钟。">
+      <defs><marker id="subagent-review-token-postmortem-arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path class="d-mk" d="M0 0L10 5L0 10z"/></marker></defs>
+      <text class="d-col" x="170" y="24" text-anchor="middle">切换前</text>
+      <text class="d-col" x="645" y="24" text-anchor="middle">切换后</text>
+      <path class="d-div" d="M340 8V452"/>
+      <g class="d-main"><rect class="d-box" x="20" y="44" width="300" height="80" rx="6"/><text class="d-title" x="170" y="78" text-anchor="middle">主会话</text><text class="d-desc" x="170" y="104" text-anchor="middle">缓存 1 小时</text></g>
+      <path class="d-link" marker-end="url(#subagent-review-token-postmortem-arrow)" d="M170 124V176"/><text class="c-sub" x="180" y="155" text-anchor="start">派出</text>
+      <g class="d-mid"><rect class="d-box" x="20" y="176" width="300" height="100" rx="6"/><text class="d-title" x="170" y="210" text-anchor="middle">做票 agent</text><text class="d-desc" x="170" y="236" text-anchor="middle">写代码</text><text class="d-desc" x="170" y="258" text-anchor="middle">自己审自己的测试</text></g>
+      <text class="d-note" x="170" y="312" text-anchor="middle">不用等另一个 agent</text>
+      <g class="d-main"><rect class="d-box" x="370" y="44" width="550" height="80" rx="6"/><text class="d-title" x="645" y="78" text-anchor="middle">主会话</text><text class="d-desc" x="645" y="104" text-anchor="middle">缓存 1 小时 · 结束本轮等通知，醒来只付一次读</text></g>
+      <path class="d-link" marker-end="url(#subagent-review-token-postmortem-arrow)" d="M645 124V176"/><text class="c-sub" x="655" y="155" text-anchor="start">派出</text>
+      <g class="d-mid"><rect class="d-box d-hi" x="370" y="176" width="550" height="134" rx="6"/><text class="d-title" x="645" y="210" text-anchor="middle">做票 / 收口 agent（子 agent）</text><text class="d-desc" x="645" y="238" text-anchor="middle">缓存只有 5 分钟 · 等复核交回、等门禁跑完</text><rect class="d-pill" x="462" y="258" width="166" height="30" rx="15"/><text class="d-pilltext" x="545" y="278" text-anchor="middle">轮询：212 次查进度</text><rect class="d-pill" x="642" y="258" width="202" height="30" rx="15"/><text class="d-pilltext" x="743" y="278" text-anchor="middle">缓存过期：18 次整份重写</text></g>
+      <path class="d-link" marker-end="url(#subagent-review-token-postmortem-arrow)" d="M645 310V362"/><text class="c-sub" x="655" y="341" text-anchor="start">派出</text>
+      <g class="d-rev"><rect class="d-box" x="370" y="362" width="550" height="80" rx="6"/><text class="d-title" x="645" y="396" text-anchor="middle">复核子 agent</text><text class="d-desc" x="645" y="422" text-anchor="middle">不继承对话的对抗性测试 · 一跑十几分钟</text></g>
+    </svg></div>
+    <figcaption><b>切到对抗性测试后，等待被夹在了中间一层。</b>中间这层是子 agent，缓存只有 5 分钟；它又要等另一个子 agent，一等就是十几分钟。</figcaption>
+  </figure>
+  <p>对抗性测试本身没有错，错在我切换流程的时候，只设计了「谁来审」，没设计「怎么等」。</p>
+</section>
+
+<section id="wrong-turns">
+  <h2>几个差点走偏的判断</h2>
+  <p>排查过程中，有几个看起来很合理的方向，算完账发现都不对。</p>
+  <p><b>第一，「把子 agent 的缓存也改成 1 小时不就行了？」</b>Claude Code 确实提供了 <code>subagentPromptCacheTtl</code> 这个设置。但 1 小时缓存的写入要比 5 分钟的贵 60%，而且是所有写入都贵，不管等不等。用这一晚的数据重算：18 次短空闲不再重写，省 51.4 美元；所有子 agent 的日常写入涨价，多付 39.6 美元，其中 17.8 美元来自 14 个从没过期过的 agent；两次超过 1 小时的限流中断照样重写，单价还更高，多付 5.3 美元。<b>净省 6.5 美元，不到总花费的 2%。</b>等改了等待方式之后，能省的部分进一步缩小，全局开 1 小时反而要多花约 10 美元。</p>
+  <p>至于订阅额度会不会对 1 小时写入多扣，我专门查了官方文档和社区：没有人给出过答案。唯一的官方说法来自 Claude Code 负责人，他说子 agent 很少被重新唤醒，用 1 小时缓存会让用户「多付钱」。所以这条路我放弃了。</p>
+  <p><b>第二，「是不是模型太贵，换便宜的就行？」</b>换模型只降单价，不降次数。轮询是行为问题，换什么模型都会轮询。</p>
+  <p><b>第三，几个我原本以为的事实，查文档后发现是错的：</b>前台命令超时不会被杀掉，而是自动转入后台继续跑；后台命令「30 分钟自动终止」只对无人值守的会话成立，本地终端里后台命令没有时限，一个永远等不到条件的后台循环永远不会退出，也就永远不会发完成通知；Opus 5.5 的缓存读是普通输入的 0.05 倍，不是 0.1 倍。这些细节直接影响「怎么等」的方案设计，凭印象就会设计错。</p>
+</section>
+
+<section id="fix">
+  <h2>怎么解决：把「怎么等」写成规则</h2>
+  <p>轮询是行为问题，所以要在规则里明确禁止它，并写清楚每一层该怎么等。最后的方案分三部分。</p>
+  <h3>第一部分：全局规则「等待后台工作」</h3>
+  <p>写进全局 <code>AGENTS.md</code>，Claude Code 和 Codex 都会加载，子 agent 也会加载（我在子 agent 的记录里核实过）。要注意，子 agent 拿到的是父会话启动时缓存的那份，会话中途改了规则，要到新会话才生效。核心只有四条：</p>
+  <ul class="plain">
+    <li><b>不得查看进度</b>：等子 agent、自己的命令或 CI 时，不得用任何方式查看进度——读它正在写的文件或日志、数行数、查进程、查 CI 状态都算。结束后读结果不算。</li>
+    <li><b>主会话</b>：耗时的命令和子 agent 放后台，没有别的事就结束本轮，等完成通知。主会话缓存 1 小时，被唤醒只付一次缓存读。</li>
+    <li><b>子 agent 等待</b>（等自己的命令或派出的子 agent）：不得靠结束本轮来等；每次调用最多阻塞 3 分钟，只检查命令是否结束（比如命令结束时写下的完成标记），等子 agent 时什么都不查；没结束就再等一次；成败按命令自己的退出码判定。</li>
+    <li><b>等外部状态</b>（CI、部署）：用一条条件满足即退出、自带超时的命令，按上面的方式等它。</li>
+  </ul>
+  <p>为什么子 agent 是「每次最多阻塞 3 分钟」，而不是像主会话那样结束本轮？因为子 agent 的缓存只有 5 分钟。结束本轮去等，一旦等超过 5 分钟，醒来就是一次整份重写；而每次阻塞 3 分钟，醒来时缓存还在，只付一次读。阻塞期间检查完成标记的是 shell 里的循环，不经过模型，不花 token。</p>
+  <h3>第二部分：流程改动</h3>
+  <p>两处：</p>
+  <ul class="plain">
+    <li><b>单票只跑相关的 e2e</b>：以前每张票的全量门禁都跑全套 e2e，这是最长的等待来源之一。现在单票只跑和本次改动相关的 e2e 用例，全套交给 PR 的 CI 跑，交付前等 CI 全部通过。</li>
+    <li><b>点名「看记录」也算查看进度</b>：在复核流程里写明，复核子 agent 交回之前去读测试审查记录，就是在查看进度。</li>
+  </ul>
+  <h3>第三部分：不改缓存时效</h3>
+  <p>子 agent 保持默认的 5 分钟。理由前面算过了：在新的等待方式下，改成 1 小时只会更贵。</p>
+</section>
+
+<section id="tests">
+  <h2>测试：同一个任务跑八遍</h2>
+  <p>规则写完不能只靠感觉，得测。我把收口环节的两段等待做成了一个可重复的任务：先跑一个约 7 分钟的模拟门禁，再派一个约 8 分钟的模拟复核子 agent，边跑边往记录里追加发现。每组一个父 agent 加一个复核子 agent，先分三种条件各跑两次：没有规则、规则带具体命令、规则精简版（只讲约束，不教命令），规则都写在提示里交给 agent。</p>
+  <p>测试里的上下文只有 5 万 token 左右，所以我按请求数和缓存过期次数，折算到 90 万上下文（一次读约 0.18 美元，一次重写约 4.5 美元）：</p>
+  <figure class="fig" id="fig-test-results">
+    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 214" role="img" aria-label="同一个任务跑六遍，等待部分的费用：没有规则约 13.5 美元，规则带命令约 5.2 美元，规则精简版约 1.4 美元；附结果正确率、缓存过期次数和打扰主会话的通知数。没有规则：结果正确 1/2，缓存过期重写每组 3 次，打扰主会话的通知 7 条。规则带命令：结果正确 2/2，缓存过期重写每组 1 次，打扰主会话的通知 0 条。规则精简版：结果正确 2/2，缓存过期重写 0 次，打扰主会话的通知 0 条。">
+      <text class="c-head" x="150" y="22">等待部分的费用</text><text class="c-head" x="650" y="22" text-anchor="end">结果正确</text><text class="c-head" x="790" y="22" text-anchor="end">缓存过期重写</text><text class="c-head" x="920" y="22" text-anchor="end">打扰主会话的通知</text>
+      <path class="c-rule" d="M20 36H920M20 94H920M20 150H920"/>
+      <text class="c-name" x="20" y="71">没有规则</text><path class="c-bar" d="M150 54H446a4 4 0 0 1 4 4V74a4 4 0 0 1 -4 4H150Z"/><text class="c-val" x="460" y="71">约 13.5 美元</text><text class="c-val" x="650" y="71" text-anchor="end">1/2</text><text class="c-val" x="790" y="71" text-anchor="end">每组 3 次</text><text class="c-val" x="920" y="71" text-anchor="end">7 条</text>
+      <text class="c-name" x="20" y="127">规则带命令</text><path class="c-bar" d="M150 110H261.56a4 4 0 0 1 4 4V130a4 4 0 0 1 -4 4H150Z"/><text class="c-val" x="275.56" y="127">约 5.2 美元</text><text class="c-val" x="650" y="127" text-anchor="end">2/2</text><text class="c-val" x="790" y="127" text-anchor="end">每组 1 次</text><text class="c-val" x="920" y="127" text-anchor="end">0</text>
+      <text class="c-name" x="20" y="183">规则精简版</text><path class="c-bar" d="M150 166H177.11a4 4 0 0 1 4 4V186a4 4 0 0 1 -4 4H150Z"/><text class="c-val" x="191.11" y="183">约 1.4 美元</text><text class="c-val" x="650" y="183" text-anchor="end">2/2</text><text class="c-val" x="790" y="183" text-anchor="end">0</text><text class="c-val" x="920" y="183" text-anchor="end">0</text>
+      <path class="c-axis" d="M150 46V198"/>
+    </svg></div>
+    <figcaption><b>同一个任务跑六遍：等待部分的费用。</b>模拟收口环节：约 7 分钟的门禁，加约 8 分钟的复核子 agent；每种条件跑 2 次，费用折算到 90 万 token 上下文。没有规则的一组提前交回，报告里没有复核结论；精简版规则只讲约束，子 agent 自己写对了等待，全程没有一次缓存过期。</figcaption>
+  </figure>
+  <p>图里没画的两项：没有规则的一组中，有一个复核子 agent 用监视器盯着记录，被唤醒了 7 次；三种条件的总耗时分别约 16、16、20 分钟。</p>
+  <p>几个结论：</p>
+  <ul class="plain">
+    <li><b>等待的费用降了约九成</b>：精简版规则下，子 agent 自己写出了带完成标记的有界等待，全程没有一次缓存过期。</li>
+    <li><b>结果更可靠</b>：没有规则的一组提前交回了，报告里没有复核结论。原因从记录里看得很清楚：它的复核子 agent 结束本轮去等脚本，系统随即发出一条中途通知，父 agent 收到后被要求交回，交出了半成品。这是社区里已经有人报告过的 auto 模式问题。有了规则，子 agent 从不结束本轮，这条通知根本不会产生。</li>
+    <li><b>少打扰主会话</b>：没有规则时有 7 条中途通知唤醒主会话，每条都让主会话把整个上下文读一遍。</li>
+    <li><b>只讲约束反而更好</b>：精简版不教具体命令，两组都自己写出了正确的等待，标记先写临时文件再改名，比我原来给的模板还稳。</li>
+  </ul>
+  <p>代价是时间：精简版等复核子 agent 时，交回要等当前这段阻塞结束才送到，这次晚了约 3.5 分钟。所以我把每段阻塞从 4 分钟缩到了 3 分钟。</p>
+  <p>最后用这个 3 分钟的版本又跑了两遍。这次规则不再写进提示，只放在全局 <code>AGENTS.md</code> 里，由新会话里的 agent 自己加载：两遍结果都正确，全程没有查过一次进度，没有缓存过期，也没有中途通知；等待部分约 1.6 到 1.8 美元，和精简版相当；等复核子 agent 时，交回分别晚了 40 秒和 2 分 50 秒。</p>
+  <p>丑话也说在前面：每种条件只跑了两次，上下文也小。最关键的是，没有规则的那两组并没有复现收口 agent 那种每 4 秒一次的疯狂轮询——小上下文、短任务里，模型的表现要克制得多。所以「禁止轮询能省多少」这件事，证据仍然是那一晚的真实记录，而不是这次测试。</p>
+</section>
+
+<section id="closing">
+  <h2>写在最后</h2>
+  <p>回头看，这次的问题不在对抗性测试本身。复核交给独立子 agent，质量确实上去了，我会继续用。问题在于，<b>我切换的是「谁来做」，却没有重新设计「谁在等、怎么等」。</b></p>
+  <p>对人来说，等待是免费的：你泡杯茶，回来看结果就行。对 agent 来说，等待从来不是空闲——它每「看一眼」，都要把整个上下文重新读一遍。上下文 4 万时，这一眼几乎不要钱；上下文 95 万时，这一眼要 0.19 美元。而模型对此毫无感知，它不知道自己的每一次「看一眼」值多少钱，只是认真地、负责地，每 4 秒看一次。</p>
+  <p>所以等待必须被设计：主会话怎么等、子 agent 怎么等、等外部系统怎么等，各有各的最优解，而决定最优解的是缓存时效这种平台细节，不是直觉。Claude Code 内置的说明只写了「不要轮询」，没拦住；这条规则把每一层怎么等都写明了，测试里有规则的六遍，没有一遍查过进度。</p>
+  <p>如果你也在用独立的子 agent 做复核，又不确定自己有没有这个问题，不妨完整跑一遍流程，再让你的 Claude Code 或者其他 agent 把这次的会话记录（包括每个子 agent 的）复盘一遍：一共等了多少轮、每轮等了多久、等待期间花掉了多少 token。</p>
+  <p>最后说一个还没解决的问题：等待多花的 2.6 亿只占 14.4%，剩下约 85% 的 token 花在正常干活上。真正的大头，是每个做票 agent 的上下文都从 4 万涨到将近 100 万——整文件读取、一次性加载大量 skill 和 spec，让后半程每一次正常调用都很贵。轮询是最刺眼的窟窿，上下文膨胀才是最大的那块账单。下一篇我们继续聊其他优化。</p>
+</section>
+
+<section id="appendix" data-toc="附：等待后台工作规则">
+  <h2>附：完整的「等待后台工作」规则</h2>
+  <p>下面是我实际在用的规则全文，写在全局 <code>AGENTS.md</code> 里（Claude Code 通过 <code>CLAUDE.md</code> 导入它）。</p>
+  <pre class="codeblock"><code>## 等待后台工作
+
+等待期间每次工具调用都要重读整个上下文；子 agent 的缓存只保留 5 分钟，过期后再调用要整份重写。
+
+- **不得查看进度**：等子 agent、自己的命令或 CI 时，不得用任何方式查看进度（读它正在写的文件或日志、数行数、查进程、查 CI 状态）；结束后读取结果不算。
+- **主会话**：耗时的命令与子 agent 放后台；没有与它无关的事就结束本轮，等完成通知。
+- **子 agent 等待（自己的命令或派出的子 agent）**：不得靠结束本轮来等。每次调用最多阻塞 3 分钟（Bash 的 timeout 要显式设够，默认只等 2 分钟），期间只检查命令是否已结束（如它结束时写下的标记）；等子 agent 时什么都不查，它的交回会在下一次调用时送到。没结束就再等一次；命令的成败按它自己的退出码判定。
+- **等外部状态**（CI、部署）：用一条条件满足即退出、自带超时的命令（如 `/github-ops` 的 `watch-ci.sh`），按上两条的方式等它。</code></pre>
+</section>
+
+<footer class="foot" id="sources" data-toc="来源">
+  <div>引用链接</div>
+  <ul class="refs">
+    <li>[1] Claude Code 文档：Prompt caching（主会话与子 agent 的缓存时效）<br><a href="https://code.claude.com/docs/en/prompt-caching">https://code.claude.com/docs/en/prompt-caching</a></li>
+    <li>[2] Claude Code 文档：Subagents（后台子 agent 的完成通知）<br><a href="https://code.claude.com/docs/en/sub-agents">https://code.claude.com/docs/en/sub-agents</a></li>
+    <li>[3] Claude Code 文档：Tools reference（前台超时转后台、后台命令时限）<br><a href="https://code.claude.com/docs/en/tools-reference">https://code.claude.com/docs/en/tools-reference</a></li>
+    <li>[4] Anthropic 定价（缓存读写倍率）<br><a href="https://platform.claude.com/docs/en/about-claude/pricing">https://platform.claude.com/docs/en/about-claude/pricing</a></li>
+    <li>[5] 社区 issue：提示词能减少但无法杜绝子 agent 轮询<br><a href="https://github.com/anthropics/claude-code/issues/95202">https://github.com/anthropics/claude-code/issues/95202</a></li>
+    <li>[6] 社区 issue：auto 模式下子 agent 在等待时被要求提前交回<br><a href="https://github.com/anthropics/claude-code/issues/102867">https://github.com/anthropics/claude-code/issues/102867</a><br><a href="https://github.com/anthropics/claude-code/issues/103605">https://github.com/anthropics/claude-code/issues/103605</a></li>
+  </ul>
+</footer>

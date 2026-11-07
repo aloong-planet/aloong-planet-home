@@ -1,0 +1,41 @@
+/* Figures, code and quote blocks unique to this post. The shared look is in public/article.css. */
+.post-subagent-review-token-postmortem { --series:#2a78d6; --on-fill:#ffffff; --main-fill:#edf4fe; --main-line:#7fa8e6; --main-ink:#174a97; --mid-fill:#fef3e2; --mid-line:#dfa355; --mid-ink:#8a4500; --rev-fill:#f3eefd; --rev-line:#a78fe3; --rev-ink:#5330a8; --good-ink:#17653a; }
+
+/* Code and quote blocks, shared by the republished WeChat posts. */
+.post-subagent-review-token-postmortem .codeblock { margin:0; padding:14px 16px; overflow-x:auto; background:var(--panel); border:1px solid var(--line); border-radius:5px; font:400 13px/1.65 var(--mono); white-space:pre; }
+.post-subagent-review-token-postmortem .codeblock code { font-size:inherit; }
+.post-subagent-review-token-postmortem .quote { margin:0; padding:2px 0 2px 16px; border-left:3px solid var(--line); color:var(--muted); display:grid; gap:10px; max-width:46em; }
+
+/* Reference list: the manuscript numbers its entries itself, and long URLs must wrap on a phone. */
+.post-subagent-review-token-postmortem .foot .refs { margin:0; padding-left:0; list-style:none; display:grid; gap:8px; overflow-wrap:anywhere; }
+
+/* Figures are 940 units wide with 13-unit text at the smallest: 940 × 11 ÷ 13 keeps that text at 11px or more where the figure scrolls. */
+.post-subagent-review-token-postmortem .figw { min-width:796px; }
+
+/* Charts */
+.post-subagent-review-token-postmortem .c-name { font:600 15px var(--sans); }
+.post-subagent-review-token-postmortem .c-sub { font-size:13px; fill:var(--muted); }
+.post-subagent-review-token-postmortem .c-head { font-size:13px; fill:var(--muted); }
+.post-subagent-review-token-postmortem .c-val { font:600 15px var(--sans); }
+.post-subagent-review-token-postmortem .c-big { font:600 17px var(--sans); }
+.post-subagent-review-token-postmortem .c-bar { fill:var(--series); }
+.post-subagent-review-token-postmortem .c-track { fill:var(--band); }
+.post-subagent-review-token-postmortem .c-tick { fill:none; stroke:var(--series); stroke-width:1.25; }
+.post-subagent-review-token-postmortem .c-axis { fill:none; stroke:var(--mark); stroke-width:1; }
+.post-subagent-review-token-postmortem .c-rule { fill:none; stroke:var(--line); stroke-width:1; }
+
+/* Diagram: each role sets its own fill, outline and title color. */
+.post-subagent-review-token-postmortem .d-main { --r-fill:var(--main-fill); --r-line:var(--main-line); --r-ink:var(--main-ink); }
+.post-subagent-review-token-postmortem .d-mid { --r-fill:var(--mid-fill); --r-line:var(--mid-line); --r-ink:var(--mid-ink); }
+.post-subagent-review-token-postmortem .d-rev { --r-fill:var(--rev-fill); --r-line:var(--rev-line); --r-ink:var(--rev-ink); }
+.post-subagent-review-token-postmortem .d-box { fill:var(--r-fill); stroke:var(--r-line); stroke-width:1.25; }
+.post-subagent-review-token-postmortem .d-box.d-hi { stroke-width:2.5; }
+.post-subagent-review-token-postmortem .d-title { font:600 17px var(--sans); fill:var(--r-ink); }
+.post-subagent-review-token-postmortem .d-desc { font-size:14px; fill:var(--muted); }
+.post-subagent-review-token-postmortem .d-pill { fill:var(--mid-ink); }
+.post-subagent-review-token-postmortem .d-pilltext { font:600 14px var(--sans); fill:var(--on-fill); }
+.post-subagent-review-token-postmortem .d-note { font:600 15px var(--sans); fill:var(--good-ink); }
+.post-subagent-review-token-postmortem .d-col { font-size:15px; letter-spacing:2px; fill:var(--muted); }
+.post-subagent-review-token-postmortem .d-div { fill:none; stroke:var(--mark); stroke-width:1; stroke-dasharray:4 4; }
+.post-subagent-review-token-postmortem .d-link { fill:none; stroke:var(--edge); stroke-width:1.5; }
+.post-subagent-review-token-postmortem .d-mk { fill:var(--edge); }
