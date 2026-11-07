@@ -4,7 +4,8 @@
 // the contents mark, interactive figures, scripting unavailable, a throwing post script, long text in full
 // on the Blog page, and fonts requested; on the Blog page, the one-line header, the lead's text and cover side by side
 // and centered on each other, two cards to a row with a leftover card alone on the left, one column on a phone, cover
-// frames at 2.35:1 that crop another shape and keep their size when an image fails, and the cover lift on hover.
+// frames at 2.35:1 that crop another shape and keep their size when an image fails, and the cover lift on hover,
+// which reduced motion turns off.
 // Which image each post uses as its cover is content, checked by eye. Test them here once the browser suite capability is enabled.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
@@ -69,6 +70,8 @@ test('a manifest entry, a body and a cover produce the post page, the homepage e
   assert.deepEqual(hrefs(home, 'ap-home-post'), ['/blog/first']);
   assert.match(home, /<a class="ap-home-post" href="\/blog\/first"><time datetime="2026-11-05">2026-11-05<\/time><h2>标题 first<\/h2><p>摘要 first<\/p><\/a>/);
   assert.match(home, /<a class="ap-link ap-home-blog-all" href="\/blog">全部文章<\/a>/);
+  // The homepage list stays text: its covers appear on the Blog page only.
+  assert.deepEqual(pageImages(home), []);
   // A single post leads alone; its cover carries no text alternative, since the title beside it names the post.
   assert.ok(list.includes('<main><div class="ap-post-list"><article class="ap-post-lead"><a class="ap-post-card" href="/blog/first"><div class="ap-post-cover"><img src="/blog/first.webp" alt=""></div><div class="ap-post-text"><time datetime="2026-11-05">2026-11-05</time><h2>标题 first</h2><p>摘要 first</p></div></a></article></div></main>'), list);
   assert.deepEqual(await readFile(join(s.outDir, 'blog/first.webp')), COVER);
@@ -402,7 +405,7 @@ test('deployment checks tell every blog page of the real site from the homepage 
   const list = await readFile(join(outDir, 'blog.html'), 'utf8');
   assert.doesNotMatch(list, /排版示例/);
   assert.equal([...list.matchAll(/<a class="ap-post-card"/g)].length, posts.length);
-  assert.deepEqual([...homepage.matchAll(/<(h[1-6])\b/g)].map(m => m[1]).slice(0, 2), ['h1', 'h2']);
+  for (const page of [homepage, list]) assert.deepEqual([...page.matchAll(/<(h[1-6])\b/g)].map(m => m[1]).slice(0, 2), ['h1', 'h2']);
 });
 
 test('the build script writes the blog and ships every image the homepage and the not-found page show, and a refused post stops it', async () => {
@@ -483,8 +486,10 @@ test('the deployment-check script passes on the whole site and fails when a host
     await failsOn(hosts[1], missing('/assets/golden-wag/motion-2.webp'), '/assets/golden-wag/motion-2\\.webp answered 404');
     await failsOn(hosts[1], missing('/assets/golden-interaction.js'), '/assets/golden-interaction\\.js is not a script');
     await failsOn(hosts[1], missing('/assets/not-found/puzzled-dog.webp'), '/assets/not-found/puzzled-dog\\.webp answered 404');
-    // The manifest's last post is not the lead, so a check of the lead's cover alone would miss this.
-    const lastCover = `/blog/${(await readManifest(join(repo, 'content'))).at(-1).slug}.webp`;
+    // The cover of the card the Blog page lists last, which is never the lead's, so a check of the lead's cover alone would miss it.
+    const cards = hrefs(await readFile(join(outDir, 'blog.html'), 'utf8'), 'ap-post-card');
+    assert.ok(cards.length > 1);
+    const lastCover = `${cards.at(-1)}.webp`;
     await failsOn(hosts[1], missing(lastCover), `${lastCover.replaceAll('.', '\\.')} answered 404`);
     await failsOn(hosts[1], host => { host.fallback = 'homepage'; }, '/\\S+ is not the not-found page');
     await failsOn(hosts[1], host => { host.fallback = 'homepage'; host.missing.add('/assets/golden-wag/motion-2.webp'); }, '/assets/golden-wag/motion-2\\.webp is not an image');

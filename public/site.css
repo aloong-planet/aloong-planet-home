@@ -115,4 +115,4 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 @media(max-width:380px) {
  .ap-scene { transform:translate(-50%,-50%) scale(.64); }
 }
-@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .ap-art,.ap-nav a,.ap-button,.ap-post-cover { transition:none; } }
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .ap-art,.ap-nav a,.ap-button,.ap-post-cover { transition:none; } .ap-post-card:hover .ap-post-cover { transform:none; } }

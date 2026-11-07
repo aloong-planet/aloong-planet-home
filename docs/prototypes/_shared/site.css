@@ -37,4 +37,4 @@
 .ap-post-card:hover h2{text-decoration:underline;text-underline-offset:5px}
 .ap-post-card:hover .ap-post-cover{transform:translateY(-4px)}
 @media(max-width:700px){.ap-post-list{grid-template-columns:1fr;gap:44px}.ap-post-lead{margin-bottom:0}.ap-post-lead .ap-post-card{display:block}.ap-post-lead time{margin-top:18px}.ap-post-lead h2{font-size:22px}.ap-post-lead p{font-size:13px}}
-@media(prefers-reduced-motion:reduce){.ap-post-cover{transition:none}}
+@media(prefers-reduced-motion:reduce){.ap-post-cover{transition:none}.ap-post-card:hover .ap-post-cover{transform:none}}
