@@ -1,0 +1,20 @@
+/* Figures and code blocks for this post. The shared look is in public/article.css. */
+.post-agent-opentelemetry{--ot-blue-fill:#EDF4FE;--ot-blue-line:#7FA8E6;--ot-blue-ink:#174A97;--ot-violet-fill:#F3EEFD;--ot-violet-line:#A78FE3;--ot-violet-ink:#5330A8;--ot-teal-fill:#E6F6F6;--ot-teal-line:#57B5BD;--ot-teal-ink:#005F6B;--ot-orange-fill:#FEF3E2;--ot-orange-line:#DFA355;--ot-orange-ink:#8A4500;--ot-green-fill:#EAF7EE;--ot-green-line:#74BE8F;--ot-green-ink:#17653A}
+.post-agent-opentelemetry .codeblock { margin:0; padding:14px 16px; overflow-x:auto; background:var(--panel); border:1px solid var(--line); border-radius:5px; font:400 13px/1.65 var(--mono); white-space:pre; }
+.post-agent-opentelemetry .codeblock code { font-size:inherit; }
+/* Smallest figure text is 13 units in a 940-wide viewBox: 940 x 11 / 13 keeps it at 11px or more when the figure scrolls on a phone. */
+.post-agent-opentelemetry .figw{min-width:796px}
+/* One tone per role in a figure: the waterfall colors spans by nesting depth, the chain colors steps by where they run. */
+.post-agent-opentelemetry .ot-blue{--ot-fill:var(--ot-blue-fill);--ot-line:var(--ot-blue-line);--ot-ink:var(--ot-blue-ink)}
+.post-agent-opentelemetry .ot-violet{--ot-fill:var(--ot-violet-fill);--ot-line:var(--ot-violet-line);--ot-ink:var(--ot-violet-ink)}
+.post-agent-opentelemetry .ot-teal{--ot-fill:var(--ot-teal-fill);--ot-line:var(--ot-teal-line);--ot-ink:var(--ot-teal-ink)}
+.post-agent-opentelemetry .ot-orange{--ot-fill:var(--ot-orange-fill);--ot-line:var(--ot-orange-line);--ot-ink:var(--ot-orange-ink)}
+.post-agent-opentelemetry .ot-green{--ot-fill:var(--ot-green-fill);--ot-line:var(--ot-green-line);--ot-ink:var(--ot-green-ink)}
+.post-agent-opentelemetry .ot-box{fill:var(--ot-fill);stroke:var(--ot-line);stroke-width:1.25}
+.post-agent-opentelemetry .ot-brace{fill:none;stroke:var(--ot-line);stroke-width:1.5}
+.post-agent-opentelemetry .ot-name{font-size:15px;font-weight:500;fill:var(--ot-ink)}
+.post-agent-opentelemetry .ot-tag{font-size:14px;font-weight:500;fill:var(--ot-ink)}
+.post-agent-opentelemetry .ot-key{font-size:13px;fill:var(--ot-ink)}
+.post-agent-opentelemetry .ot-note{font-size:13px;fill:var(--muted)}
+.post-agent-opentelemetry .ot-arrow{fill:none;stroke:var(--edge);stroke-width:1.5}
+.post-agent-opentelemetry .ot-head{fill:var(--edge)}

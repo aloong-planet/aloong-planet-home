@@ -3,10 +3,10 @@
 > Related: [features](../features/blog.md) · [visitor line](visitor-counter.md)
 
 ## Problem Statement
-Aloong wants to publish long, figure-heavy explainers, starting with an analysis of DeepSeek's Super-agent article, show recent writing on the homepage, and have every later post look the same without restyling each one.
+Aloong wants to publish long, figure-heavy explainers, starting with an analysis of DeepSeek's Super-agent article, show recent writing on the homepage, list every post on a Blog page that reads differently from the homepage's text list, and have every later post look the same without restyling each one.
 
 ## Solution
-Publish posts as HTML bodies listed in one manifest. The build turns them into static post pages with a shared layout and table of contents, the full list on the Blog page, and the newest entries in the homepage's first screen. The build refuses a post that would bring its own fonts, dark appearance, or global styles.
+Publish posts as HTML bodies listed in one manifest. Each post also brings a cover image. The build turns them into static post pages with a shared layout and table of contents, the full list on the Blog page as covers with the newest post leading, and the newest entries in the homepage's first screen. The build refuses a post that has no cover, or that would bring its own fonts, dark appearance, or global styles.
 
 ## User Stories
 
@@ -24,10 +24,15 @@ As a visitor landing on the homepage, I see recent writing beside the portrait a
 
 ### blog::US-002 Browse all posts
 
-As a reader, I can see everything published, so older posts stay reachable once they leave the homepage.
+As a reader, I can see everything published, each post with its cover, so older posts stay reachable once they leave the homepage and the list reads differently from the homepage's text list.
 
-- blog::US-002/AC-01: The Blog page lists every published post, newest first, with its date, title, and summary. It shows no layout-example notice or example entries.
-- blog::US-002/AC-02: Activating anywhere on a row opens that post, and hovering underlines its title.
+- blog::US-002/AC-01: The Blog page lists every published post, newest first, each with its cover, date, title, and summary. Titles and summaries show in full. It shows no layout-example notice or example entries.
+- blog::US-002/AC-02: Activating anywhere on a post's card opens that post. Hovering a card underlines its title and lifts its cover 4px; with reduced motion the cover stays still. Keyboard focus draws a visible ring around the whole card.
+- blog::US-002/AC-03: The page header is one line of small text above the posts. The heading 「Blog」 is 12px, in capitals with 2px letter spacing. The introduction 「关于技术、作品，以及创造的过程。把值得留下的想法，慢慢写下来。」 follows on the same baseline, at 12px in muted text. The header starts 48px below the navigation, or 32px on windows 700px wide or narrower, and leaves 40px before the posts. Where the line does not fit, the introduction wraps under the heading.
+- blog::US-002/AC-04: On windows wider than 700px, the newest post leads across the full content width. Its text takes the left third and its cover the right two thirds, 40px apart, and the two are vertically centered on each other. The text is the date, a 26px title, and a 14px summary. Posts with the same date follow blog::REQ-002/AC-04.
+- blog::US-002/AC-05: On windows wider than 700px, the other posts follow the lead two to a row, 40px apart. Each card shows its cover on top, then the date, a 20px title, and a 13px summary. Cards in a row align at the top, and a post left over sits alone in the left column.
+- blog::US-002/AC-06: On windows 700px wide or narrower, the posts stack in one column with the newest first. Each shows its cover above its text, and the newest post's title is 22px and its summary 13px.
+- blog::US-002/AC-07: Every cover shows at 2.35:1, the shape of a WeChat cover, with a thin border and rounded corners so a white cover keeps its edge. A cover of another shape is scaled to fill the frame, centered, and its overflowing edges are cut off. Covers are decorative and carry no text alternative, since the title beside each names the post.
 
 ### blog::US-003 Read a post
 
@@ -51,7 +56,7 @@ As a reader, I can read a long post comfortably and move around it quickly.
 
 ### blog::REQ-002 Publishing a post
 
-- blog::REQ-002/AC-01: Adding a manifest entry and an HTML body produces the post page, a Blog row, and, when it is among the newest 4, a homepage entry, with no change to page templates.
+- blog::REQ-002/AC-01: Adding a manifest entry, an HTML body, and a cover produces the post page, a Blog card, and, when it is among the newest 4, a homepage entry, with no change to page templates.
 - blog::REQ-002/AC-02: A post may add its own stylesheet and script for figures it alone uses. A post that has neither still builds and loads no extra files.
 - blog::REQ-002/AC-03: Post pages and lists are complete in the built HTML, so they need no client-side request to show their text.
 - blog::REQ-002/AC-04: Posts with the same date keep their manifest order.
@@ -73,6 +78,13 @@ Each case stops the build with a message naming the post and the problem; nothin
 - blog::REQ-004/AC-05: A rule on the post's own class that sets anything other than custom properties, or a custom property that redefines a shared token.
 - blog::REQ-004/AC-06: A font declaration in a post stylesheet whose family is anything but one shared font token.
 - blog::REQ-004/AC-07: A manifest problem: no posts, a missing or empty field, a slug that is not lowercase words joined by hyphens, a date that is not a real `YYYY-MM-DD` date, a duplicate slug, or a listed body file that does not exist.
+- blog::REQ-004/AC-08: A listed post with no cover image.
+
+### blog::REQ-005 Post covers
+
+- blog::REQ-005/AC-01: Every published post has a cover image, shown with the post on the Blog page.
+- blog::REQ-005/AC-02: A post republished from a WeChat article uses that article's cover.
+- blog::REQ-005/AC-03: 《Super-agent 架构图解》, which has no WeChat article, uses a still image of its architecture map as its cover, shown whole and centered on white.
 
 ## Quality Requirements
 
@@ -108,6 +120,17 @@ Homepage list:
 - The narrowest two-column window: the list never covers the dog's hit area, the portrait, or the introduction (blog::US-001/AC-05).
 - Keyboard: each entry is one focusable link with a visible focus ring, and the visible heading order stays h1 then h2.
 
+Blog page:
+- One published post: the lead shows alone, with no cards below it (blog::US-002/AC-04).
+- An even number of posts leaves one card alone in the left column of the last row (blog::US-002/AC-05).
+- A lead with a long title or summary has text taller than its cover; the two stay centered on each other (blog::US-002/AC-04).
+- Two posts with the same newest date: the one listed first in the manifest leads (blog::REQ-002/AC-04).
+- A cover whose shape is not 2.35:1 is published as it is and shown centered and cropped to fill its frame; the build does not refuse it (blog::US-002/AC-07).
+- A cover that fails to load leaves its frame at the same size on the light ground; the date, title, summary, and link still work (blog::US-002/AC-07).
+- A post without a cover never reaches the page, because the build refuses it (blog::REQ-004/AC-08).
+- Keyboard: each card is one focusable link with a visible focus ring, and the visible heading order stays h1 then h2 (blog::US-002/AC-02).
+- The narrowest phone window: the header wraps and the page never scrolls sideways (blog::US-002/AC-03, AC-06).
+
 Post page:
 - Opening an address with a section, reloading, and browser back or forward all land on the section, with no animation (blog::US-003/AC-06).
 - A contents link clicked while already at the page end still moves the mark (blog::US-003/AC-07).
@@ -119,10 +142,10 @@ Post page:
 
 Build and publishing:
 - Publishing no posts at all fails the build rather than showing an unprototyped empty page (blog::REQ-004/AC-07).
-- A stylesheet or script file with no manifest entry is ignored and is not deployed.
+- A stylesheet, script, or cover file with no manifest entry is ignored and is not deployed.
 - A title or summary containing HTML characters is shown as text, never parsed as markup.
 - A removed post's address shows the [not-found page](not-found.md) with status 404, like any address the site does not have. No redirect is kept.
-- Deployment checks request the homepage, the Blog page, every post page, and the shared stylesheet and script on all public hosts, and each must answer with status 200 and its own expected text, so neither the not-found page nor another page passes for it.
+- Deployment checks request the homepage, the Blog page, every post page, and the shared stylesheet and script on all public hosts, and each must answer with status 200 and its own expected text, so neither the not-found page nor another page passes for it. Every cover the Blog page shows must answer with status 200 and an image content type.
 
 Content a post brings in:
 - Other-site links, including scheme-relative ones, open a new tab with no referrer. Site links and in-page links stay in the tab. A link that already names a target keeps it, and a link that names its own `rel` keeps that instead of gaining no-referrer.
@@ -131,7 +154,9 @@ Content a post brings in:
 - The post's own script runs on that post's page only, and its stylesheet applies only inside the post's own class.
 
 Existing features:
-- Homepage portrait, dog interaction, visitor line, Apps, footer, and the visitor API behave as before, apart from the narrow-screen spacing that makes room for the list and the [visitor line wording](visitor-counter.md).
+- The homepage list stays a text list with no covers (blog::US-001/AC-01).
+- Homepage portrait, dog interaction, visitor line, Apps cards, and the visitor API behave as before, apart from the narrow-screen spacing that makes room for the list and the [visitor line wording](visitor-counter.md).
+- The homepage footer has no Blog link: the list's "全部文章" and the top navigation lead to the Blog page.
 - The homepage's Apps and About links keep their smooth scroll; only post pages drop it.
 
 ## Implementation Decisions
@@ -140,16 +165,17 @@ Existing features:
 - Post pages load the site stylesheet, then a shared article stylesheet and a shared article script that only post pages use, then the post's own files if it has them. Site-wide smooth scrolling is overridden in the shared article stylesheet, because the browser gives no control over its duration.
 - A post's own styles are written under a `post-<slug>` class placed on the post's content, leaving the title block and contents outside its reach. The validation reads the shared tokens from the site and article stylesheets, so a token added there is protected automatically. It reads stylesheet structure with strings emptied, and allows named at-rules and font values rather than refusing named ones, because refusing named forms kept leaving others open.
 - The post sections appear in the contents through `section` or `footer` elements with an `id`. An optional `data-toc` attribute supplies a shorter label; it is the only way a `footer` joins the contents.
+- Each post's cover is a WebP file named after the post and kept with the post's other files, reduced to web size before it is added; a cover under another name or format counts as missing. The build checks that it exists and copies it, but converts nothing, so no image dependency is added (blog::CON-001). The Blog page writes the lead and the cards into the built page like the other lists. Each cover frame keeps its 2.35:1 shape before its image loads, so nothing shifts as covers arrive, and covers below the lead load lazily.
 - The homepage list's width runs from the window edge to the dog, which sits at a fixed offset from the portrait group's center. Auto margins center the list so that it stops at the top when too tall.
 - Contents are generated once at build time and the current-section mark is a small script; the mark is `aria-current`.
 - Status marks in a post are drawn in its stylesheet. Typed symbols are not used as icons.
 
 ## Testing Decisions
 
-A good test here builds a real site from fixture posts in a temporary folder and asserts on the written pages and on the build's refusals, without looking inside the build step. The seams are the blog build module's exported build function, the build and deployment-check scripts run as processes in a temporary folder, and the visitor client's exported display function with a stubbed network. Deployment checks are tested against the real site and local servers that answer an address the site does not have with the not-found page and status 404, as the host does; the `SMOKE_DEADLINE_MS` environment variable shortens their retry window so a failing test ends in seconds, and nothing in deployment sets it. Existing precedent is `tests/deploy.test.mjs` and `tests/visitor-client.test.mjs`.
+A good test here builds a real site from fixture posts in a temporary folder and asserts on the written pages and on the build's refusals, without looking inside the build step. That covers the Blog page's order, with the newest post leading and every post carrying its cover, and the refusal of a post with no cover. The seams are the blog build module's exported build function, the build and deployment-check scripts run as processes in a temporary folder, and the visitor client's exported display function with a stubbed network. Deployment checks are tested against the real site and local servers that answer an address the site does not have with the not-found page and status 404, as the host does; the `SMOKE_DEADLINE_MS` environment variable shortens their retry window so a failing test ends in seconds, and nothing in deployment sets it. Existing precedent is `tests/deploy.test.mjs` and `tests/visitor-client.test.mjs`.
 
-Layout, type sizes, scrolling, and interactive figures are checked in a real browser against the built site at the window sizes this spec names; per the project capabilities the browser suite is not enabled, so these are recorded runs, not automated tests.
+Layout, type sizes, hover, scrolling, and interactive figures are checked in a real browser against the built site at the window sizes this spec names; per the project capabilities the browser suite is not enabled, so these are recorded runs, not automated tests.
 
 ## Out of Scope
 
-Markdown or any other post format; drafts and scheduled publishing (a listed post is published); tags, search, pagination, comments; RSS, sitemap, and social preview tags; cover images and post-owned image assets, which the first post does not use; dark appearance and other languages; redirects for removed posts.
+Markdown or any other post format; drafts and scheduled publishing (a listed post is published); tags, search, pagination, comments; RSS, sitemap, and social preview tags; post-owned image files other than the cover; dark appearance and other languages; redirects for removed posts.

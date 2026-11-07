@@ -1,0 +1,35 @@
+/* Figures and code blocks for this post. The shared look is in public/article.css. */
+.post-agent-structured-result-testing { --sr-main-fill:#eef6ff; --sr-main-line:#6294bb; --sr-main-ink:#213547; --sr-decide-fill:#fff5e5; --sr-decide-line:#c9a16c; --sr-decide-ink:#513d21; --sr-proof-fill:#eaf5ee; --sr-proof-line:#699880; --sr-proof-ink:#204632; --sr-fail-fill:#fff0ed; --sr-fail-line:#ba8175; --sr-fail-ink:#683e33; }
+
+/* Code blocks, shared markup across the republished posts. */
+.post-agent-structured-result-testing .codeblock { margin:0; padding:14px 16px; overflow-x:auto; background:var(--panel); border:1px solid var(--line); border-radius:5px; font:400 13px/1.65 var(--mono); white-space:pre; }
+.post-agent-structured-result-testing .codeblock code { font-size:inherit; }
+
+/* Figures: both are 780 wide with 13px as the smallest text, so 660px keeps that text at 11px or more on a phone. */
+.post-agent-structured-result-testing .figw { min-width:660px; max-width:820px; margin:0 auto; }
+
+/* Box colors by role: main flow, decision, evidence, failure. */
+.post-agent-structured-result-testing .sr-main { fill:var(--sr-main-fill); stroke:var(--sr-main-line); stroke-width:1.25; }
+.post-agent-structured-result-testing .sr-decide { fill:var(--sr-decide-fill); stroke:var(--sr-decide-line); stroke-width:1.25; }
+.post-agent-structured-result-testing .sr-proof { fill:var(--sr-proof-fill); stroke:var(--sr-proof-line); stroke-width:1.25; }
+.post-agent-structured-result-testing .sr-fail { fill:var(--sr-fail-fill); stroke:var(--sr-fail-line); stroke-width:1.25; }
+.post-agent-structured-result-testing .sr-frame { fill:none; stroke:var(--mark); stroke-width:1.25; }
+.post-agent-structured-result-testing .sr-sep { fill:none; stroke:var(--line); stroke-width:1; }
+.post-agent-structured-result-testing .sr-dot { fill:var(--sr-proof-line); }
+
+/* Text */
+.post-agent-structured-result-testing .sr-t { font-size:14px; font-weight:500; }
+.post-agent-structured-result-testing .sr-head { font-size:14px; font-weight:600; }
+.post-agent-structured-result-testing .sr-lb { font-size:13px; }
+.post-agent-structured-result-testing .sr-mono { font-family:var(--mono); }
+.post-agent-structured-result-testing .sr-on-main { fill:var(--sr-main-ink); }
+.post-agent-structured-result-testing .sr-on-decide { fill:var(--sr-decide-ink); }
+.post-agent-structured-result-testing .sr-on-proof { fill:var(--sr-proof-ink); }
+.post-agent-structured-result-testing .sr-on-fail { fill:var(--sr-fail-ink); }
+
+/* Lines and arrowheads */
+.post-agent-structured-result-testing .sr-edge { fill:none; stroke:var(--edge); stroke-width:1.5; }
+.post-agent-structured-result-testing .sr-proof-edge { fill:none; stroke:var(--sr-proof-line); stroke-width:1.5; }
+.post-agent-structured-result-testing .sr-dash { stroke-dasharray:5 4; }
+.post-agent-structured-result-testing .sr-mk { fill:var(--edge); }
+.post-agent-structured-result-testing .sr-mk-proof { fill:var(--sr-proof-line); }

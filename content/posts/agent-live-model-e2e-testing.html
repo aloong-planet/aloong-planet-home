@@ -1,0 +1,218 @@
+<section>
+  <p class="lead">刚开始用 Codex 开发微信插件时，我经常遇到一种落差：测试报告里已经全部通过，真正拿到微信里使用，结果却和预期不一样。</p>
+  <p>这个插件的入口是微信里的 Clawbot，可以定时推送信息、整理笔记，也可以按要求查找和发送文件、图片。我的需求看起来并不复杂，但交付时常常要反复磨合：Codex 完成修改，单元测试和 E2E 都跑通了，我发一句消息，却发现它没有正确理解要求，或没有完成应有的操作。把问题反馈回去，再修改、再测试，往往要经过几轮，才能达到最初设定的目标。</p>
+  <p>后来，我把真模型端到端回归加入了交付流程：不只检查工具能否执行，还让真实模型接收用户口令、处理连续对话，再核对最终发生了什么。这让不少原本要等我使用后才暴露的问题，提前在开发阶段被发现和修复。目前目标达成率接近 100%。</p>
+  <p>前面的<a href="/blog/agent-structured-result-testing">《聊一聊Agent开发中的语义化测试替代方案》</a>，介绍了如何通过结构化输出，减少“意思答对了，却因措辞不同被测试判错”的问题；<a href="/blog/agent-opentelemetry">《聊一聊 OpenTelemetry 在 Agent 开发中的作用》</a>，介绍了如何用链路追踪串起执行过程，让开发 Agent 更容易定位故障。这两项是判断结果和排查问题的基础，具体实现可以回看前文。这一篇重点说说：怎样把它们用在真实交互测试中，缩小“测试通过”和“交付符合预期”之间的差距。</p>
+</section>
+
+<section id="why-tests-pass" data-toc="为什么测试都通过了">
+  <h2>为什么测试都通过了，交付仍然不符合预期</h2>
+  <p>这里先区分两个角色：业务 Agent 是插件里响应微信消息的模型；开发 Agent 是帮助我读代码、运行测试、定位问题和修复缺陷的 Codex。本文讨论的，是后者如何测试前者及其背后的完整系统。</p>
+  <p>后来回头检查，我发现问题不在于“有没有 E2E”这个名字，而在于它到底覆盖了什么。我的系统既有模型决策，也有权限、文件沙箱、工作流和消息发送。单个模块正确，不能自动推出整条交互正确。</p>
+  <p><b>首先，工具能工作，不代表模型会正确使用它。</b>“把相册中最新一张图片发给我”，需要模型理解目录范围，决定查询和排序参数，再把正确的文件交给发送流程。如果测试已经给好了参数、文件引用和工具调用，它验证的是执行能力，却没有验证这些决定能不能由真实模型作出。</p>
+  <p><b>其次，一轮操作成功，不代表连续交互也能接上。</b>模型列出两张图片后，用户回答“都要”，系统必须把这句话和之前的候选、待选任务以及权限上下文联系起来。只分别测试“列出图片”和“发送两张图片”，就可能漏掉中间的衔接。任务改了、用户取消了，旧状态也不能继续影响后续执行。</p>
+  <p><b>还有，测试路径和实际使用路径必须对得上。</b>如果测试直接调用底层工具，就无法覆盖消息进入系统后的一系列处理；如果模型输出始终是预设的，也就看不到真实模型可能选择的参数、探索路径和纠错过程。</p>
+  <p>这并不意味着原来的测试没有价值。单元测试、集成测试和预设模型的 E2E，仍然适合验证确定的规则、接口接线和异常分支。传统 E2E 也可以覆盖复杂状态和实际副作用；我们缺少的，是把真实模型的理解与决策纳入同一条验证链路。</p>
+  <p>所以，我没有用另一套测试替换它们，而是在此基础上补了一层：<b>从用户会说的话开始，让真实模型参与完整执行，再检查任务有没有真正达成。</b></p>
+</section>
+
+<section id="real-interaction">
+  <h2>把真实交互放进端到端回归</h2>
+  <p>我把这部分称为“真模型端到端回归测试”。它不是再请一个模型给回答打分，而是让真实的业务模型进入被测试的执行链路。</p>
+  <p>测试程序从专用的模拟微信入口提交口令，进入与生产一致的入站处理，再经过模型会话、工具执行和工作流。查询使用受控测试文件和权限配置，模型需要自己选择工具和参数，测试不替它预先安排决定。</p>
+  <p>外部微信渠道在自动化阶段采用模拟实现，记录本来要发送的内容，不真的把每一轮回归消息发到我的手机。因此，这里说的“一致”是应用内部处理链路一致，不是把模拟通道冒充真实微信网络。</p>
+  <p>整个过程可以概括为：</p>
+  <blockquote class="quote"><p>用户口令 → 生产一致的入站链路 → 真实模型自主调用工具 → 实际文件操作与工作流 → 模拟发送记录 → 结论和证据核对。</p></blockquote>
+  <p>传统的单元测试、集成测试和预设模型测试仍然保留。真模型回归是在它们之上，专门补上“模型如何使用系统”的验证。</p>
+  <figure class="fig" id="fig-live-run">
+    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 332" role="img" aria-label="真模型端到端回归的一次执行：用户口令从专用的模拟微信入口提交，经过与生产一致的入站链路，由真实模型自主调用工具、自己选择工具和参数，再进行实际文件操作与工作流，使用受控测试文件和权限配置；模拟发送记录本来要发送的内容；最后用结构化结论、Trace 和实际执行记录核对结论和证据。对照原来的测试：模型输出始终是预设的时，看不到真实模型可能选择的参数、探索路径和纠错过程；测试直接调用底层工具时，参数、文件引用和工具调用已由测试给好，无法覆盖消息进入系统后的一系列处理。">
+      <defs>
+        <marker id="agent-live-model-e2e-testing-m1" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path class="lm-mk-edge" d="M0 0L10 5L0 10z"/></marker>
+        <marker id="agent-live-model-e2e-testing-m1g" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path class="lm-mk-gap" d="M0 0L10 5L0 10z"/></marker>
+      </defs>
+      <text class="lm-gt" x="392" y="26" text-anchor="middle">模型输出始终是预设的时</text>
+      <text class="lm-gd" x="392" y="48" text-anchor="middle">看不到真实模型可能选择的参数、探索路径和纠错过程</text>
+      <path class="lm-miss" d="M392 56V68M327 84V68H457V84"/>
+      <text class="lm-h" x="15" y="90">真模型端到端回归</text>
+
+      <rect class="lm-test" x="15" y="104" width="130" height="110" rx="4"/>
+      <text class="lm-t lm-test-ink" x="80" y="138" text-anchor="middle">用户口令</text>
+      <text class="lm-d" x="80" y="177" text-anchor="middle">从专用的模拟</text>
+      <text class="lm-d" x="80" y="195" text-anchor="middle">微信入口提交</text>
+
+      <rect class="lm-app" x="171" y="104" width="130" height="110" rx="4"/>
+      <text class="lm-t lm-app-ink" x="236" y="129" text-anchor="middle">生产一致的</text>
+      <text class="lm-t lm-app-ink" x="236" y="148" text-anchor="middle">入站链路</text>
+      <text class="lm-d" x="236" y="177" text-anchor="middle">应用内部处理</text>
+      <text class="lm-d" x="236" y="195" text-anchor="middle">链路一致</text>
+
+      <rect class="lm-model" x="327" y="104" width="130" height="110" rx="4"/>
+      <text class="lm-t lm-model-ink" x="392" y="129" text-anchor="middle">真实模型</text>
+      <text class="lm-t lm-model-ink" x="392" y="148" text-anchor="middle">自主调用工具</text>
+      <text class="lm-d" x="392" y="177" text-anchor="middle">自己选择</text>
+      <text class="lm-d" x="392" y="195" text-anchor="middle">工具和参数</text>
+
+      <rect class="lm-app" x="483" y="104" width="130" height="110" rx="4"/>
+      <text class="lm-t lm-app-ink" x="548" y="129" text-anchor="middle">实际文件操作</text>
+      <text class="lm-t lm-app-ink" x="548" y="148" text-anchor="middle">与工作流</text>
+      <text class="lm-d" x="548" y="177" text-anchor="middle">受控测试文件</text>
+      <text class="lm-d" x="548" y="195" text-anchor="middle">和权限配置</text>
+
+      <rect class="lm-test" x="639" y="104" width="130" height="110" rx="4"/>
+      <text class="lm-t lm-test-ink" x="704" y="138" text-anchor="middle">模拟发送记录</text>
+      <text class="lm-d" x="704" y="177" text-anchor="middle">记录本来要</text>
+      <text class="lm-d" x="704" y="195" text-anchor="middle">发送的内容</text>
+
+      <rect class="lm-test" x="795" y="104" width="130" height="110" rx="4"/>
+      <text class="lm-t lm-test-ink" x="860" y="138" text-anchor="middle">结论和证据核对</text>
+      <text class="lm-d" x="860" y="177" text-anchor="middle">结构化结论、Trace</text>
+      <text class="lm-d" x="860" y="195" text-anchor="middle">和实际执行记录</text>
+
+      <path class="lm-flow" marker-end="url(#agent-live-model-e2e-testing-m1)" d="M145 138H171"/>
+      <path class="lm-flow" marker-end="url(#agent-live-model-e2e-testing-m1)" d="M301 138H327"/>
+      <path class="lm-flow" marker-end="url(#agent-live-model-e2e-testing-m1)" d="M457 138H483"/>
+      <path class="lm-flow" marker-end="url(#agent-live-model-e2e-testing-m1)" d="M613 138H639"/>
+      <path class="lm-flow" marker-end="url(#agent-live-model-e2e-testing-m1)" d="M769 138H795"/>
+
+      <text class="lm-gt" x="15" y="242">测试直接调用底层工具时</text>
+      <circle class="lm-dot" cx="15" cy="256" r="4"/>
+      <path class="lm-miss" marker-end="url(#agent-live-model-e2e-testing-m1g)" d="M19 256H548V214"/>
+      <text class="lm-gd" x="562" y="238">参数、文件引用和工具调用</text>
+      <text class="lm-gd" x="562" y="256">已由测试给好</text>
+      <text class="lm-gd" x="15" y="280">无法覆盖消息进入系统后的一系列处理</text>
+
+      <rect class="lm-test" x="15" y="305" width="18" height="12" rx="2"/>
+      <text class="lm-s" x="40" y="316">测试程序与模拟渠道</text>
+      <rect class="lm-app" x="185" y="305" width="18" height="12" rx="2"/>
+      <text class="lm-s" x="210" y="316">应用内部链路，与生产一致</text>
+      <rect class="lm-model" x="394" y="305" width="18" height="12" rx="2"/>
+      <text class="lm-s" x="419" y="316">真实业务模型</text>
+      <path class="lm-miss" d="M525 311H543"/>
+      <text class="lm-s" x="550" y="316">原来的测试</text>
+    </svg></div>
+    <figcaption>中间一排方框是真模型端到端回归走过的链路，从专用的模拟微信入口提交口令，到核对结论和证据。红色标出原来的两种测试漏掉的部分：直接调用底层工具的测试绕过了消息进入系统后的处理，模型输出预设的测试看不到真实模型自己作出的决定。</figcaption>
+  </figure>
+
+  <h3>第一，测试用户会说的话，而不是只测工具参数</h3>
+  <p>其中一个真实模型回归口令就是：</p>
+  <blockquote class="quote"><p>把相册中最新一张图片发给我</p></blockquote>
+  <p>测试不直接调用文件查询或发送函数，而是把整句话交给真实模型。随后检查：是否选中测试数据里最新的那张图片，是否只发送一张，以及是否没有多余地进入候选选择流程。</p>
+  <p>如果工具都能工作，但模型选错目录、没有排序，或者把唯一结果又交给用户选择，这个交互仍然不符合预期。</p>
+
+  <h3>第二，多轮上下文必须连起来测</h3>
+  <p>我们有一组固定回归场景，第一轮口令是：</p>
+  <blockquote class="quote"><p>帮我找 Pictures 里的 album 图片，先列出来让我选择，暂时不要发送；我可能会选多张。</p></blockquote>
+  <p>模型通过工具进入候选选择流程后，第二轮回复：</p>
+  <blockquote class="quote"><p>都要</p></blockquote>
+  <p>第一轮不应该发送附件。第二轮则应该恢复同一个待选任务，发送两张候选图片，每张一次，然后结束等待状态。</p>
+  <p>只单独测试“都要”这两个字，没有前一轮的候选和任务状态，是验证不了这个功能的。因此，同一用例的多轮交互共享上下文，不同用例则隔离服务、状态和诊断目录，避免旧任务影响新场景。</p>
+  <p>同样的第一轮，还可以接不同的后续回答：</p>
+  <ul class="plain">
+    <li>“我改主意了，这个就先放着吧”：取消待选操作，不发送图片。</li>
+    <li>“这两张都不要了，帮我把 Pictures 里的 holiday 图片发给我”：结束旧任务，处理新的目标。</li>
+  </ul>
+  <p>这些不是把几个关键词写成宿主判断规则，而是让真实模型参与意图理解，再核对系统有没有执行正确的状态变化。</p>
+
+  <h3>第三，允许不同路径，但不能放宽结果要求</h3>
+  <p>我们曾经遇到一个很典型的测试误报：模型成功完成了原文件发送，但测试失败了，因为测试预期调用两次工具，实际却调用了五次。</p>
+  <p>其中有一次读取使用了无效引用，模型随后重新查询，最终完成发送。前面的工具错误需要保留和分析，后面的恢复成功也应如实记录。</p>
+  <p>因此，真实模型测试不再把某条固定调用路线当成唯一正确答案。我们核对实际工具记录与 Trace 是否一致，再检查必要的执行行为和最终副作用。</p>
+  <p>模型可以调整查询，但不能越过授权范围；可以多查几次，但不能多发文件；可以从错误中恢复，但不能把没有完成的工作说成完成。</p>
+  <p><b>固定的是业务约束，不是模型的每一步探索。</b></p>
+</section>
+
+<section id="judging">
+  <h2>怎样判断它真的把事情做对了</h2>
+  <p>只检查回复“文件已发送，请查收”，仍然不够。对我们来说，一次交互需要同时回答三个问题。</p>
+  <p><b>第一，业务结论是否符合预期。</b>主模型负责最终答复时，检查本轮的结构化 <code>results</code>。如果是工作流接管并返回执行回执，则以工作流记录为准，不强求再补一份模型结论。</p>
+  <p><b>第二，实际产生了什么副作用。</b>核对选中的文件、发送数量与顺序、工作流状态和逐项发送结果。要求两张就不能只发一张，也不能靠历史发送记录凑够两张。</p>
+  <p><b>第三，不该发生的事情是否确实没有发生。</b>用户取消后不能继续发送；要求“只修改，不发送”，就要同时验证修改结果和没有新增外发；没有找到文件，不能悄悄换到其他目录发送一个相似文件。</p>
+  <p>“没找到”的测试也要有正向对照。我们会在同一上下文里，先要求查找不存在的图片，再要求发送一张确实存在的图片。这样既防止一直回答“没找到”也能过关，也检查后一轮有没有误用前一轮的结论。</p>
+  <p>结构化输出提供业务结论，Tracing 提供执行过程，文件与工作流记录提供实际结果。它们互相核对，而不是让模型只凭一句“完成了”证明自己。</p>
+</section>
+
+<section id="repeatable" data-toc="可以重复执行的回归">
+  <h2>把一次验证变成可以重复执行的回归</h2>
+  <p>这套测试并不是每次临时聊几句、看着差不多就结束。</p>
+  <p>我们把已经确认的场景保留为固定用例。新功能增加对应场景，修复缺陷时补充能复现问题的用例，再复用已有入口、隔离机制和断言，重复检查受影响的行为。</p>
+  <p>交付前，开发 Agent 先执行针对性测试，再运行完整工程门禁以及相应的真模型回归。失败时，结合结构化结论、Trace 和实际执行记录判断：是产品行为有问题，还是测试断言测错了对象。修复后重新运行，而不是原样重复直到碰巧通过。</p>
+  <p>测试结果还必须形成报告，至少保留这些信息：</p>
+  <ul class="plain">
+    <li>测试对应的版本、范围和执行命令。</li>
+    <li>完整口令与实际回复原文，不能只写“发送成功”。</li>
+    <li>任务状态、关键步骤、逐项执行结果和模拟发送记录。</li>
+    <li>哪些检查通过、哪些失败或未覆盖，以及真实微信还需要确认什么。</li>
+  </ul>
+  <p>报告让“测试过了”变成可以复核的证据，也让我能够在微信里使用相同口令确认结果。</p>
+  <p>自动化阶段得到的是候选通过；真实微信阶段，再核对相同业务结论与实际文件接收效果。自然语言不要求逐字一样，但业务行为必须一致。渠道接受发送与手机实际收到，也分别记录。</p>
+  <figure class="fig" id="fig-delivery-loop">
+    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 516" role="img" aria-label="交付流程前后对比，竖虚线是交付。刚开始：Codex 完成修改，单元测试和 E2E 都跑通了；交付后我发一句消息，却发现它没有正确理解要求，或没有完成应有的操作；把问题反馈回去，再修改、再测试，往往要经过几轮，这个回路越过了交付线。加入真模型端到端回归后：Codex 完成修改，先执行针对性测试，再运行完整工程门禁以及相应的真模型回归；失败时判断是产品行为有问题，还是测试断言测错了对象，修复后重新运行，而不是原样重复直到碰巧通过，这个回路留在交付之前；通过后形成报告，得到候选通过；交付后真实微信验收，核对相同业务结论与实际文件接收效果，第一次验收时达到了预期。">
+      <defs>
+        <marker id="agent-live-model-e2e-testing-m2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path class="lm-mk-edge" d="M0 0L10 5L0 10z"/></marker>
+        <marker id="agent-live-model-e2e-testing-m2g" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path class="lm-mk-gap" d="M0 0L10 5L0 10z"/></marker>
+      </defs>
+      <text class="lm-z" x="15" y="24">开发阶段</text>
+      <text class="lm-h" x="664" y="24" text-anchor="middle">交付</text>
+      <text class="lm-z" x="697" y="24">拿到微信里使用</text>
+      <path class="lm-cut" d="M664 34V482"/>
+
+      <text class="lm-h" x="15" y="64">刚开始</text>
+      <rect class="lm-dev" x="15" y="80" width="120" height="56" rx="4"/>
+      <text class="lm-t lm-dev-ink" x="75" y="113" text-anchor="middle">Codex 完成修改</text>
+      <rect class="lm-test" x="165" y="80" width="306" height="56" rx="4"/>
+      <text class="lm-t lm-test-ink" x="318" y="113" text-anchor="middle">单元测试和 E2E 都跑通了</text>
+      <rect class="lm-user" x="697" y="80" width="228" height="84" rx="4"/>
+      <text class="lm-t lm-user-ink" x="811" y="104" text-anchor="middle">我发一句消息</text>
+      <text class="lm-d" x="811" y="128" text-anchor="middle">没有正确理解要求，</text>
+      <text class="lm-d" x="811" y="148" text-anchor="middle">或没有完成应有的操作</text>
+      <path class="lm-flow" marker-end="url(#agent-live-model-e2e-testing-m2)" d="M135 108H165"/>
+      <path class="lm-flow" marker-end="url(#agent-live-model-e2e-testing-m2)" d="M471 108H697"/>
+      <path class="lm-loop" marker-end="url(#agent-live-model-e2e-testing-m2g)" d="M811 164V192H75V136"/>
+      <text class="lm-gd" x="400" y="214" text-anchor="middle">把问题反馈回去，再修改、再测试，往往要经过几轮</text>
+
+      <text class="lm-h" x="15" y="258">加入真模型端到端回归后</text>
+      <rect class="lm-band" x="155" y="266" width="326" height="128" rx="4"/>
+      <rect class="lm-dev" x="15" y="302" width="120" height="56" rx="4"/>
+      <text class="lm-t lm-dev-ink" x="75" y="335" text-anchor="middle">Codex 完成修改</text>
+      <rect class="lm-test" x="165" y="302" width="110" height="56" rx="4"/>
+      <text class="lm-t lm-test-ink" x="220" y="335" text-anchor="middle">针对性测试</text>
+      <rect class="lm-test" x="321" y="276" width="150" height="48" rx="4"/>
+      <text class="lm-t lm-test-ink" x="396" y="305" text-anchor="middle">完整工程门禁</text>
+      <rect class="lm-test" x="321" y="336" width="150" height="48" rx="4"/>
+      <text class="lm-t lm-test-ink" x="396" y="365" text-anchor="middle">相应的真模型回归</text>
+      <rect class="lm-test" x="521" y="302" width="110" height="56" rx="4"/>
+      <text class="lm-t lm-test-ink" x="576" y="326" text-anchor="middle">形成报告</text>
+      <text class="lm-d" x="576" y="346" text-anchor="middle">候选通过</text>
+      <rect class="lm-user" x="697" y="288" width="228" height="84" rx="4"/>
+      <text class="lm-t lm-user-ink" x="811" y="312" text-anchor="middle">真实微信验收</text>
+      <text class="lm-d" x="811" y="336" text-anchor="middle">核对相同业务结论</text>
+      <text class="lm-d" x="811" y="356" text-anchor="middle">与实际文件接收效果</text>
+      <text class="lm-t lm-user-ink" x="811" y="396" text-anchor="middle">第一次验收时达到了预期</text>
+      <path class="lm-flow" marker-end="url(#agent-live-model-e2e-testing-m2)" d="M135 330H165"/>
+      <path class="lm-flow" marker-end="url(#agent-live-model-e2e-testing-m2)" d="M275 330H291V300H321"/>
+      <path class="lm-flow" marker-end="url(#agent-live-model-e2e-testing-m2)" d="M275 330H291V360H321"/>
+      <path class="lm-flow" marker-end="url(#agent-live-model-e2e-testing-m2)" d="M471 300H487V330H521"/>
+      <path class="lm-flow" d="M471 360H487V330"/>
+      <path class="lm-flow" marker-end="url(#agent-live-model-e2e-testing-m2)" d="M631 330H697"/>
+      <path class="lm-loop" marker-end="url(#agent-live-model-e2e-testing-m2g)" d="M318 394V420H75V358"/>
+      <text class="lm-gd" x="318" y="442" text-anchor="middle">失败时，判断是产品行为有问题，还是测试断言测错了对象</text>
+      <text class="lm-gd" x="318" y="462" text-anchor="middle">修复后重新运行，而不是原样重复直到碰巧通过</text>
+
+      <rect class="lm-dev" x="15" y="489" width="18" height="12" rx="2"/>
+      <text class="lm-s" x="40" y="500">开发 Agent（Codex）</text>
+      <rect class="lm-test" x="196" y="489" width="18" height="12" rx="2"/>
+      <text class="lm-s" x="221" y="500">测试与报告</text>
+      <rect class="lm-user" x="312" y="489" width="18" height="12" rx="2"/>
+      <text class="lm-s" x="337" y="500">我</text>
+    </svg></div>
+    <figcaption>红线是修复的回路。刚开始，这个回路要越过交付，经过我在微信里的使用；加入真模型端到端回归后，它在交付之前就闭合了。“第一次验收时达到了预期”指目前已经交付并由我验收的功能。</figcaption>
+  </figure>
+</section>
+
+<section id="before-delivery">
+  <h2>把问题留在交付之前</h2>
+  <p>引入这三项实践后，最明显的变化不是测试报告更漂亮，而是交付更可靠了。</p>
+  <p>结构化输出让测试能够判断模型的业务结论，而不被措辞变化干扰；OpenTelemetry Tracing 让失败有迹可循；真模型端到端回归则把这些能力放进完整交互中，检查 Agent 是否真的理解要求、正确调用工具，并产生预期结果。</p>
+  <p>在目前已经交付并由我验收的功能中，这套流程落地后，功能都在第一次真实微信验收时达到了预期。</p>
+  <p>这里的“一次成功”，不是开发过程没有失败，而是失败更多地发生在交付之前，被测试发现、定位和修复，不再需要我反复充当测试员。因为大模型一定程度上已经是一个非常优秀的测试员。未来很可能会成为唯一的测试员。</p>
+</section>

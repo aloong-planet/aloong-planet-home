@@ -1,0 +1,233 @@
+<section>
+  <p class="lead">基于大模型的 Agent 开发完成后，测试却碰上了问题：同一个要求，模型可能给出不同的表达，而测试断言却期待固定的文字。</p>
+  <p>我让它查找一张不存在的图片，模型回复：“Pictures 中未找到名为 definitely-missing 的图片。”意思很清楚，但测试期待的是另一句固定文案。只是换了一种说法，一次正常的交互就被判成了失败。</p>
+  <p>把断言改宽松一点呢？检查回复中有没有“未找到”或者“没有找到”，看起来就行了。但“第一次没有找到，换个条件后找到了”也能命中。这样虽然放宽了措辞，却可能把错误回答也放过去。</p>
+  <p>问题到这里就变了：我要测的是 Agent 有没有把事情做对，为什么最后变成了猜它这句话是什么意思？</p>
+  <p>于是我把目光转向语义化测试：再接一个评分模型，让它判断回答是否符合预期。接入本身并不难，也不需要改动生产 Agent 的架构，但测试从此多了一次模型调用、一套评分标准，以及对评分器的校准和维护。这些投入，对每一种断言都有必要吗？</p>
+  <p>思考了一阵子之后，我想了另一种解决方案：让主模型在回复用户的同时，提供结构化的业务结论，再把结论和真实执行记录放在一起验证。能直接核对的部分先直接核对，剩下需要理解语言的部分，再考虑语义评分。</p>
+</section>
+
+<section id="semantic-testing">
+  <h2>语义化测试，一般怎么做</h2>
+  <p>这里说的语义化测试，就是不要求答案逐字一致，而是判断它的意思是否满足要求。</p>
+  <p>常见的一种做法是<b>语义相似度</b>：把参考答案和实际答案转成向量，比较相似程度，再设一个通过阈值。另一种是 <b>LLM-as-a-Judge</b>：把用户问题、实际回答、评分标准，以及必要的上下文交给另一个模型，让它判断通过与否，或者给出分数。Promptfoo 就提供了 embedding 相似度和基于评分标准的模型评审等能力。<a href="https://www.promptfoo.dev/docs/configuration/expected-outputs/model-graded/">来源：Promptfoo 的模型评分文档</a></p>
+  <p>比如，不再要求回复必须等于“没有找到匹配的图片”，而是告诉评分模型：“回答应明确说明未找到目标图片，不能虚构文件，也不能声称已经发送。”模型换一种中文说法，仍然可以通过。</p>
+  <p>人工评审也不能完全省掉。它至少要帮助我们校准：评分模型判对的，人是否也认为对？否则，只是把原来不可靠的断言，换成了另一个未经验证的判断。Anthropic 对 Agent 评估的总结，也区分了代码评分、模型评分和人工评分，并强调结合实际结果与执行过程，而不是只看最终回复。<a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents">来源：Anthropic 的 Agent 评估实践</a></p>
+  <p>方法都不难理解，真正麻烦的是把它们变成可以长期依赖的回归测试。</p>
+</section>
+
+<section id="trustworthy-scoring" data-toc="难点在让评分可信">
+  <h2>难点不在接模型，而在让评分可信</h2>
+  <p>第一道难题，是<b>评分标准怎么写</b>。</p>
+  <p>“回答正确”不是一个足够明确的标准。没有找到文件、没有权限读取文件、搜索工具执行失败，是三件不同的事。用户看到的回复可能都以“抱歉”开头，业务上却不能混为一谈。</p>
+  <p>第二道，是<b>评分器能看到什么</b>。</p>
+  <p>只看“文件已发送，请查收”，评分模型很难知道文件到底发了没有。要核对真实行为，就需要把搜索结果、文件身份、发送记录等证据接进评估流程。语义评分器可以理解证据，但不能凭空制造证据。</p>
+  <p>第三道，是<b>评分本身也需要测试</b>。</p>
+  <p>相似度高不等于事实正确；使用评分模型，也要考虑误判、波动和模型版本变化。开发者需要准备正例、反例和容易混淆的边界样本，检查评分结果是否符合预期，而不是跑出一个分数就认为评估体系建好了。</p>
+  <p>评分器本身也会超时、额度不足或返回错误格式，这些应记为“未完成评估”，不能当成产品失败，更不能算通过。评分应有独立预算，不能挤占 Agent 的交互等待时间；一次判定不通过，也不能反复调用直到通过。这些才是需要补齐的工程细节，而不是再搭一套 Agent 架构。</p>
+  <p>对我们的项目来说，当时最急的问题并不是评价一篇回答有多好，而是稳定地区分“找到了、没找到、失败了、需要补充信息”。这部分，是否一定需要另请一个模型来判断？</p>
+</section>
+
+<section id="alternative">
+  <h2>我的替代方案：正文给用户，结论给程序</h2>
+  <p>我换了一个思路：既然主模型已经根据工具结果得出了结论，就让它把结论明确写出来，不再要求测试从正文里重新猜一遍。</p>
+  <p>先看整个流程。图中的“宿主”，就是承载 Agent、连接模型与工具的应用程序。主线是主模型仍负责最终回复的情况；文件发送被持久工作流接管后，继续使用原有执行回执。</p>
+  <figure class="fig" id="fig-results-flow">
+    <div class="scroll ground">
+      <svg class="figw" viewBox="0 0 780 610" role="img" aria-label="结构化结果测试流程。用户提出要求后，主模型理解目标并调用工具，工具执行并返回真实结果；还需查找或处理时回到主模型。之后判断最终回复由谁负责。由主模型负责时，主模型输出 message 与 results，宿主校验结构：合法则关联本轮交互并保存，message 发给用户，results 供测试断言；非法则记录协议失败，不重跑已执行操作。持久工作流已接管时，沿用工作流回执与执行记录。results、工作流回执与执行记录，以及工具执行留下的执行证据，都进入测试核对结论与实际行为。">
+        <defs>
+          <marker id="agent-structured-result-testing-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="sr-mk" d="M0 0L10 5L0 10z"/></marker>
+          <marker id="agent-structured-result-testing-arrow-proof" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="sr-mk-proof" d="M0 0L10 5L0 10z"/></marker>
+        </defs>
+
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow)" d="M170 90H229"/>
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow)" d="M420 90H499"/>
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow)" d="M560 60V30H360V59"/>
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow)" d="M595 120V152"/>
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow)" d="M510 205H421"/>
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow)" d="M595 257V309"/>
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow)" d="M325 235V267"/>
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow)" d="M240 320H191"/>
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow)" d="M325 372V419"/>
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow)" d="M325 470V500H160V529"/>
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow)" d="M325 470V500H380V529"/>
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow)" d="M460 560H509"/>
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow)" d="M595 370V529"/>
+        <path class="sr-proof-edge sr-dash" marker-end="url(#agent-structured-result-testing-arrow-proof)" d="M690 90H760V560H681"/>
+
+        <text class="sr-lb sr-on-main" x="460" y="22" text-anchor="middle">还需查找或处理</text>
+        <text class="sr-lb sr-on-main" x="465" y="197" text-anchor="middle">主模型</text>
+        <text class="sr-lb sr-on-proof" x="605" y="289">持久工作流已接管</text>
+        <text class="sr-lb sr-on-fail" x="215" y="312" text-anchor="middle">非法</text>
+        <text class="sr-lb sr-on-main" x="335" y="400">合法</text>
+        <text class="sr-lb sr-on-proof" x="752" y="455" text-anchor="end">执行证据</text>
+
+        <rect class="sr-main" x="20" y="60" width="150" height="60" rx="3"/>
+        <text class="sr-t sr-on-main" x="95" y="95" text-anchor="middle">用户提出要求</text>
+
+        <rect class="sr-main" x="230" y="60" width="190" height="60" rx="3"/>
+        <text class="sr-t sr-on-main" x="325" y="85" text-anchor="middle">主模型理解目标</text>
+        <text class="sr-t sr-on-main" x="325" y="105" text-anchor="middle">并调用工具</text>
+
+        <rect class="sr-main" x="500" y="60" width="190" height="60" rx="3"/>
+        <text class="sr-t sr-on-main" x="595" y="85" text-anchor="middle">工具执行</text>
+        <text class="sr-t sr-on-main" x="595" y="105" text-anchor="middle">并返回真实结果</text>
+
+        <polygon class="sr-decide" points="595,153 680,205 595,257 510,205"/>
+        <text class="sr-t sr-on-decide" x="595" y="200" text-anchor="middle">最终回复</text>
+        <text class="sr-t sr-on-decide" x="595" y="220" text-anchor="middle">由谁负责</text>
+
+        <rect class="sr-main" x="230" y="175" width="190" height="60" rx="3"/>
+        <text class="sr-t sr-on-main" x="325" y="200" text-anchor="middle">主模型输出</text>
+        <text class="sr-t sr-on-main" x="325" y="220" text-anchor="middle"><tspan class="sr-mono">message</tspan> 与 <tspan class="sr-mono">results</tspan></text>
+
+        <polygon class="sr-decide" points="325,268 410,320 325,372 240,320"/>
+        <text class="sr-t sr-on-decide" x="325" y="325" text-anchor="middle">宿主校验结构</text>
+
+        <rect class="sr-fail" x="20" y="290" width="170" height="60" rx="3"/>
+        <text class="sr-t sr-on-fail" x="105" y="315" text-anchor="middle">记录协议失败</text>
+        <text class="sr-t sr-on-fail" x="105" y="335" text-anchor="middle">不重跑已执行操作</text>
+
+        <rect class="sr-proof" x="510" y="310" width="170" height="60" rx="3"/>
+        <text class="sr-t sr-on-proof" x="595" y="335" text-anchor="middle">沿用工作流回执</text>
+        <text class="sr-t sr-on-proof" x="595" y="355" text-anchor="middle">与执行记录</text>
+
+        <rect class="sr-main" x="235" y="420" width="180" height="50" rx="3"/>
+        <text class="sr-t sr-on-main" x="325" y="450" text-anchor="middle">关联本轮交互并保存</text>
+
+        <rect class="sr-main" x="80" y="530" width="160" height="60" rx="3"/>
+        <text class="sr-t sr-on-main sr-mono" x="160" y="555" text-anchor="middle">message</text>
+        <text class="sr-t sr-on-main" x="160" y="575" text-anchor="middle">发给用户</text>
+
+        <rect class="sr-main" x="300" y="530" width="160" height="60" rx="3"/>
+        <text class="sr-t sr-on-main sr-mono" x="380" y="555" text-anchor="middle">results</text>
+        <text class="sr-t sr-on-main" x="380" y="575" text-anchor="middle">供测试断言</text>
+
+        <rect class="sr-proof" x="510" y="530" width="170" height="60" rx="3"/>
+        <text class="sr-t sr-on-proof" x="595" y="555" text-anchor="middle">测试核对</text>
+        <text class="sr-t sr-on-proof" x="595" y="575" text-anchor="middle">结论与实际行为</text>
+      </svg>
+    </div>
+    <figcaption>结构化结果测试流程：主模型调用工具并报告结果，宿主校验保存，测试结合真实执行证据验证结论；工作流接管后沿用执行回执。</figcaption>
+  </figure>
+  <p>这条链路没有新增评分模型，也没有改变主模型自主调用工具的方式。新增的是最终答复的结构，以及围绕这个结构建立的验证。</p>
+  <h3>第一步，让主模型正常做事，不固定它的探索路径</h3>
+  <p>用户提出要求后，主模型仍然自己决定查什么、调用哪个工具、是否调整条件再查一次。</p>
+  <p>这一点很重要：第一次搜索没有结果，不代表最终没有结果。模型可能换一个关键词就找到了。所以，我们没有把某次工具返回的空列表直接转换成最终的 <code>not_found</code>，也没有为了测试方便，规定它必须搜索两次。</p>
+  <p><b>工具返回的是一次执行的事实，最终答复报告的是整个目标的结论。</b>两者不能混用。</p>
+  <h3>第二步，最终答复同时输出正文和结果</h3>
+  <p>我们把主模型的最终输出定义成下面这样的结构，示例如下：</p>
+  <pre class="codeblock"><code>{
+  "message": "Pictures 中未找到名为 definitely-missing 的图片。",
+  "results": [
+    {
+      "subject": "查找 definitely-missing 图片",
+      "status": "not_found"
+    }
+  ]
+}</code></pre>
+  <p><code>message</code> 继续是自然语言，不固定句子。<code>results</code> 按本轮业务目标记录结果。</p>
+  <p>为什么是数组？因为一句话里可能有两件事：“读一下摘要，再帮我找一张图片。”读摘要完成了，图片没找到，就分别报告 <code>completed</code> 和 <code>not_found</code>。同一个目标调用了多次工具，仍然只对应一项；普通聊天没有业务结论，就返回空数组。</p>
+  <p>我们定义了九种状态：</p>
+  <table>
+    <thead><tr><th>状态</th><th>含义</th></tr></thead>
+    <tbody>
+      <tr><td><code>completed</code></td><td>目标已完成</td></tr>
+      <tr><td><code>partial</code></td><td>同一目标部分完成</td></tr>
+      <tr><td><code>not_found</code></td><td>未找到目标</td></tr>
+      <tr><td><code>needs_input</code></td><td>需要用户补充信息或选择</td></tr>
+      <tr><td><code>blocked</code></td><td>被权限、政策或前置条件阻止</td></tr>
+      <tr><td><code>failed</code></td><td>已知执行失败</td></tr>
+      <tr><td><code>cancelled</code></td><td>已取消或放弃</td></tr>
+      <tr><td><code>in_progress</code></td><td>工作仍在进行</td></tr>
+      <tr><td><code>unknown</code></td><td>实际结果无法确认</td></tr>
+    </tbody>
+  </table>
+  <p>提示词告诉模型这些类型的含义，并要求它结合完整对话和真实执行证据自行选择。没有“看到某个中文词就返回某个状态”的规则，也没有再开一个子模型做分类。</p>
+  <p>语义判断仍由主模型完成。我们改变的是测试获取结论的方式：不再从正文里猜，而是读取明确的结果字段，再用执行证据核对。</p>
+  <h3>第三步，宿主校验格式，不替模型重做判断</h3>
+  <p>每轮请求都带上最终输出的 <code>outputSchema</code>，也就是约定输出应包含哪些字段、每个字段是什么类型、允许哪些状态值的结构规则。主模型完成工具循环后，宿主再解析权威的最终答复，检查字段、类型和状态枚举。</p>
+  <p>少了 <code>results</code>、返回了不存在的状态、JSON 不完整，都明确作为协议问题处理，不偷偷从普通文本里补猜一个结果。</p>
+  <p>但校验格式不等于验证事实。<code>status</code> 是合法的 <code>completed</code>，只能说明模型报告了“完成”，不能说明事情真的完成了。</p>
+  <p>还有一个容易忽略的边界：如果文件已经改完，最后输出的 JSON 却不合法，不能为了修复格式把整轮任务重跑。否则，一次回复格式错误，就可能变成重复修改或重复发送。</p>
+  <h3>第四步，保存本轮结果，用户仍然只看正文</h3>
+  <p>通过校验后，宿主把结果与可信的账户、目标和本轮入站消息关联保存。微信只发送 <code>message</code>，不把 JSON 和内部状态码展示给用户。</p>
+  <p>这里要防止的是串轮：上一轮“没找到”，不能被下一轮测试拿来当结论。<code>subject</code> 只是给人看的简短说明，不作为任务身份，更不用于权限或执行路由。</p>
+  <p>业务结果与正文发送状态也分开记录。文件操作完成了，但微信正文发送失败，不能反过来把已经发生的文件操作改写成失败。</p>
+  <h3>第五步，断言结果，也核对实际发生了什么</h3>
+  <p>这是整套方案最关键的一步。</p>
+  <p>如果只检查模型有没有返回 <code>not_found</code>，一个永远说“没找到”的模型，也能通过所有负向样例。</p>
+  <p>因此，对“查找不存在的图片”，测试同时检查：结果是 <code>not_found</code>；搜索范围确实是目标授权目录；搜索已经完成、结果没有被截断且为空；没有创建发送任务，也没有产生附件发送记录。</p>
+  <p>核心断言可以写成下面这样（示意，变量名作了简化）：</p>
+  <pre class="codeblock"><code>expect(result.status).toBe("not_found");
+expect(search.scanComplete).toBe(true);
+expect(search.resultTruncated).toBe(false);
+expect(search.entries).toHaveLength(0);
+expect(newSendTasks).toHaveLength(0);
+expect(newAttachmentRecords).toHaveLength(0);</code></pre>
+  <p>这些数据必须属于本轮交互，搜索证据必须对应正确的授权范围；多次查询时，还要核对相关查询记录，不能随便拿一次空结果来证明最终结论。</p>
+  <p>接着，在同一个模型上下文里，再要求它发送一张确实存在的图片，检查对应文件是否进入发送流程。上一轮没找到、下一轮能找到，这个正反组合才能防止模型一直报告同一个结论，也能防止测试误用旧记录。</p>
+  <figure class="fig" id="fig-paired-rounds">
+    <div class="scroll ground">
+      <svg class="figw" viewBox="0 0 780 340" role="img" aria-label="同一个模型上下文里的两轮。第一轮查找不存在的图片：模型报告的结论是 not_found，与本轮执行证据核对，即搜索范围确实是目标授权目录，搜索已经完成、结果没有被截断且为空，没有创建发送任务，没有产生附件发送记录。第二轮发送一张确实存在的图片：模型报告的结论是能找到，与本轮执行证据核对，即对应文件进入发送流程。">
+        <defs>
+          <marker id="agent-structured-result-testing-arrow-rounds" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="sr-mk" d="M0 0L10 5L0 10z"/></marker>
+        </defs>
+
+        <rect class="sr-frame" x="10" y="10" width="760" height="320" rx="6"/>
+        <text class="sr-head" x="30" y="38">同一个模型上下文</text>
+        <path class="sr-sep" d="M30 222H750"/>
+
+        <text class="sr-head" x="30" y="126">第一轮</text>
+        <text class="sr-t" x="30" y="148">查找不存在的图片</text>
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow-rounds)" d="M196 131H239"/>
+        <rect class="sr-main" x="240" y="96" width="160" height="70" rx="3"/>
+        <text class="sr-head sr-on-main" x="320" y="126" text-anchor="middle">模型报告的结论</text>
+        <text class="sr-t sr-on-main sr-mono" x="320" y="150" text-anchor="middle">not_found</text>
+        <path class="sr-proof-edge" d="M400 131H470"/>
+        <text class="sr-lb sr-on-proof" x="435" y="123" text-anchor="middle">核对</text>
+        <rect class="sr-proof" x="470" y="56" width="290" height="150" rx="3"/>
+        <text class="sr-head sr-on-proof" x="490" y="86">本轮执行证据</text>
+        <circle class="sr-dot" cx="494" cy="109" r="2.5"/>
+        <text class="sr-t" x="504" y="114">搜索范围确实是目标授权目录</text>
+        <circle class="sr-dot" cx="494" cy="133" r="2.5"/>
+        <text class="sr-t" x="504" y="138">搜索已经完成、结果没有被截断且为空</text>
+        <circle class="sr-dot" cx="494" cy="157" r="2.5"/>
+        <text class="sr-t" x="504" y="162">没有创建发送任务</text>
+        <circle class="sr-dot" cx="494" cy="181" r="2.5"/>
+        <text class="sr-t" x="504" y="186">没有产生附件发送记录</text>
+
+        <text class="sr-head" x="30" y="271">第二轮</text>
+        <text class="sr-t" x="30" y="293">发送一张确实存在的图片</text>
+        <path class="sr-edge" marker-end="url(#agent-structured-result-testing-arrow-rounds)" d="M196 276H239"/>
+        <rect class="sr-main" x="240" y="241" width="160" height="70" rx="3"/>
+        <text class="sr-head sr-on-main" x="320" y="271" text-anchor="middle">模型报告的结论</text>
+        <text class="sr-t sr-on-main" x="320" y="295" text-anchor="middle">能找到</text>
+        <path class="sr-proof-edge" d="M400 276H470"/>
+        <text class="sr-lb sr-on-proof" x="435" y="268" text-anchor="middle">核对</text>
+        <rect class="sr-proof" x="470" y="241" width="290" height="70" rx="3"/>
+        <text class="sr-head sr-on-proof" x="490" y="268">本轮执行证据</text>
+        <circle class="sr-dot" cx="494" cy="289" r="2.5"/>
+        <text class="sr-t" x="504" y="294">对应文件进入发送流程</text>
+      </svg>
+    </div>
+    <figcaption>同一个模型上下文里的正反两轮，每一轮的结论都用属于本轮交互的执行证据核对。上一轮没找到、下一轮能找到，这个正反组合防止模型一直报告同一个结论，也防止测试误用旧记录。</figcaption>
+  </figure>
+  <p>已经由持久工作流接管的发送，则以工作流回执和实际发送记录为准，不让模型自报的 <code>completed</code> 覆盖它们。通道接受发送，也不直接等于用户手机已经收到。</p>
+  <p>我们还保留真实模型测试中的完整口令和实际回复，供人工核对。预设模型输出的测试可以验证格式和异常处理，但不能证明真实模型会正确分类；模拟通道通过，也不能冒充真实微信验收。</p>
+</section>
+
+<section id="outcome">
+  <h2>换成这种方式，效果如何</h2>
+  <p>首先是职责更清晰了。主模型负责理解和执行，宿主负责协议校验与记录，测试负责核对结论和事实。这部分业务验收不需要另一个评分模型，也就不必额外维护对应的评分提示词和通过阈值。不是因为评分器会让架构失控，而是这些已经有明确证据的判断，没有必要再增加一层模型评审。</p>
+  <p>其次，业务结果可以直接断言。相比每次再调用一个评分模型，这部分业务断言省去了额外的评分等待；失败原因也更容易定位到格式、业务分类或执行事实。</p>
+</section>
+
+<section id="closing">
+  <h2>写在最后：测试必须做，语义评分要做取舍</h2>
+  <p>回到开头的问题：模型换了一种说法，测试就失败，未必是模型答错了，也可能是我们把表达方式当成了业务结果。</p>
+  <p>这次改造做的事情很简单：正文留给用户，结构化结论留给测试，再用真实执行记录核对结论。模型可以自然表达，但“没找到”和“执行失败”不能混淆，“已经完成”也必须有事实支撑。</p>
+  <p>怎么选测试方式？总结是否忠实、回答是否切题、解释是否完整，适合语义测试；文件是否找到、修改是否完成、附件是否提交发送，适合结构化结果加事实断言。同一个任务既涉及操作又涉及表达，就组合使用，不必二选一。</p>
+  <p>Agent 越能自主决策，回归测试越不能省。关键不是让每条断言都变得“智能”，而是先想清楚它究竟要验证什么。</p>
+  <p><b>能核对事实的地方，用证据说话；需要理解语言的地方，再引入语义判断。测试不必复述模型的每一种说法，但必须守住用户期待的结果。</b></p>
+</section>

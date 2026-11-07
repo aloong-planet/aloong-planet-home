@@ -2,7 +2,11 @@
 // layout, type sizes, centering, shared table and figure styles, hover states, the keyboard focus ring,
 // jumps and scrolling including figure and contents-column scrolling, the homepage's kept smooth scroll,
 // the contents mark, interactive figures, scripting unavailable, a throwing post script, long text in full
-// on the Blog page, and fonts requested. Test them here once the browser suite capability is enabled.
+// on the Blog page, and fonts requested; on the Blog page, the one-line header, the lead's text and cover side by side
+// and centered on each other, two cards to a row with a leftover card alone on the left, one column on a phone, cover
+// frames at 2.35:1 that crop another shape and keep their size when an image fails, and the cover lift on hover,
+// which reduced motion turns off.
+// Which image each post uses as its cover is content, checked by eye. Test them here once the browser suite capability is enabled.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {execFile} from 'node:child_process';
@@ -18,8 +22,11 @@ import {pageImages, motionSheets} from '../scripts/image-checks.mjs';
 const BODY = '<section id="s2"><h2><span class="sec">§2</span>双层架构：把连续性和吞吐量拆开</h2><p>正文</p></section>';
 const post = (slug, date = '2026-11-05', extra = {}) => ({slug, title: `标题 ${slug}`, date, summary: `摘要 ${slug}`, ...extra});
 
-/** Builds a small site in a temporary folder and returns a reader for its output. */
-async function site(posts, {files = {}, bodies = {}, home = '<main><!-- blog:home --></main>', list = '<main><!-- blog:list --></main>'} = {}) {
+/** Bytes standing in for a cover: the build only checks that the file exists and copies it, so they need not be an image. */
+const COVER = Buffer.from('RIFF cover bytes WEBP');
+
+/** Builds a small site in a temporary folder and returns a reader for its output. Every listed post gets a body and a cover unless `bodies` or `covers` maps its slug to null. */
+async function site(posts, {files = {}, bodies = {}, covers = {}, home = '<main><!-- blog:home --></main>', list = '<main><!-- blog:list --></main>'} = {}) {
   const root = await mkdtemp(join(tmpdir(), 'blog-test-'));
   const contentDir = join(root, 'content'), outDir = join(root, 'out');
   await mkdir(join(contentDir, 'posts'), {recursive: true});
@@ -27,6 +34,7 @@ async function site(posts, {files = {}, bodies = {}, home = '<main><!-- blog:hom
   await writeFile(join(contentDir, 'posts.json'), JSON.stringify(posts));
   for (const p of Array.isArray(posts) ? posts : []) {
     if (p && typeof p.slug === 'string' && !(p.slug in bodies)) await writeFile(join(contentDir, 'posts', `${p.slug}.html`), BODY);
+    if (p && typeof p.slug === 'string' && covers[p.slug] !== null) await writeFile(join(contentDir, 'posts', `${p.slug}.webp`), COVER);
   }
   for (const [slug, body] of Object.entries(bodies)) if (body !== null) await writeFile(join(contentDir, 'posts', `${slug}.html`), body);
   for (const [name, text] of Object.entries(files)) await writeFile(join(contentDir, 'posts', name), text);
@@ -55,15 +63,18 @@ const runScript = (script, cwd, env = {}) => new Promise(resolve => {
 });
 const hrefs = (html, cls) => [...html.matchAll(new RegExp(`<a class="${cls}" href="([^"]+)"`, 'g'))].map(m => m[1]);
 
-test('a manifest entry and a body produce the post page, the homepage entry and the Blog row', async () => {
+test('a manifest entry, a body and a cover produce the post page, the homepage entry and the Blog card', async () => {
   const s = await site([post('first')]);
   await s.build();
   const home = await s.read('index.html'), list = await s.read('blog.html'), page = await s.read('blog/first.html');
   assert.deepEqual(hrefs(home, 'ap-home-post'), ['/blog/first']);
   assert.match(home, /<a class="ap-home-post" href="\/blog\/first"><time datetime="2026-11-05">2026-11-05<\/time><h2>标题 first<\/h2><p>摘要 first<\/p><\/a>/);
   assert.match(home, /<a class="ap-link ap-home-blog-all" href="\/blog">全部文章<\/a>/);
-  assert.deepEqual(hrefs(list, 'ap-post-link'), ['/blog/first']);
-  assert.match(list, /<small><time datetime="2026-11-05">2026-11-05<\/time><\/small><div><h2>标题 first<\/h2><p>摘要 first<\/p><\/div>/);
+  // The homepage list stays text: its covers appear on the Blog page only.
+  assert.deepEqual(pageImages(home), []);
+  // A single post leads alone; its cover carries no text alternative, since the title beside it names the post.
+  assert.ok(list.includes('<main><div class="ap-post-list"><article class="ap-post-lead"><a class="ap-post-card" href="/blog/first"><div class="ap-post-cover"><img src="/blog/first.webp" alt=""></div><div class="ap-post-text"><time datetime="2026-11-05">2026-11-05</time><h2>标题 first</h2><p>摘要 first</p></div></a></article></div></main>'), list);
+  assert.deepEqual(await readFile(join(s.outDir, 'blog/first.webp')), COVER);
   assert.match(page, /<h1>标题 first<\/h1>/);
   assert.match(page, /正文/);
   assert.match(page, /<a class="ap-link" href="\/blog">全部文章<\/a>/);
@@ -82,10 +93,16 @@ test('the homepage shows the newest 4 posts, or all of them when there are fewer
   assert.deepEqual(hrefs(await one.read('index.html'), 'ap-home-post'), ['/blog/only']);
 });
 
-test('the Blog page lists every post newest first, and equal dates keep manifest order', async () => {
-  const s = await site([post('old', '2026-01-01'), post('same-two', '2026-03-01'), post('same-one', '2026-03-01'), post('new', '2026-05-01'), post('mid', '2026-02-01')]);
+test('the Blog page lists every post newest first with the newest leading, and equal dates keep manifest order', async () => {
+  const s = await site([post('old', '2026-01-01'), post('same-two', '2026-03-01'), post('same-one', '2026-03-01'), post('lead-z', '2026-05-01'), post('lead-a', '2026-05-01'), post('mid', '2026-02-01')]);
   await s.build();
-  assert.deepEqual(hrefs(await s.read('blog.html'), 'ap-post-link'), ['/blog/new', '/blog/same-two', '/blog/same-one', '/blog/mid', '/blog/old']);
+  const list = await s.read('blog.html');
+  assert.deepEqual(hrefs(list, 'ap-post-card'), ['/blog/lead-z', '/blog/lead-a', '/blog/same-two', '/blog/same-one', '/blog/mid', '/blog/old']);
+  assert.deepEqual([...list.matchAll(/<article class="ap-post-lead"><a class="ap-post-card" href="([^"]+)"/g)].map(m => m[1]), ['/blog/lead-z']);
+  // Only the covers below the lead wait until they are near the window.
+  assert.deepEqual([...list.matchAll(/<img src="([^"]+)" alt=""( loading="lazy")?>/g)].map(m => [m[1], Boolean(m[2])]), [
+    ['/blog/lead-z.webp', false], ['/blog/lead-a.webp', true], ['/blog/same-two.webp', true], ['/blog/same-one.webp', true], ['/blog/mid.webp', true], ['/blog/old.webp', true],
+  ]);
 });
 
 test('titles and summaries are shown as text, never parsed as markup', async () => {
@@ -106,7 +123,7 @@ test('titles and summaries are shown as text, never parsed as markup', async () 
 test('a post loads its own files only when it has them, and unlisted files are not deployed', async () => {
   const s = await site([post('with-files'), post('plain')], {files: {
     'with-files.css': '.post-with-files .fig-a{color:red}', 'with-files.js': 'console.log(1)',
-    'stray.css': '.anything{color:red}', 'stray.js': 'x', 'stray.html': '<html>',
+    'stray.css': '.anything{color:red}', 'stray.js': 'x', 'stray.html': '<html>', 'stray.webp': 'cover',
   }});
   await s.build();
   const rich = await s.read('blog/with-files.html'), plain = await s.read('blog/plain.html');
@@ -116,7 +133,7 @@ test('a post loads its own files only when it has them, and unlisted files are n
   assert.equal(await s.read('blog/with-files.js'), 'console.log(1)');
   assert.doesNotMatch(plain, /\/blog\/plain\.(css|js)/);
   assert.equal(existsSync(join(s.outDir, 'blog/plain.css')), false);
-  for (const name of ['stray.css', 'stray.js', 'stray.html']) assert.equal(existsSync(join(s.outDir, 'blog', name)), false);
+  for (const name of ['stray.css', 'stray.js', 'stray.html', 'stray.webp']) assert.equal(existsSync(join(s.outDir, 'blog', name)), false);
 });
 
 test('every post gets the shared look and no remote stylesheet', async () => {
@@ -338,7 +355,7 @@ test('real article stylesheet shapes pass the check', async () => {
   assert.match(await s.read('blog/fine.html'), /\/blog\/fine\.css/);
 });
 
-test('the build refuses a bad manifest', async () => {
+test('the build refuses a bad manifest, or a listed post without its body or its cover', async () => {
   for (const [posts, reason] of [
     [[], /no posts/i],
     [{}, /no posts|list/i],
@@ -362,6 +379,9 @@ test('the build refuses a bad manifest', async () => {
   }
   const missing = await site([post('gone')], {bodies: {gone: null}});
   await assert.rejects(missing.build(), /"gone".*body|body.*"gone"/);
+  // The coverless post is not the first, and has a cover under another name, which does not count.
+  const coverless = await site([post('covered', '2026-11-05'), post('bare', '2026-10-01')], {covers: {bare: null}, files: {'bare.jpg': 'jpeg'}});
+  await assert.rejects(coverless.build(), e => e.message.includes('Blog post "bare"') && e.message.includes('bare.webp'));
 });
 
 test('a template without its slot stops the build instead of dropping the list', async () => {
@@ -384,8 +404,8 @@ test('deployment checks tell every blog page of the real site from the homepage 
   }
   const list = await readFile(join(outDir, 'blog.html'), 'utf8');
   assert.doesNotMatch(list, /排版示例/);
-  assert.equal([...list.matchAll(/<article class="ap-post"/g)].length, posts.length);
-  assert.deepEqual([...homepage.matchAll(/<(h[1-6])\b/g)].map(m => m[1]).slice(0, 2), ['h1', 'h2']);
+  assert.equal([...list.matchAll(/<a class="ap-post-card"/g)].length, posts.length);
+  for (const page of [homepage, list]) assert.deepEqual([...page.matchAll(/<(h[1-6])\b/g)].map(m => m[1]).slice(0, 2), ['h1', 'h2']);
 });
 
 test('the build script writes the blog and ships every image the homepage and the not-found page show, and a refused post stops it', async () => {
@@ -466,6 +486,11 @@ test('the deployment-check script passes on the whole site and fails when a host
     await failsOn(hosts[1], missing('/assets/golden-wag/motion-2.webp'), '/assets/golden-wag/motion-2\\.webp answered 404');
     await failsOn(hosts[1], missing('/assets/golden-interaction.js'), '/assets/golden-interaction\\.js is not a script');
     await failsOn(hosts[1], missing('/assets/not-found/puzzled-dog.webp'), '/assets/not-found/puzzled-dog\\.webp answered 404');
+    // The cover of the card the Blog page lists last, which is never the lead's, so a check of the lead's cover alone would miss it.
+    const cards = hrefs(await readFile(join(outDir, 'blog.html'), 'utf8'), 'ap-post-card');
+    assert.ok(cards.length > 1);
+    const lastCover = `${cards.at(-1)}.webp`;
+    await failsOn(hosts[1], missing(lastCover), `${lastCover.replaceAll('.', '\\.')} answered 404`);
     await failsOn(hosts[1], host => { host.fallback = 'homepage'; }, '/\\S+ is not the not-found page');
     await failsOn(hosts[1], host => { host.fallback = 'homepage'; host.missing.add('/assets/golden-wag/motion-2.webp'); }, '/assets/golden-wag/motion-2\\.webp is not an image');
     await failsOn(hosts[1], host => { host.fallback = 'soft'; }, '/\\S+ is not the not-found page');

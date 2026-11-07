@@ -1,0 +1,435 @@
+<section>
+  <p class="lead">先说结论：<b>把 Claude Code 升级到最新版</b>（写这篇时是 v2.1.318），一般运行 <code>claude update</code> 就行，其他安装方式见后文。</p>
+  <p>新版多了一个功能叫空闲压缩（idle compaction），对应的配置项是 <code>idleCompaction</code>。它解决一件很贵的事：上下文已经很大的时候，你离开超过一小时再回来。</p>
+  <p>用订阅的话，升级后什么都不用配，它默认就开着，省的是额度。用 API Key 或云厂商的话，默认不会触发，要先改缓存时效，这笔账得另算，后面会讲。</p>
+  <p>我 10 月用的是 v2.1.286，11 月初升到 v2.1.317，正好前后各有一批记录。我把这些记录拆开算了一遍：</p>
+  <ul class="plain">
+    <li><b>回来这一下</b>：28 次真实记录，不压缩估算要约 94 美元，实际约 25 美元，少花 73%。</li>
+    <li><b>回来之后接着干</b>：这 28 段工作估算少处理约 2.5 亿 token，少了 38%。</li>
+    <li><b>整张账单</b>：估计省 8% 到 14%。</li>
+  </ul>
+  <p>我用的是订阅，不按美元扣费。官方文档把缓存未命中列为额度上涨的原因之一，但额度怎么折算 token 没有公开。所以下面的美元都按 Opus 5.5 的 API 公开价折算，只用来比较相对大小，不等于额度也能省同样的比例。</p>
+</section>
+
+<section id="why-costly">
+  <h2>为什么离开一小时这么贵</h2>
+  <p>模型没有记忆，Claude Code 每发一次请求，都要把整段上下文重新发一遍。prompt cache 让这部分变便宜，但读和写的价格差得很远：</p>
+  <div class="scroll"><table>
+    <thead><tr><th>动作</th><th class="num">相对普通输入的价格</th><th class="num">50 万 token 要花</th></tr></thead>
+    <tbody>
+      <tr><td>读缓存</td><td class="num">0.05 倍</td><td class="num">0.10 美元</td></tr>
+      <tr><td>写缓存（1 小时有效）</td><td class="num">2 倍</td><td class="num">4.00 美元</td></tr>
+    </tbody>
+  </table></div>
+  <p>同样 50 万 token，写是读的 40 倍。Sonnet 5.5 也是这个倍数。</p>
+  <p>订阅用户的主会话，缓存默认保留 1 小时。只要一小时内有请求，缓存就续上了，每轮只付读的价格。一旦离开超过一小时，缓存过期，你回来说的第一句话哪怕只是「继续」，整段上下文也要重新写一遍。</p>
+  <p>我查了自己的记录。10 月里，上下文 20 万以上、离开超过一小时再回来的情况有 141 次，每次第一个请求的中位数是 4.38 美元，合计 629 美元，占当月账单的 8.4%。</p>
+</section>
+
+<section id="how-it-works">
+  <h2>空闲压缩做了什么</h2>
+  <p>会话空闲约 54 分钟时，Claude Code 趁缓存还没过期，自动发一个请求，把对话压缩成摘要。我这边 35 次记录全都发生在最后一次请求之后 53.3 到 54 分钟，耗时中位数 71 秒。</p>
+  <p>这个请求读的是缓存，所以便宜。等你回来，要写进缓存的只剩摘要和重新载入的内容。</p>
+  <figure class="fig" id="fig-idle-timeline">
+    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 552" role="img" aria-label="两条时间线对比离开一小时后回来的花费，上下文 50 万 token，按 Opus 5.5 的 API 价折算，色条是回来时要写进缓存的量。不压缩（旧版，或关掉 idleCompaction）：0 分钟是最后一次请求，缓存开始计时；60 分钟缓存过期，这一步不花钱；你回来时整份重写 50 万，花 4.00 美元，回来这一下合计 4.00 美元。空闲压缩（新版默认）：0 分钟是最后一次请求，缓存开始计时；约 54 分钟读缓存 50 万花 0.10 美元，写摘要约 0.20 美元；你回来时只重写约 8 万，花 0.63 美元，回来这一下合计 0.93 美元。同样 50 万 token，写缓存的单价是读缓存的 40 倍。赶在过期前读这一遍，就躲开了那次整份重写。">
+<text x="24" y="34"><tspan class="ic-lane">不压缩</tspan><tspan class="ic-note" dx="12">旧版，或关掉 idleCompaction</tspan></text>
+<text x="916" y="34" text-anchor="end"><tspan class="ic-note">回来这一下合计</tspan><tspan class="ic-total ic-ink-cost" dx="10">$4.00</tspan></text>
+<g class="ic-node" data-role="ev">
+<rect class="ic-box ic-box-ev" x="24" y="52" width="260" height="150" rx="8"/>
+<text class="ic-ttl ic-ink-ev" x="44" y="86">0 分钟</text>
+<text class="ic-txt" x="44" y="118">最后一次请求</text>
+<text class="ic-txt" x="44" y="144">缓存开始计时</text>
+</g>
+<g class="ic-arrowset" data-length="44" data-head="10"><line class="ic-arrow" x1="290" y1="127" x2="325" y2="127"/><path class="ic-head" d="M334 127 L324 121 L324 133 Z"/></g>
+<g class="ic-node" data-role="ev">
+<rect class="ic-box ic-box-ev" x="340" y="52" width="260" height="150" rx="8"/>
+<text class="ic-ttl ic-ink-ev" x="360" y="86">60 分钟</text>
+<text class="ic-txt" x="360" y="118">缓存过期</text>
+<text class="ic-txt" x="360" y="144">这一步不花钱</text>
+</g>
+<g class="ic-arrowset" data-length="44" data-head="10"><line class="ic-arrow" x1="606" y1="127" x2="641" y2="127"/><path class="ic-head" d="M650 127 L640 121 L640 133 Z"/></g>
+<g class="ic-node" data-role="cost">
+<rect class="ic-box ic-box-cost" x="656" y="52" width="260" height="150" rx="8"/>
+<text class="ic-ttl ic-ink-cost" x="676" y="86">你回来</text>
+<text class="ic-txt" x="676" y="118">整份重写 50 万</text>
+<text class="ic-key ic-ink-cost" x="676" y="156">$4.00</text>
+<rect class="ic-bar-cost" x="676" y="172" width="220" height="10" rx="4"/>
+</g>
+<text x="24" y="260"><tspan class="ic-lane">空闲压缩</tspan><tspan class="ic-note" dx="12">新版默认</tspan></text>
+<text x="916" y="260" text-anchor="end"><tspan class="ic-note">回来这一下合计</tspan><tspan class="ic-total ic-ink-save" dx="10">$0.93</tspan></text>
+<g class="ic-node" data-role="ev">
+<rect class="ic-box ic-box-ev" x="24" y="278" width="260" height="150" rx="8"/>
+<text class="ic-ttl ic-ink-ev" x="44" y="312">0 分钟</text>
+<text class="ic-txt" x="44" y="344">最后一次请求</text>
+<text class="ic-txt" x="44" y="370">缓存开始计时</text>
+</g>
+<g class="ic-arrowset" data-length="44" data-head="10"><line class="ic-arrow" x1="290" y1="353" x2="325" y2="353"/><path class="ic-head" d="M334 353 L324 347 L324 359 Z"/></g>
+<g class="ic-node" data-role="save">
+<rect class="ic-box ic-box-save" x="340" y="278" width="260" height="150" rx="8"/>
+<text class="ic-ttl ic-ink-save" x="360" y="312">约 54 分钟</text>
+<text class="ic-txt" x="360" y="344">读缓存 50 万 $0.10</text>
+<text class="ic-txt" x="360" y="370">写摘要约 $0.20</text>
+</g>
+<g class="ic-arrowset" data-length="44" data-head="10"><line class="ic-arrow" x1="606" y1="353" x2="641" y2="353"/><path class="ic-head" d="M650 353 L640 347 L640 359 Z"/></g>
+<g class="ic-node" data-role="save">
+<rect class="ic-box ic-box-save" x="656" y="278" width="260" height="150" rx="8"/>
+<text class="ic-ttl ic-ink-save" x="676" y="312">你回来</text>
+<text class="ic-txt" x="676" y="344">只重写约 8 万</text>
+<text class="ic-key ic-ink-save" x="676" y="382">$0.63</text>
+<rect class="ic-bar-save" x="676" y="398" width="35.2" height="10" rx="4"/>
+</g>
+<rect class="ic-callout" x="24" y="460" width="892" height="72"/>
+<rect class="ic-callout-bar" x="24" y="460" width="4" height="72"/>
+<text class="ic-txt" x="44" y="489">同样 50 万 token，写缓存的单价是读缓存的 40 倍。</text>
+<text class="ic-txt ic-strong" x="44" y="516">赶在过期前读这一遍，就躲开了那次整份重写。</text>
+</svg></div>
+    <figcaption><b>离开一小时，两种结局。</b>上下文 50 万 token，按 Opus 5.5 的 API 价折算；色条是回来时要写进缓存的量。</figcaption>
+  </figure>
+  <p>以 50 万 token 为例：</p>
+  <ul class="plain">
+    <li><b>不压缩</b>：整份重写，4.00 美元。</li>
+    <li><b>空闲压缩</b>：读缓存 0.10 美元，生成摘要约 0.20 美元，回来重写约 8 万 token 要 0.63 美元，合计 0.93 美元。</li>
+  </ul>
+  <p>回来这一下省的其实不是 token 数量，这 50 万一样要过一遍，省的是单价。数量要到后面才开始省。</p>
+</section>
+
+<section id="measured">
+  <h2>实测省多少</h2>
+  <h3>回来这一下：少花 73%</h3>
+  <p>升级后有 28 次离开再回来，全都过了一小时才回来，所以缓存确实会过期。同样这 28 次，如果没有空闲压缩，第一个请求合计约 94 美元；实际花了约 25 美元，其中压缩请求约 8 美元。</p>
+  <p>压缩请求的用量不写在会话记录里。它读缓存的量是确定的，生成摘要的输出量是我按 1 万 token 估的。按 5 千到 2 万算，这个比例在 67% 到 76% 之间。</p>
+  <figure class="fig" id="fig-return-cost-scatter">
+    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 546" role="img" aria-label="散点图：回来这一下花了多少钱。每个点是一次离开超过一小时再回来的真实记录，横轴是离开前的上下文大小（20 万到 100 万），纵轴是回来第一个请求的费用，按 Opus 5.5 的 API 价折算。10 月不压缩的 141 次（v2.1.286），中位数 4.38 美元，费用随上下文从约 1.5 美元线性涨到约 7.5 美元：上下文越大越贵。11 月 3 日至 5 日空闲压缩的 28 次，中位数 0.97 美元，费用基本平在 1 美元左右。">
+<circle class="ic-dot-cost" cx="30" cy="25" r="6"/><text class="ic-legend" x="44" y="30">不压缩：10 月，v2.1.286，141 次，中位数 $4.38</text>
+<circle class="ic-dot-save" cx="30" cy="51" r="6"/><text class="ic-legend" x="44" y="56">空闲压缩：11 月 3 日至 5 日，28 次，中位数 $0.97</text>
+<line class="ic-base" x1="70" x2="916" y1="476" y2="476"/>
+<text class="ic-tick" x="58" y="481" text-anchor="end">$0</text>
+<line class="ic-grid" x1="70" x2="916" y1="385.5" y2="385.5"/>
+<text class="ic-tick" x="58" y="390.5" text-anchor="end">$2</text>
+<line class="ic-grid" x1="70" x2="916" y1="295" y2="295"/>
+<text class="ic-tick" x="58" y="300" text-anchor="end">$4</text>
+<line class="ic-grid" x1="70" x2="916" y1="204.6" y2="204.6"/>
+<text class="ic-tick" x="58" y="209.6" text-anchor="end">$6</text>
+<line class="ic-grid" x1="70" x2="916" y1="114.1" y2="114.1"/>
+<text class="ic-tick" x="58" y="119.1" text-anchor="end">$8</text>
+<text class="ic-tick" x="118.6" y="502" text-anchor="middle">20 万</text>
+<text class="ic-tick" x="313.1" y="502" text-anchor="middle">40 万</text>
+<text class="ic-tick" x="507.6" y="502" text-anchor="middle">60 万</text>
+<text class="ic-tick" x="702.1" y="502" text-anchor="middle">80 万</text>
+<text class="ic-tick" x="896.6" y="502" text-anchor="middle">100 万</text>
+<text class="ic-tick" x="493" y="530" text-anchor="middle">离开前的上下文大小</text>
+<g class="ic-points" data-series="old" data-count="141">
+<circle class="ic-dot-cost" cx="372" cy="310.7" r="6"/>
+<circle class="ic-dot-cost" cx="320.7" cy="336.2" r="6"/>
+<circle class="ic-dot-cost" cx="341.8" cy="322.7" r="6"/>
+<circle class="ic-dot-cost" cx="204.5" cy="379.4" r="6"/>
+<circle class="ic-dot-cost" cx="389.9" cy="309.8" r="6"/>
+<circle class="ic-dot-cost" cx="400.5" cy="306" r="6"/>
+<circle class="ic-dot-cost" cx="339.3" cy="324.7" r="6"/>
+<circle class="ic-dot-cost" cx="611.5" cy="223.8" r="6"/>
+<circle class="ic-dot-cost" cx="295.9" cy="342.4" r="6"/>
+<circle class="ic-dot-cost" cx="405.3" cy="302.4" r="6"/>
+<circle class="ic-dot-cost" cx="538" cy="250.6" r="6"/>
+<circle class="ic-dot-cost" cx="701.3" cy="190.9" r="6"/>
+<circle class="ic-dot-cost" cx="242.9" cy="363.3" r="6"/>
+<circle class="ic-dot-cost" cx="850.2" cy="139.4" r="6"/>
+<circle class="ic-dot-cost" cx="856.6" cy="137.2" r="6"/>
+<circle class="ic-dot-cost" cx="367.2" cy="315.8" r="6"/>
+<circle class="ic-dot-cost" cx="374.2" cy="313.6" r="6"/>
+<circle class="ic-dot-cost" cx="458" cy="283.9" r="6"/>
+<circle class="ic-dot-cost" cx="210.9" cy="364.4" r="6"/>
+<circle class="ic-dot-cost" cx="535.1" cy="257" r="6"/>
+<circle class="ic-dot-cost" cx="145.1" cy="399.5" r="6"/>
+<circle class="ic-dot-cost" cx="373.2" cy="318.7" r="6"/>
+<circle class="ic-dot-cost" cx="635.5" cy="216.8" r="6"/>
+<circle class="ic-dot-cost" cx="165.2" cy="395.2" r="6"/>
+<circle class="ic-dot-cost" cx="590.7" cy="235.9" r="6"/>
+<circle class="ic-dot-cost" cx="641.9" cy="217.3" r="6"/>
+<circle class="ic-dot-cost" cx="668.9" cy="207.7" r="6"/>
+<circle class="ic-dot-cost" cx="360" cy="320" r="6"/>
+<circle class="ic-dot-cost" cx="124.1" cy="409.2" r="6"/>
+<circle class="ic-dot-cost" cx="762.2" cy="173.3" r="6"/>
+<circle class="ic-dot-cost" cx="173.9" cy="380.9" r="6"/>
+<circle class="ic-dot-cost" cx="767.6" cy="169.6" r="6"/>
+<circle class="ic-dot-cost" cx="355.3" cy="323.3" r="6"/>
+<circle class="ic-dot-cost" cx="843.5" cy="141.6" r="6"/>
+<circle class="ic-dot-cost" cx="637.3" cy="216.2" r="6"/>
+<circle class="ic-dot-cost" cx="529.4" cy="259.7" r="6"/>
+<circle class="ic-dot-cost" cx="756.6" cy="175.5" r="6"/>
+<circle class="ic-dot-cost" cx="322.3" cy="332.6" r="6"/>
+<circle class="ic-dot-cost" cx="374.8" cy="315.5" r="6"/>
+<circle class="ic-dot-cost" cx="667.1" cy="206.6" r="6"/>
+<circle class="ic-dot-cost" cx="212.8" cy="373.8" r="6"/>
+<circle class="ic-dot-cost" cx="486.9" cy="273.1" r="6"/>
+<circle class="ic-dot-cost" cx="499.5" cy="268.9" r="6"/>
+<circle class="ic-dot-cost" cx="653" cy="213.7" r="6"/>
+<circle class="ic-dot-cost" cx="313.1" cy="330.2" r="6"/>
+<circle class="ic-dot-cost" cx="119.9" cy="410.1" r="6"/>
+<circle class="ic-dot-cost" cx="149.4" cy="396.9" r="6"/>
+<circle class="ic-dot-cost" cx="341.1" cy="329.1" r="6"/>
+<circle class="ic-dot-cost" cx="731.8" cy="181.5" r="6"/>
+<circle class="ic-dot-cost" cx="234.8" cy="368.1" r="6"/>
+<circle class="ic-dot-cost" cx="262.4" cy="358.9" r="6"/>
+<circle class="ic-dot-cost" cx="333" cy="329.8" r="6"/>
+<circle class="ic-dot-cost" cx="184.5" cy="375.8" r="6"/>
+<circle class="ic-dot-cost" cx="195.9" cy="372.4" r="6"/>
+<circle class="ic-dot-cost" cx="198.8" cy="371.3" r="6"/>
+<circle class="ic-dot-cost" cx="200.4" cy="371.2" r="6"/>
+<circle class="ic-dot-cost" cx="288.7" cy="338.7" r="6"/>
+<circle class="ic-dot-cost" cx="342.4" cy="319.7" r="6"/>
+<circle class="ic-dot-cost" cx="344.8" cy="318.8" r="6"/>
+<circle class="ic-dot-cost" cx="382.9" cy="303.6" r="6"/>
+<circle class="ic-dot-cost" cx="382.7" cy="313.6" r="6"/>
+<circle class="ic-dot-cost" cx="739.6" cy="180" r="6"/>
+<circle class="ic-dot-cost" cx="814.5" cy="152.9" r="6"/>
+<circle class="ic-dot-cost" cx="337.1" cy="328.8" r="6"/>
+<circle class="ic-dot-cost" cx="550.9" cy="251.2" r="6"/>
+<circle class="ic-dot-cost" cx="638.7" cy="208.6" r="6"/>
+<circle class="ic-dot-cost" cx="846" cy="140.2" r="6"/>
+<circle class="ic-dot-cost" cx="139.9" cy="404.4" r="6"/>
+<circle class="ic-dot-cost" cx="627.6" cy="221.2" r="6"/>
+<circle class="ic-dot-cost" cx="810.2" cy="153.4" r="6"/>
+<circle class="ic-dot-cost" cx="732.5" cy="183.1" r="6"/>
+<circle class="ic-dot-cost" cx="807.1" cy="149.7" r="6"/>
+<circle class="ic-dot-cost" cx="184.9" cy="383.4" r="6"/>
+<circle class="ic-dot-cost" cx="181.1" cy="388" r="6"/>
+<circle class="ic-dot-cost" cx="279.3" cy="351.6" r="6"/>
+<circle class="ic-dot-cost" cx="306.8" cy="338.3" r="6"/>
+<circle class="ic-dot-cost" cx="330.1" cy="332.6" r="6"/>
+<circle class="ic-dot-cost" cx="178.1" cy="387.5" r="6"/>
+<circle class="ic-dot-cost" cx="716.7" cy="189" r="6"/>
+<circle class="ic-dot-cost" cx="411.3" cy="300.5" r="6"/>
+<circle class="ic-dot-cost" cx="155.6" cy="397.7" r="6"/>
+<circle class="ic-dot-cost" cx="335.6" cy="329.6" r="6"/>
+<circle class="ic-dot-cost" cx="386.9" cy="309.7" r="6"/>
+<circle class="ic-dot-cost" cx="401.5" cy="300.3" r="6"/>
+<circle class="ic-dot-cost" cx="450.7" cy="280.4" r="6"/>
+<circle class="ic-dot-cost" cx="599.9" cy="229.5" r="6"/>
+<circle class="ic-dot-cost" cx="683" cy="198" r="6"/>
+<circle class="ic-dot-cost" cx="467.6" cy="280.2" r="6"/>
+<circle class="ic-dot-cost" cx="155.4" cy="391.8" r="6"/>
+<circle class="ic-dot-cost" cx="559.3" cy="246.6" r="6"/>
+<circle class="ic-dot-cost" cx="801.3" cy="156.9" r="6"/>
+<circle class="ic-dot-cost" cx="625.7" cy="221.6" r="6"/>
+<circle class="ic-dot-cost" cx="599.4" cy="232.1" r="6"/>
+<circle class="ic-dot-cost" cx="755.5" cy="172.6" r="6"/>
+<circle class="ic-dot-cost" cx="796.6" cy="156.9" r="6"/>
+<circle class="ic-dot-cost" cx="811.1" cy="154" r="6"/>
+<circle class="ic-dot-cost" cx="355.8" cy="319.9" r="6"/>
+<circle class="ic-dot-cost" cx="588.3" cy="236.4" r="6"/>
+<circle class="ic-dot-cost" cx="562.3" cy="246.8" r="6"/>
+<circle class="ic-dot-cost" cx="309.3" cy="340.8" r="6"/>
+<circle class="ic-dot-cost" cx="547.8" cy="250" r="6"/>
+<circle class="ic-dot-cost" cx="771.3" cy="168.9" r="6"/>
+<circle class="ic-dot-cost" cx="228.4" cy="371.1" r="6"/>
+<circle class="ic-dot-cost" cx="256.9" cy="357.4" r="6"/>
+<circle class="ic-dot-cost" cx="556.7" cy="248" r="6"/>
+<circle class="ic-dot-cost" cx="735" cy="181.4" r="6"/>
+<circle class="ic-dot-cost" cx="815.3" cy="152.7" r="6"/>
+<circle class="ic-dot-cost" cx="375.5" cy="316.3" r="6"/>
+<circle class="ic-dot-cost" cx="482.3" cy="276.2" r="6"/>
+<circle class="ic-dot-cost" cx="771.8" cy="165.3" r="6"/>
+<circle class="ic-dot-cost" cx="834.2" cy="141.9" r="6"/>
+<circle class="ic-dot-cost" cx="437.8" cy="292.3" r="6"/>
+<circle class="ic-dot-cost" cx="471.2" cy="278.4" r="6"/>
+<circle class="ic-dot-cost" cx="486.7" cy="269.3" r="6"/>
+<circle class="ic-dot-cost" cx="504.5" cy="262.5" r="6"/>
+<circle class="ic-dot-cost" cx="730.2" cy="181.8" r="6"/>
+<circle class="ic-dot-cost" cx="582.3" cy="238.5" r="6"/>
+<circle class="ic-dot-cost" cx="782.2" cy="164.7" r="6"/>
+<circle class="ic-dot-cost" cx="293.9" cy="346" r="6"/>
+<circle class="ic-dot-cost" cx="375.4" cy="316.1" r="6"/>
+<circle class="ic-dot-cost" cx="732.5" cy="183.6" r="6"/>
+<circle class="ic-dot-cost" cx="424.5" cy="297.7" r="6"/>
+<circle class="ic-dot-cost" cx="475" cy="277.9" r="6"/>
+<circle class="ic-dot-cost" cx="386.1" cy="311.7" r="6"/>
+<circle class="ic-dot-cost" cx="497.6" cy="270.3" r="6"/>
+<circle class="ic-dot-cost" cx="569.1" cy="243.2" r="6"/>
+<circle class="ic-dot-cost" cx="640.3" cy="217" r="6"/>
+<circle class="ic-dot-cost" cx="399" cy="308.8" r="6"/>
+<circle class="ic-dot-cost" cx="402.8" cy="307.2" r="6"/>
+<circle class="ic-dot-cost" cx="524.8" cy="263.3" r="6"/>
+<circle class="ic-dot-cost" cx="532.9" cy="260.4" r="6"/>
+<circle class="ic-dot-cost" cx="543.7" cy="256" r="6"/>
+<circle class="ic-dot-cost" cx="548.2" cy="252.4" r="6"/>
+<circle class="ic-dot-cost" cx="574.7" cy="244.6" r="6"/>
+<circle class="ic-dot-cost" cx="610.4" cy="231.9" r="6"/>
+<circle class="ic-dot-cost" cx="648.4" cy="215.3" r="6"/>
+<circle class="ic-dot-cost" cx="650.6" cy="216.2" r="6"/>
+<circle class="ic-dot-cost" cx="587.6" cy="234.1" r="6"/>
+<circle class="ic-dot-cost" cx="654.3" cy="212.4" r="6"/>
+<circle class="ic-dot-cost" cx="658.6" cy="210.7" r="6"/>
+<circle class="ic-dot-cost" cx="339.9" cy="328.2" r="6"/>
+</g>
+<g class="ic-points" data-series="new" data-count="28">
+<circle class="ic-dot-save" cx="442.1" cy="430.4" r="6"/>
+<circle class="ic-dot-save" cx="451.7" cy="425.9" r="6"/>
+<circle class="ic-dot-save" cx="184.6" cy="431.5" r="6"/>
+<circle class="ic-dot-save" cx="131.6" cy="439.2" r="6"/>
+<circle class="ic-dot-save" cx="336.7" cy="434.1" r="6"/>
+<circle class="ic-dot-save" cx="481.3" cy="431" r="6"/>
+<circle class="ic-dot-save" cx="320.1" cy="435.2" r="6"/>
+<circle class="ic-dot-save" cx="397.2" cy="430.6" r="6"/>
+<circle class="ic-dot-save" cx="177.1" cy="434.2" r="6"/>
+<circle class="ic-dot-save" cx="165.6" cy="426.9" r="6"/>
+<circle class="ic-dot-save" cx="699.1" cy="428.5" r="6"/>
+<circle class="ic-dot-save" cx="265.9" cy="432.6" r="6"/>
+<circle class="ic-dot-save" cx="586.8" cy="427.7" r="6"/>
+<circle class="ic-dot-save" cx="129.6" cy="439.6" r="6"/>
+<circle class="ic-dot-save" cx="567.5" cy="427.7" r="6"/>
+<circle class="ic-dot-save" cx="147.2" cy="432" r="6"/>
+<circle class="ic-dot-save" cx="155.9" cy="435.2" r="6"/>
+<circle class="ic-dot-save" cx="665.3" cy="425.8" r="6"/>
+<circle class="ic-dot-save" cx="575.7" cy="431.8" r="6"/>
+<circle class="ic-dot-save" cx="179.9" cy="433.1" r="6"/>
+<circle class="ic-dot-save" cx="472.5" cy="425.6" r="6"/>
+<circle class="ic-dot-save" cx="603.6" cy="433.1" r="6"/>
+<circle class="ic-dot-save" cx="203.8" cy="446.3" r="6"/>
+<circle class="ic-dot-save" cx="444.4" cy="445.8" r="6"/>
+<circle class="ic-dot-save" cx="133" cy="447.2" r="6"/>
+<circle class="ic-dot-save" cx="283.4" cy="439.4" r="6"/>
+<circle class="ic-dot-save" cx="578" cy="433.4" r="6"/>
+<circle class="ic-dot-save" cx="340" cy="429.4" r="6"/>
+</g>
+<circle class="ic-dot-cost" cx="167.2" cy="177.4" r="6"/><text class="ic-label" x="183.2" y="183.4">不压缩：上下文越大越贵</text>
+<circle class="ic-dot-save" cx="527" cy="376.5" r="6"/><text class="ic-label" x="543" y="382.5">空闲压缩：基本平在 $1 左右</text>
+</svg></div>
+    <figcaption><b>回来这一下，花了多少钱。</b>每个点是我的一次真实记录：离开超过一小时再回来，按 Opus 5.5 的 API 价折算。空闲压缩一组已计入压缩请求本身，其中生成摘要的输出量按 1 万 token 估算。</figcaption>
+  </figure>
+  <p>不压缩的费用跟着上下文线性涨，压缩后基本平在 1 美元左右。所以上下文越大，省的比例越高：</p>
+  <div class="scroll"><table class="mid">
+    <thead><tr><th class="num">离开前的上下文</th><th class="num">不压缩</th><th class="num">空闲压缩</th><th class="num">少花</th></tr></thead>
+    <tbody>
+      <tr><td class="num">20 万</td><td class="num">1.60 美元</td><td class="num">0.87 美元</td><td class="num">45%</td></tr>
+      <tr><td class="num">50 万</td><td class="num">4.00 美元</td><td class="num">0.93 美元</td><td class="num">77%</td></tr>
+      <tr><td class="num">80 万</td><td class="num">6.40 美元</td><td class="num">0.99 美元</td><td class="num">84%</td></tr>
+    </tbody>
+  </table></div>
+  <p>这张表里，回来要重写的量按我的中位数 8 万算，我的规则文件和记忆比较多。如果你的只有 3 万，三档分别是 70%、86%、91%。</p>
+
+  <h3>回来之后：每轮读得少，但要补读</h3>
+  <p>压缩之后上下文小了。我回来时上下文的中位数是 10.9 万，之后每轮读缓存的量也跟着变小。</p>
+  <p>但摘要会丢细节，Claude 可能要把一部分内容重新读回来。回来后的 20 个请求里，压缩过的会话上下文涨了 12.2 万，没压缩的只涨 5 万。这个差距不全是读回来的：两组做的不是同一批任务，我的规则还要求压缩后重新载入用到的 skill，别人未必有这笔。我把差的这部分都算成压缩的成本。它要按写缓存的价格付钱，所以省的比例不会一直停在 77%：</p>
+  <figure class="fig" id="fig-after-return-cost">
+    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 546" role="img" aria-label="折线图：回来之后接着干，差距还在。从 50 万 token 的上下文回来后的累计费用，按 Opus 5.5 的 API 价折算，横轴是回来之后的请求数（0 到 30），纵轴是美元。不压缩每轮都要读一遍 50 万以上的上下文，累计费用从 4.00 美元涨到 30 个请求后的 7.78 美元；空闲压缩每轮读得少，但要多写重新读回来的内容，从 0.93 美元涨到 3.66 美元。">
+<line class="ic-line-cost" x1="22" x2="42" y1="25" y2="25"/><text class="ic-legend" x="52" y="30">不压缩：每轮都要读一遍 50 万以上的上下文</text>
+<line class="ic-line-save" x1="22" x2="42" y1="51" y2="51"/><text class="ic-legend" x="52" y="56">空闲压缩：每轮读得少，但要多写重新读回来的内容</text>
+<line class="ic-base" x1="70" x2="780" y1="476" y2="476"/>
+<text class="ic-tick" x="58" y="481" text-anchor="end">$0</text>
+<line class="ic-grid" x1="70" x2="780" y1="388.9" y2="388.9"/>
+<text class="ic-tick" x="58" y="393.9" text-anchor="end">$2</text>
+<line class="ic-grid" x1="70" x2="780" y1="301.8" y2="301.8"/>
+<text class="ic-tick" x="58" y="306.8" text-anchor="end">$4</text>
+<line class="ic-grid" x1="70" x2="780" y1="214.7" y2="214.7"/>
+<text class="ic-tick" x="58" y="219.7" text-anchor="end">$6</text>
+<line class="ic-grid" x1="70" x2="780" y1="127.6" y2="127.6"/>
+<text class="ic-tick" x="58" y="132.6" text-anchor="end">$8</text>
+<text class="ic-tick" x="70" y="502" text-anchor="middle">0</text>
+<text class="ic-tick" x="306.7" y="502" text-anchor="middle">10</text>
+<text class="ic-tick" x="543.3" y="502" text-anchor="middle">20</text>
+<text class="ic-tick" x="780" y="502" text-anchor="middle">30</text>
+<text class="ic-tick" x="425" y="530" text-anchor="middle">回来之后的请求数</text>
+<path class="ic-line-cost" d="M70 301.8 L93.7 296.7 L117.3 291.7 L141 286.3 L164.7 281.2 L188.3 276.1 L212 270.6 L235.7 265.3 L259.3 259.9 L283 254.9 L306.7 249.8 L330.3 244.6 L354 238.7 L377.7 233 L401.3 227.2 L425 221.3 L448.7 215.4 L472.3 210.2 L496 204.3 L519.7 198.9 L543.3 193.2 L567 187.9 L590.7 182.5 L614.3 176.8 L638 170.9 L661.7 165.5 L685.3 160.1 L709 154.1 L732.7 148.6 L756.3 143.1 L780 137.2"/>
+<circle class="ic-dot-cost" cx="70" cy="301.8" r="5"/>
+<circle class="ic-dot-cost" cx="780" cy="137.2" r="5"/>
+<text class="ic-end" x="794" y="135.2">$7.78</text>
+<text class="ic-endname" x="794" y="157.2">不压缩</text>
+<text class="ic-end" x="84" y="331.8">$4.00</text>
+<path class="ic-line-save" d="M70 435.5 L93.7 432.3 L117.3 428.7 L141 423.2 L164.7 420.3 L188.3 412 L212 406.9 L235.7 403.9 L259.3 398.2 L283 395.1 L306.7 392.4 L330.3 388.9 L354 385.1 L377.7 379.8 L401.3 377.9 L425 375.8 L448.7 373.3 L472.3 370.6 L496 367.5 L519.7 364.2 L543.3 361.1 L567 358.4 L590.7 354.7 L614.3 352.1 L638 344.9 L661.7 342.1 L685.3 338.6 L709 334.4 L732.7 328.1 L756.3 322.9 L780 316.5"/>
+<circle class="ic-dot-save" cx="70" cy="435.5" r="5"/>
+<circle class="ic-dot-save" cx="780" cy="316.5" r="5"/>
+<text class="ic-end" x="794" y="314.5">$3.66</text>
+<text class="ic-endname" x="794" y="336.5">空闲压缩</text>
+<text class="ic-end" x="84" y="465.5">$0.93</text>
+</svg></div>
+    <figcaption><b>回来之后接着干，差距还在。</b>从 50 万 token 的上下文回来后的累计费用，按 Opus 5.5 的 API 价折算。每一轮新增的上下文取两组记录的中位数：压缩后 30 个请求涨 18.7 万，不压缩涨 7.1 万。模型输出的费用两边相同，未计入。</figcaption>
+  </figure>
+  <p>按这组中位数算，30 个请求后的差距从 3.07 美元变成 4.12 美元，还是少花一半多。这只能当作近似。</p>
+  <p>直接数 token 也能看到差别。这 28 段工作实际处理了 3.96 亿 token，包括压缩请求读的那一遍；不压缩的话估算要 6.43 亿，少了 2.5 亿。</p>
+
+  <h3>整张账单：8% 到 14%</h3>
+  <div class="scroll"><table class="mid">
+    <thead><tr><th>口径</th><th class="num">账单</th><th class="num">省下</th><th class="num">比例</th></tr></thead>
+    <tbody>
+      <tr><td>11 月 3 日至 5 日，真实记录</td><td class="num">1,045 美元</td><td class="num">约 93 美元</td><td class="num">约 8%</td></tr>
+      <tr><td>10 月，假设每次都压缩</td><td class="num">7,522 美元</td><td class="num">约 1,053 美元</td><td class="num">14%</td></tr>
+    </tbody>
+  </table></div>
+  <p>第一行的账单已经是省过的，比例按「账单加省下的」算。两行都扣掉了压缩请求本身和读回来的内容，第一行还扣掉了没回来的压缩。换不同的假设（摘要的输出量、读回来的量），第一行在 6% 到 10%，第二行在 11% 到 17%。</p>
+  <p>这个比例很看习惯。我的上下文偏大，10 月那 141 次的中位数是 57 万，又经常让会话停着等我。回来第一个请求这笔钱，在我 7 到 10 月的账单里每月占 8% 到 23%。如果你的上下文很少到 20 万，或者很少离开一小时，能省的会少很多。</p>
+  <p>想看自己的情况，运行 <code>/usage</code>，Session 部分有一行 <code>Prompt cache (main)</code>，会列出缓存未命中的次数和重写的 token 数。</p>
+</section>
+
+<section id="conditions">
+  <h2>什么情况下它不会跑</h2>
+  <p>官方文档写的条件是同时满足下面这些：</p>
+  <ul class="plain">
+    <li><b>会话类型</b>：交互式终端、VS Code 聊天面板，或桌面 App 的 Code 标签页（会话跑在本机或 SSH 上）。</li>
+    <li><b>自动压缩开着</b>：<code>autoCompactEnabled</code> 没关。</li>
+    <li><b>缓存是 1 小时</b>：订阅用户在套餐额度内默认就是。API Key、云厂商，以及超额后走 usage credits 时默认 5 分钟，不会触发。API 用户想用，要设 <code>"promptCacheTtl": "1h"</code>，代价是每次写缓存都从 1.25 倍涨到 2 倍，所以这篇的比例不能直接套用，值不值要看你多常离开。</li>
+    <li><b>上下文够大</b>：默认 20 万 token。上下文窗口只有 20 万的会话，到不了门槛就先自动压缩了，这种情况可以调低门槛。</li>
+    <li><b>电脑醒着</b>：要一直醒到那个时候。</li>
+  </ul>
+  <p>调门槛用这个环境变量，写在 <code>settings.json</code> 的 <code>env</code> 里，最低 10 万：</p>
+  <p><code>CLAUDE_CODE_IDLE_COMPACT_MIN_TOKENS</code></p>
+  <p>最容易踩的是最后一条：合上笔记本走开一小时，它就跑不了。知道自己要离开很久又要合盖的话，走之前手动跑一次 <code>/compact</code>，趁缓存还在，一样便宜。</p>
+</section>
+
+<section id="tradeoffs">
+  <h2>它的代价</h2>
+  <p><b>摘要会丢细节。</b> 压缩后 Claude 手里只剩摘要。官方文档写的是：会重新读最多 5 个最近改过的文件，技能正文每个最多保留 5,000 token、总共 25,000 token。读回来的那笔钱能算出来，但丢了细节之后答得有没有变差，我量化不了。做到一半的复杂任务，回来后最好先让它确认一下当前状态。</p>
+  <p><b>不回来就白花。</b> 压缩在你离开时就做了，不回来这笔也花了，50 万上下文约 0.30 美元。我 35 次压缩里有 7 次到写这篇时还没回去。算下来，回来的概率超过约 9% 就划算。</p>
+  <p><b>回来得太早也亏。</b> 压缩在约 54 分钟就做了。如果你 55 分钟回来，缓存本来还在，终端里的对话却已经换成摘要了；VS Code 和桌面 App 只有缓存过期才用摘要。我这 28 次都没碰上，最早的一次也是离开约 65 分钟才回来。</p>
+  <p><b>也不是每次都拦得住。</b> 升级后，上下文 20 万以上、离开超过一小时的有 36 次，35 次压缩了，1 次没触发，原因我没查清。</p>
+  <p>不想要可以关掉：在终端里运行 <code>/config</code>，改 <b>Idle compaction</b> 这一行；或者写进 <code>settings.json</code>：</p>
+  <pre class="codeblock"><code>{
+  "idleCompaction": false
+}</code></pre>
+</section>
+
+<section id="upgrade">
+  <h2>怎么升级</h2>
+  <pre class="codeblock"><code># 看当前版本
+claude --version
+
+# 原生安装
+claude update
+
+# npm 安装
+npm install -g @anthropic-ai/claude-code@latest</code></pre>
+  <p>Homebrew 的 <code>claude-code</code> 跟的是 <code>stable</code> 渠道，要最新版得装 <code>claude-code@latest</code>。已经开着的会话不会变，重启后才用上新版。</p>
+  <p>建议直接升到最新，因为这个功能是分几个版本补齐的：</p>
+  <div class="scroll"><table class="mid">
+    <thead><tr><th>版本</th><th>变化</th></tr></thead>
+    <tbody>
+      <tr><td>v2.1.290</td><td>配置项 <code>idleCompaction</code> 从这版起生效</td></tr>
+      <tr><td>v2.1.299</td><td>终端加入空闲压缩，changelog 第一次写到它</td></tr>
+      <tr><td>v2.1.302</td><td><code>/config</code> 增加开关</td></tr>
+      <tr><td>v2.1.314</td><td>支持 VS Code 和桌面 App；关了遥测的订阅用户也能跑；Bedrock、Vertex、Foundry 和 LLM 网关开了 1 小时缓存后也能跑</td></tr>
+      <tr><td>v2.1.318</td><td>修复空闲压缩可能把对话替换成一段不是摘要的回复</td></tr>
+    </tbody>
+  </table></div>
+  <p>最后一条修的是这个功能本身的问题，所以我建议到 v2.1.318。另外，如果你的环境取不到 Anthropic 的功能开关，比如关了遥测，v2.1.314 之前这个功能根本不会跑。</p>
+  <p>用 <code>stable</code> 渠道的注意一下：写这篇时它还在 v2.1.311，后两条都没有。可以等它跟上，也可以在 <code>/config</code> 的 <b>Auto-update channel</b> 切到 <code>latest</code>。</p>
+  <p>升级后想确认它跑过，看提示就行。终端里有一行 <code>Compacted while idle, before the prompt cache expired</code>，VS Code 和桌面 App 的提示里有 <code>a summary written while you were away</code>。</p>
+</section>
+
+<section id="method">
+  <h2>这些数字怎么来的</h2>
+  <ul class="plain">
+    <li><b>数据</b>：我这台机器上 2,833 个主会话和 829 个子 agent 的记录，2026 年 6 月 23 日到 11 月 5 日。一个 <code>message.id</code> 算一个请求。</li>
+    <li><b>离开再回来</b>：相邻两次请求隔了一小时以上，离开前上下文在 20 万以上，回来第一个请求写缓存的量超过上下文的一半。</li>
+    <li><b>不压缩的对照</b>：第一个请求按整份重写算。之后每轮多读「离开前的上下文 − 回来时的上下文 − 7.2 万」，一直算到下一次离开超过一小时或下一次压缩。7.2 万是两组记录在 20 个请求时的增长差，算作读回来的量，它本身还按写缓存的价格计一次。</li>
+    <li><b>样本的局限</b>：11 月的记录只有两天多。10 月那一行假设 141 次都能触发，经常合盖或关机的人会打折扣。</li>
+  </ul>
+</section>
+
+<footer class="foot" id="sources" data-toc="来源">
+  <div>引用链接</div>
+  <p class="ic-ref">[1] Claude Code 文档：idleCompaction 配置项<br><a href="https://code.claude.com/docs/en/settings-reference#idlecompaction">https://code.claude.com/docs/en/settings-reference#idlecompaction</a></p>
+  <p class="ic-ref">[2] Claude Code 文档：Prompt caching（缓存时效、压缩的费用）<br><a href="https://code.claude.com/docs/en/prompt-caching">https://code.claude.com/docs/en/prompt-caching</a></p>
+  <p class="ic-ref">[3] Claude Code 文档：压缩后保留什么<br><a href="https://code.claude.com/docs/en/context-window#what-survives-compaction">https://code.claude.com/docs/en/context-window#what-survives-compaction</a></p>
+  <p class="ic-ref">[4] Claude Code 文档：Manage costs（<code>/usage</code> 的缓存统计）<br><a href="https://code.claude.com/docs/en/costs">https://code.claude.com/docs/en/costs</a></p>
+  <p class="ic-ref">[5] Anthropic 定价（缓存读写倍率）<br><a href="https://platform.claude.com/docs/en/about-claude/pricing">https://platform.claude.com/docs/en/about-claude/pricing</a></p>
+  <p class="ic-ref">[6] Claude Code changelog<br><a href="https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md">https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md</a></p>
+</footer>
