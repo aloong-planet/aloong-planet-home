@@ -11,7 +11,7 @@ Readers who want more than the app showcase can read Aloong's long-form writing.
 - Move around a post with its contents: beside the article on a wide screen, where it stays in view and marks the section being read, or under the title on a narrower one.
 - Land on a section immediately when following a link to it, with the section heading clear of the top navigation.
 - Read text, tables, figures and code at one width, with green headings, links and accents that only post pages use.
-- See every figure whole at the article's width on any screen, and open any figure in a larger view for its detail: by clicking the figure or its 查看大图 button. The view shows the figure as it is at that moment, and closes from its X, Esc, or a click outside the figure.
+- See every figure whole at the article's width on any screen, straight on the page without a box around it, and click or tap any figure to open it in a larger view for its detail; from the keyboard, its 查看大图 button appears on focus. The view shows the figure as it is at that moment, and a click or tap anywhere in it, or Esc, closes it.
 - On a small screen, scroll wide tables sideways inside their own area.
 - Open links to other sites in a new tab.
 - At the end of a post, go to the post published just before it (上一篇) or just after it (下一篇). The oldest and newest posts say there is none on that side.

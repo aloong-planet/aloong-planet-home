@@ -1,22 +1,20 @@
 ## Question
-With one width for the whole article, does a long post read evenly: text, lists, captions, tables, figures and code all 820px wide, tables filling it, and figures scaled to fill their frame? Does opening a figure in a larger view work, both on a wide window and on a phone? Does the end of the post lead on well, with the previous post and the next post? And does one rule hold for every figure, the Super-agent post's wide, composed and interactive ones included: each fills its width in the page, and its detail is read in the larger view?
+With one width for the whole article, does a long post read evenly: text, lists, captions, tables, figures and code all 820px wide, tables filling it, and figures scaled to fill it? Does opening a figure in a larger view work, both on a wide window and on a phone? Does the end of the post lead on well, with the previous post and the next post? And does one rule hold for every figure, the Super-agent post's wide, composed and interactive ones included: each fills its width in the page, and its detail is read in the larger view?
 
 ## Structure basis
 - The page is the post page of the confirmed post prototype (`prototype-post.html`): the top navigation, title block, contents and article column. On top of that, it changes the widths, the type and color, the figures' larger view, and the end of the post.
-- The user chose the width scheme: one 820px measure for everything in the article column. Tables always fill it. Every figure frame is the same width, and the figure fills its frame.
+- The user chose the width scheme: one 820px measure for everything in the article column. Tables and figures always fill it.
 - Every figure fills its width at every window size and keeps its proportions, phones included: no drawing keeps a minimum width of its own, and no figure scrolls sideways in the page. No figure is drawn or placed specially; its detail is read in the larger view.
+- A figure sits straight on the page, with no ground or frame of the article's around it. A drawing's own frame, drawn inside it, stays.
 - On windows 1280px and wider, the contents sit left of the article. An empty track the contents' width sits to its right, which centers the measure in the window. It is the first to give way as the window narrows. Narrower windows keep the contents as a block under the title, inside the same measure.
-- The user asked for the larger view, with icon-only buttons and a colored layer that shows where a click closes it, as in common image viewers. Its details are this page's defaults.
-  - Every figure opens larger. Clicking a figure's drawing area (its frame, or its block of drawings when it has no frame), or its larger-view button, opens the figure with its caption on a white sheet. A see-through gray layer covers the rest of the window: the page still shows beneath it, and the white sheet stands clear of it.
-  - The view shows the figure as it looks at that moment: a figure with a step-by-step playback shows the step it is on. Its controls do not work in the view.
+- The user asked for the larger view, with no visible buttons: a reader clicks a figure to enlarge it and clicks again to close it, as in common image viewers. Its details are this page's defaults.
+  - Every figure opens larger. Clicking or tapping a figure's drawing area (the drawing, or its block of drawings) opens the figure with its caption on a white sheet. Over the drawing area the pointer is a zoom-in cursor; nothing else marks it. A see-through gray layer covers the rest of the window: the page still shows beneath it, and the white sheet stands clear of it.
+  - The view shows the figure as it looks at that moment: a figure with a step-by-step playback shows the step it is on. Its controls and links do not work in the view.
   - The figure is as large as the window allows, up to twice its width in the page.
   - It is never narrower than 800px, or than 85% of its widest drawing's drawn width if that is more. On a phone the sheet therefore scrolls sideways at a legible size, and the caption stays in view. A tall figure scrolls up and down inside the view.
-  - The gray layer closes the view: over it the pointer is a zoom-out cursor, and a click or tap on it closes. A click inside the sheet does nothing.
-  - The close button, an X in the window's top-right corner, and Esc close it too. Focus moves to the close button on opening and returns to the larger-view button on closing.
-  - Both buttons show only an icon, from Lucide: Maximize 2 (two arrows pointing out) to open, X to close. Screen readers and the hover tooltip name them 查看大图 and 关闭.
-  - The larger-view button is a 32px square with a 16px icon. On a pointer device it shows at the frame's top-right corner on hover and on keyboard focus. On a touch screen it is always shown, at the right end of the caption row, so it covers no part of the figure.
-  - The close button is a 40px white round button with a 22px dark icon, light gray on hover. Its own white ground keeps it legible whatever the page shows beneath the layer.
-  - Without scripting, figures are shown as before, with no button.
+  - A click or tap anywhere in the view closes it, on the sheet as well as on the gray layer, since a figure can fill a phone's screen and leave no gray to tap. Scrolling the view does not close it. Over the whole view the pointer is a zoom-out cursor. Esc closes it too. There is no close button.
+  - For the keyboard and screen readers, each figure has a larger-view button named 查看大图, with the Lucide Maximize 2 icon (two arrows pointing out). It is a 32px square with a 16px icon at the figure's top-right corner, shown only while it has keyboard focus; a pointer or a touch never meets it. A view opened from it returns focus to it on closing.
+  - Without scripting, figures are shown as before, with no larger view.
   - A figure's own controls, such as the Super-agent map's view switch and playback buttons, sit outside its drawing area, so a click on them still reaches them.
 - Type and color:
   - Body text is 15px with 1.75 line height, in a slightly softer ink than headings. Paragraphs sit 12px apart. Figures, tables, code and quotes get 8px more on each side. Sections sit 48px apart.
