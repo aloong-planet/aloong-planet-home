@@ -4,80 +4,100 @@
 /* Overrides the site's smooth scrolling: on a page this long the animation delays every jump, and browsers offer no way to shorten it. */
 html { scroll-behavior:auto; }
 
+/* Tokens. Neutrals follow the site; green is the article's one accent, used on post pages only.
+   Both text greens keep 4.5:1 on the page and on the green wash: #1f7a4d is 5.1:1 and 4.8:1, #155c39 7.7:1 and 7.3:1. */
 .ap-article {
-  --bg:var(--paper); --panel:#fff; --band:var(--tag); --lit:#e7e7e1;
-  --muted:#62645d; --line:#d9dad3; --edge:#787a72; --mark:#b4b7b0;
+  --ink-soft:#3a3d38; --bg:var(--paper); --panel:#fff; --band:var(--tag); --lit:#e7e7e1;
+  --muted:#62645d; --line:#e1e2dc; --edge:#787a72; --mark:#b4b7b0;
+  --green:#1f7a4d; --green-deep:#155c39; --green-line:#a9d2b9; --green-wash:#eef6f1; --code-bg:#f4f5f1;
+  --scrim:rgb(17 19 17 / .4); --scrim-ring:#fff;
   --sans:Arial,"PingFang SC",sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,"PingFang SC",monospace;
-  font:400 15.5px/1.8 var(--sans);
+  /* One width for the whole article column: text, lead, lists, quotes, captions, tables, figures and code. */
+  --measure:820px;
+  font:400 15px/1.75 var(--sans);
+  color:var(--ink-soft);
 }
 
-/* Page layout: title block, contents, then the article. */
-.ap-article-page { max-width:1064px; margin:0 auto; padding:56px 32px 120px; display:grid; grid-template-columns:minmax(0,1fr); gap:28px; }
-.ap-article-head { display:grid; gap:18px; }
-.ap-article-body { display:grid; gap:72px; }
+/* Page layout: title block, contents, then the article column. */
+.ap-article-page { max-width:calc(var(--measure) + 64px); margin:0 auto; padding:56px 32px 120px; display:grid; grid-template-columns:minmax(0,1fr); gap:28px; }
+.ap-article-head { display:grid; gap:12px; }
+.ap-article-body { display:grid; gap:48px; }
 .ap-article-body > * { min-width:0; }
-.ap-article .ap-byline { margin:0; font-size:14px; }
-.ap-article .ap-byline b { font-weight:600; }
+.ap-article .ap-byline { margin:0; font-size:13.5px; color:var(--muted); }
+.ap-article .ap-byline b { font-weight:600; color:var(--green-deep); }
 .ap-article .ap-source-note { margin:-8px 0 0; font-size:13px; color:var(--muted); }
-.ap-article .ap-article-back { margin:48px 0 0; }
-.ap-article .ap-article-back a { text-decoration:none; }
+@media(max-width:700px) {
+  .ap-article-page { padding:32px 20px 80px; }
+}
 
-/* Contents: a block under the title on narrower windows, fixed beside the article on wide ones. */
+/* Contents: a two-column block under the title on narrower windows, fixed beside the article on wide ones. */
 .ap-article .ap-toc-title { margin:0 0 10px; font-size:11px; letter-spacing:2px; color:var(--muted); }
 .ap-toc ol { list-style:none; margin:0; padding:0; columns:2; column-gap:16px; }
 .ap-toc li { break-inside:avoid; }
 .ap-article .ap-toc a { display:block; padding:5px 0 5px 12px; font-size:13px; line-height:1.45; color:var(--muted); text-decoration:none; border-left:2px solid var(--line); }
 .ap-article .ap-toc a:hover { color:var(--ink); }
-.ap-article .ap-toc a[aria-current=true] { color:var(--ink); border-left-color:var(--ink); }
+.ap-article .ap-toc a[aria-current=true] { color:var(--green-deep); border-left-color:var(--green); font-weight:600; }
 .ap-article .ap-toc a:focus-visible { outline-offset:-2px; }
 
+/* Wide windows. After the contents rules above, so the single-column contents here win over their two-column default.
+   The empty third track mirrors the contents column, which centers the column in the window; it gives way first as the window narrows. */
 @media(min-width:1280px) {
-  .ap-article-page { max-width:none; grid-template-columns:190px minmax(0,1120px); grid-template-rows:auto 1fr; gap:24px 48px; justify-content:center; }
-  /* 942px keeps the widest figure (940px plus its border) from scrolling; 64px less than the track leaves whitespace on the right. */
-  .ap-article-head, .ap-article-col { grid-column:2; width:max(942px,min(1000px,calc(100% - 64px))); }
-  .ap-article-head { grid-row:1; }
-  .ap-article-col { grid-row:2; }
+  .ap-article-page { max-width:none; grid-template-columns:190px var(--measure) minmax(0,190px); grid-template-rows:auto 1fr; gap:24px 48px; justify-content:center; }
+  .ap-article-head { grid-column:2; grid-row:1; }
   .ap-toc { grid-column:1; grid-row:1 / span 2; position:sticky; top:108px; align-self:start; max-height:calc(100svh - 124px); overflow-y:auto; }
   .ap-toc ol { columns:auto; }
-}
-@media(max-width:700px) {
-  .ap-article-page { padding:32px 20px 80px; }
+  .ap-article-col { grid-column:2; grid-row:2; }
 }
 
-/* Text */
-.ap-article section { display:grid; gap:18px; scroll-margin-top:96px; }
+/* Text. Paragraphs sit 12px apart; figures, tables, code and quotes get 8px more on each side. */
+.ap-article section { display:grid; gap:12px; scroll-margin-top:96px; }
 .ap-article section > * { min-width:0; }
-.ap-article h1, .ap-article h2 { font-family:var(--sans); text-wrap:balance; margin:0; }
-.ap-article h1 { font-weight:500; font-size:clamp(32px,3.8vw,48px); line-height:1.1; letter-spacing:-1.6px; }
-.ap-article h2 { font-weight:500; font-size:clamp(21px,2vw,26px); line-height:1.3; letter-spacing:-.6px; }
-.ap-article h3 { font:600 17px/1.4 var(--sans); margin:14px 0 0; }
-.ap-article p { margin:0; max-width:46em; }
-.ap-article .lead { font-weight:500; font-size:clamp(17px,1.6vw,20px); line-height:1.55; letter-spacing:-.3px; max-width:32em; }
-.ap-article a { color:inherit; text-decoration:underline; text-decoration-color:var(--edge); text-underline-offset:3px; }
+.ap-article section > .fig, .ap-article section > .scroll, .ap-article section > table, .ap-article section > .codeblock, .ap-article section > .quote { margin-block:8px; }
+/* A long heading fills its first line before it wraps: "balance" would even the lines out, which puts the break near the middle of the heading. */
+.ap-article h1, .ap-article h2, .ap-article h3 { font-family:var(--sans); color:var(--ink); text-wrap:pretty; margin:0; }
+.ap-article h1 { font-weight:600; font-size:clamp(24px,2.3vw,30px); line-height:1.3; letter-spacing:-.4px; }
+.ap-article h2 { position:relative; padding-left:14px; margin-bottom:2px; font-weight:600; font-size:clamp(18px,1.5vw,20px); line-height:1.45; letter-spacing:-.2px; }
+/* The green mark beside each section heading, drawn as a bar rather than a character. */
+.ap-article h2::before { content:""; position:absolute; left:0; top:.28em; bottom:.28em; width:4px; border-radius:2px; background:var(--green); }
+.ap-article h3 { font-weight:600; font-size:16px; line-height:1.5; color:var(--green-deep); margin-top:6px; }
+.ap-article p { margin:0; }
+.ap-article b, .ap-article strong { font-weight:600; color:var(--ink); }
+.ap-article .lead { font-size:16px; line-height:1.7; color:var(--ink); background:var(--green-wash); border-left:3px solid var(--green); border-radius:0 6px 6px 0; padding:14px 18px; }
+.ap-article a { color:var(--green-deep); text-decoration:underline; text-decoration-color:var(--green-line); text-underline-offset:3px; }
 .ap-article a:hover { text-decoration-color:currentColor; }
-.ap-article :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-.ap-article code, .ap-article .mono { font-family:var(--mono); font-size:.9em; }
+.ap-article :focus-visible { outline:2px solid var(--green); outline-offset:2px; }
+.ap-article code, .ap-article .mono { font-family:var(--mono); font-size:.88em; }
+.ap-article p code, .ap-article li code, .ap-article td code { background:var(--code-bg); border-radius:3px; padding:.1em .35em; }
 .ap-article .sec { font:500 .62em/1 var(--mono); color:var(--muted); margin-right:.5em; vertical-align:.12em; }
-.ap-article .note { color:var(--muted); font-size:14px; }
-.ap-article ul.plain { margin:0; padding-left:1.15em; display:grid; gap:8px; max-width:50em; }
+.ap-article .note { color:var(--muted); font-size:13.5px; }
+.ap-article ul.plain, .ap-article ol { margin:0; padding-left:1.25em; display:grid; gap:6px; }
+.ap-article ul.plain li::marker, .ap-article ol li::marker { color:var(--green); }
+.ap-article .codeblock { margin:0; padding:14px 16px; overflow-x:auto; background:var(--code-bg); border:1px solid var(--line); border-radius:6px; font:400 12.5px/1.65 var(--mono); color:var(--ink); white-space:pre; }
+.ap-article .codeblock code { font-size:inherit; }
+.ap-article .quote { margin:0; padding:12px 16px; background:var(--green-wash); border-left:3px solid var(--green-line); border-radius:0 6px 6px 0; color:var(--ink-soft); display:grid; gap:8px; }
 
-/* Figures */
+/* Figures. Every figure fills the column at any window size and keeps its proportions; its detail is read in the larger view.
+   The !important is the rule itself: a minimum width set by a post, in its stylesheet or on the drawing, does not opt a figure
+   out, in the page or in the larger view's copy. */
 .ap-article .scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-.ap-article .fig { margin:0; display:grid; gap:12px; }
-.ap-article .ground { background:var(--panel); border:1px solid var(--line); border-radius:5px; }
-.ap-article figcaption { font-size:14px; line-height:1.7; color:var(--muted); max-width:60em; }
+.ap-article .fig { margin:0; display:grid; gap:10px; position:relative; }
+.ap-article .ground { background:var(--panel); border:1px solid var(--line); border-radius:6px; }
+.ap-article figcaption { font-size:13px; line-height:1.65; color:var(--muted); }
+.ap-article figcaption b { color:var(--ink-soft); }
 .ap-article svg { display:block; width:100%; height:auto; }
+.ap-article .fig svg, .ap-article .lb-figure svg { min-width:0 !important; }
 .ap-article svg text { font-family:var(--sans); fill:var(--ink); }
 
-/* Tables */
-.ap-article table { border-collapse:collapse; width:100%; font-size:14px; line-height:1.65; }
-.ap-article th { font:500 12px/1.4 var(--mono); color:var(--muted); text-align:left; padding:8px 12px; border-bottom:1px solid var(--edge); white-space:nowrap; }
-.ap-article td { padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
-.ap-article td:first-child { font-weight:500; }
+/* Tables fill the column; a wide one keeps its minimum width and scrolls inside its own box. */
+.ap-article table { border-collapse:collapse; width:100%; font-size:13.5px; line-height:1.6; }
+.ap-article th { font:600 12px/1.4 var(--sans); color:var(--green-deep); background:var(--green-wash); text-align:left; padding:9px 12px; border-bottom:1px solid var(--green-line); white-space:nowrap; }
+.ap-article td { padding:8px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+.ap-article td:first-child { font-weight:500; color:var(--ink); }
 .ap-article tbody tr:last-child td { border-bottom:0; }
 .ap-article .num { font-variant-numeric:tabular-nums; }
-.ap-article td.num, .ap-article th.num { text-align:right; white-space:nowrap; font-family:var(--mono); font-size:13px; }
+.ap-article td.num, .ap-article th.num { text-align:right; white-space:nowrap; }
+.ap-article td.num { font-family:var(--mono); font-size:12.5px; }
 .ap-article .src { font:400 12px/1.7 var(--mono); white-space:nowrap; }
 .ap-article .wide { min-width:760px; }
 .ap-article .mid { min-width:560px; }
@@ -85,3 +105,56 @@ html { scroll-behavior:auto; }
 /* Sources */
 .ap-article .foot { font-size:13.5px; line-height:1.8; color:var(--muted); display:grid; gap:8px; border-top:1px solid var(--line); padding-top:18px; scroll-margin-top:96px; }
 .ap-article .foot ul { margin:0; padding-left:1.15em; }
+
+/* The end of every post: the post published just before this one and the one just after.
+   Titles wrap to two lines and end in an ellipsis beyond that; a missing side keeps its place and says so. */
+.ap-article .post-nav { margin:48px 0 0; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; align-items:stretch; }
+.ap-article .pn-card { display:grid; align-content:start; gap:4px; padding:12px 16px; background:var(--panel); border:1px solid var(--line); border-radius:8px; color:var(--ink); text-decoration:none; transition:border-color .15s; }
+.ap-article .pn-next { text-align:right; }
+.ap-article .pn-dir { font-size:12px; line-height:1.4; color:var(--muted); }
+.ap-article .pn-title { font-size:14.5px; line-height:1.55; font-weight:500; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow:hidden; overflow-wrap:anywhere; }
+.ap-article a.pn-card:hover { border-color:var(--green); }
+.ap-article a.pn-card:hover .pn-title { color:var(--green-deep); }
+.ap-article .pn-none { background:transparent; border-style:dashed; }
+.ap-article .pn-none .pn-title { color:var(--muted); font-weight:400; }
+/* Narrow windows: the two stack, previous first, each the full width, so titles keep room for two lines. */
+@media(max-width:560px) {
+  .ap-article .post-nav { grid-template-columns:minmax(0,1fr); }
+  .ap-article .pn-next { text-align:left; }
+}
+
+/* Figures that open larger (added by article.js). The drawing area takes the pointer; the icon button is the keyboard
+   target and the cue on touch screens. The icon is sized here because the figure rule above stretches every svg to its box. */
+.ap-article .zoomable { cursor:zoom-in; transition:border-color .15s; }
+.ap-article .zoomable:hover { border-color:var(--green-line); }
+.ap-article .zoom-btn { position:absolute; top:8px; right:8px; width:32px; height:32px; padding:0; display:grid; place-items:center; color:var(--green-deep); background:var(--panel); border:1px solid var(--green-line); border-radius:6px; cursor:zoom-in; opacity:0; transition:opacity .15s, border-color .15s; }
+.ap-article .zoom-btn svg { width:16px; height:16px; }
+.ap-article .fig:hover .zoom-btn, .ap-article .zoom-btn:focus-visible { opacity:1; }
+.ap-article .zoom-btn:hover { border-color:var(--green); }
+/* Touch screens have no hover, so the button is always shown, at the right end of the caption row, where it covers nothing.
+   Everything else in the figure (the drawing, a legend, controls) spans both columns; the caption and then the button,
+   last in the figure, take the two cells of the last row. */
+@media(hover:none) {
+  .ap-article .fig { grid-template-columns:minmax(0,1fr) auto; column-gap:12px; }
+  .ap-article .fig > :not(figcaption):not(.zoom-btn) { grid-column:1 / -1; }
+  .ap-article .zoom-btn { position:static; grid-column:2; align-self:start; opacity:1; }
+}
+
+/* The larger view sits inside the article so it shares the tokens; being fixed, it covers the window regardless.
+   The figure sits on a white sheet; all around it is a see-through gray layer, which closes the view when clicked.
+   The close button carries its own white ground, so it reads the same whatever the page shows beneath the layer. */
+.ap-article .lightbox { position:fixed; inset:0; z-index:50; background:var(--scrim); display:grid; grid-template-rows:auto minmax(0,1fr); cursor:zoom-out; }
+.ap-article .lightbox[hidden] { display:none; }
+.ap-article .lb-bar { display:flex; justify-content:flex-end; padding:12px 12px 4px; }
+.ap-article .lb-close { width:40px; height:40px; padding:0; display:grid; place-items:center; color:var(--ink); background:var(--panel); border:0; border-radius:50%; cursor:pointer; transition:background-color .15s; }
+.ap-article .lb-close svg { width:22px; height:22px; }
+.ap-article .lb-close:hover { background:var(--lit); }
+.ap-article .lb-close:focus-visible { outline:2px solid var(--scrim-ring); outline-offset:2px; }
+.ap-article .lb-stage { overflow:auto; padding:0 16px 24px; display:grid; justify-items:center; align-content:center; }
+.ap-article .lb-sheet { background:var(--panel); border-radius:8px; padding:16px; display:grid; gap:10px; cursor:auto; }
+.ap-article .lb-caption { margin:0; font-size:14px; line-height:1.7; color:var(--muted); }
+.ap-article .lb-caption:empty { display:none; }
+/* A figure wider than the window scrolls sideways; it starts at the left edge and its caption stays in view while it scrolls.
+   The sticky offset counts from inside the stage's padding, so 16px puts the caption on the sheet's padding line. */
+.ap-article .lb-stage.lb-wide { justify-items:start; }
+.ap-article .lb-wide .lb-caption { position:sticky; left:16px; }

@@ -3,7 +3,7 @@
   <p>于是我研究了官方的 skills 写作规范,以及社区的一些最佳实践,开始不断地评估和迭代我的 skills,最终达到了稳定的效果。如果你在使用 skills 的过程中也碰到这样那样的问题,相信看完这篇文章,一定会有所收获。</p>
   <p>首先我们需要明白 skills 的一些机制。一份 skill 从写下到生效,要过三道关:「被触发、被记住、被执行」。每一道关都有自己的失效机制,每个机制都对应大模型的一种确定行为。懂了机制,评估和优化才有抓手。</p>
   <figure class="fig" id="fig-gates">
-    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 336" role="img" aria-label="一份 skill 从写下到生效,要依次过三道关。第一道关是触发,它可能根本没打开你的文档。失效机制:加载不是查表分发,是语义匹配;只有 description 常驻上下文;正文要等被选中才加载;这是个概率行为,不是 if-else。排查:它被触发了吗,选择器写对了没。第二道关是记忆,它记得的那份不是磁盘上那份。失效机制:长会话触发上下文压缩;skill 正文被摘要化、截断;模型没有「我忘了」的信号;head -100 只读进前一百行。排查:它被完整记住了吗,压缩后重新加载了没。第三道关是执行,全文读了,行为还是飘。失效机制:歧义被默认值填满;每个词都要过解释器;格式决定产出;规则的缝被合法地钻过去。排查:它被一致地执行了吗,拿收敛度测过没。">
+    <div class="scroll ground"><svg viewBox="0 0 940 336" role="img" aria-label="一份 skill 从写下到生效,要依次过三道关。第一道关是触发,它可能根本没打开你的文档。失效机制:加载不是查表分发,是语义匹配;只有 description 常驻上下文;正文要等被选中才加载;这是个概率行为,不是 if-else。排查:它被触发了吗,选择器写对了没。第二道关是记忆,它记得的那份不是磁盘上那份。失效机制:长会话触发上下文压缩;skill 正文被摘要化、截断;模型没有「我忘了」的信号;head -100 只读进前一百行。排查:它被完整记住了吗,压缩后重新加载了没。第三道关是执行,全文读了,行为还是飘。失效机制:歧义被默认值填满;每个词都要过解释器;格式决定产出;规则的缝被合法地钻过去。排查:它被一致地执行了吗,拿收敛度测过没。">
       <defs><marker id="skill-pitfalls-arrow-gates" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="sp-mk" d="M0 0L10 5L0 10z"/></marker></defs>
   
       <rect class="sp-gate" x="20" y="16" width="276" height="304" rx="4"/>
@@ -74,7 +74,7 @@
   <p>是文档的问题,还是模型的问题?吵不出结论,得测。这也是标题里「评估」的答案——我用的方法很朴素,任何人都能照搬:</p>
   <blockquote class="quote"><p>把要评估的 skill 冻结,派三个互相隔离的 agent 按它执行同一个任务,比较三方的产出差在哪。如果 skill 写得足够好,三方应该给出同样的结果——<b>收敛度,就是 skill 质量的读数</b>;每一处分歧,都精确指向 skill 里的一个缺陷。</p></blockquote>
   <figure class="fig" id="fig-converge">
-    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 336" role="img" aria-label="收敛度测法。把要评估的 skill 冻结,派三个互相隔离的 agent 按它执行同一个任务,再比较三方的产出差在哪。三方给出同样的结果时,收敛度就是 skill 质量的读数;每一处分歧都精确指向 skill 里的一个缺陷。定向修复分歧点后,回到 skill 再跑下一轮。">
+    <div class="scroll ground"><svg viewBox="0 0 940 336" role="img" aria-label="收敛度测法。把要评估的 skill 冻结,派三个互相隔离的 agent 按它执行同一个任务,再比较三方的产出差在哪。三方给出同样的结果时,收敛度就是 skill 质量的读数;每一处分歧都精确指向 skill 里的一个缺陷。定向修复分歧点后,回到 skill 再跑下一轮。">
       <defs><marker id="skill-pitfalls-arrow-converge" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="sp-mk" d="M0 0L10 5L0 10z"/></marker></defs>
   
       <rect class="sp-skill" x="20" y="118" width="140" height="72" rx="3"/>
@@ -176,7 +176,7 @@
     <li><b>关键节点,隔离复验</b>:就是第三道关里那个收敛度测法——派几个互不可见的 agent 按同一标准执行,分歧不是吵架,是坐标,每一处都精确指向 skill 里的一个缺陷。修分歧,再循环,直到一整轮零新增发现。</li>
   </ul>
   <figure class="fig" id="fig-review">
-    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 284" role="img" aria-label="两阶段自检加隔离复验。阶段一逐条审措辞:每条条文问五个问题,可枚举的检查先提取成表,逐项判、每项留结论;动过手就重跑整轮,一整轮零发现才进阶段二。阶段二跨条文对读:按「它在约束什么」归堆,堆内逐对给出「相容/冲突」结论;每次改动都退回阶段一,直到两阶段都零发现。关键节点再隔离复验:派几个互不可见的 agent 按同一标准执行,每处分歧指向一个缺陷;修分歧,再循环,直到一整轮零新增发现。">
+    <div class="scroll ground"><svg viewBox="0 0 940 284" role="img" aria-label="两阶段自检加隔离复验。阶段一逐条审措辞:每条条文问五个问题,可枚举的检查先提取成表,逐项判、每项留结论;动过手就重跑整轮,一整轮零发现才进阶段二。阶段二跨条文对读:按「它在约束什么」归堆,堆内逐对给出「相容/冲突」结论;每次改动都退回阶段一,直到两阶段都零发现。关键节点再隔离复验:派几个互不可见的 agent 按同一标准执行,每处分歧指向一个缺陷;修分歧,再循环,直到一整轮零新增发现。">
       <defs><marker id="skill-pitfalls-arrow-review" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="sp-mk" d="M0 0L10 5L0 10z"/></marker></defs>
   
       <rect class="sp-phase" x="20" y="96" width="230" height="120" rx="3"/>

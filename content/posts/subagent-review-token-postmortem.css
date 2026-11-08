@@ -1,16 +1,8 @@
-/* Figures, code and quote blocks unique to this post. The shared look is in public/article.css. */
+/* Figures and the reference list unique to this post. The shared look is in public/article.css. */
 .post-subagent-review-token-postmortem { --series:#2a78d6; --on-fill:#ffffff; --main-fill:#edf4fe; --main-line:#7fa8e6; --main-ink:#174a97; --mid-fill:#fef3e2; --mid-line:#dfa355; --mid-ink:#8a4500; --rev-fill:#f3eefd; --rev-line:#a78fe3; --rev-ink:#5330a8; --good-ink:#17653a; }
-
-/* Code and quote blocks, shared by the republished WeChat posts. */
-.post-subagent-review-token-postmortem .codeblock { margin:0; padding:14px 16px; overflow-x:auto; background:var(--panel); border:1px solid var(--line); border-radius:5px; font:400 13px/1.65 var(--mono); white-space:pre; }
-.post-subagent-review-token-postmortem .codeblock code { font-size:inherit; }
-.post-subagent-review-token-postmortem .quote { margin:0; padding:2px 0 2px 16px; border-left:3px solid var(--line); color:var(--muted); display:grid; gap:10px; max-width:46em; }
 
 /* Reference list: the manuscript numbers its entries itself, and long URLs must wrap on a phone. */
 .post-subagent-review-token-postmortem .foot .refs { margin:0; padding-left:0; list-style:none; display:grid; gap:8px; overflow-wrap:anywhere; }
-
-/* Figures are 940 units wide with 13-unit text at the smallest: 940 × 11 ÷ 13 keeps that text at 11px or more where the figure scrolls. */
-.post-subagent-review-token-postmortem .figw { min-width:796px; }
 
 /* Charts */
 .post-subagent-review-token-postmortem .c-name { font:600 15px var(--sans); }

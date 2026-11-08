@@ -1,0 +1,1684 @@
+<!doctype html>
+<!-- prototype-post-width.md -->
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>文章页 · 宽度规范</title><script src="../manifest.js"></script><script src="../app-identity.js"></script><link rel="stylesheet" href="../_shared/site.css"><style>
+html{scroll-behavior:auto}
+/* Tokens. Neutrals follow the site; green is the article's one accent: headings' marks, links, the current contents entry,
+   the lead and quotes, table heads, list markers and focus. Text greens keep at least 5:1 on the page and on the wash. */
+.ap-article{--ink:#20211f;--ink-soft:#3a3d38;--bg:var(--paper);--panel:#ffffff;--band:var(--tag);--lit:#e7e7e1;--muted:#62645d;--line:#e1e2dc;--edge:#787a72;--mark:#b4b7b0;
+  --green:#1f7a4d;--green-deep:#155c39;--green-line:#a9d2b9;--green-wash:#eef6f1;--code-bg:#f4f5f1;
+  --scrim:rgb(17 19 17 / .4);--scrim-ring:#ffffff;
+  --sans:Arial,"PingFang SC",sans-serif;--mono:ui-monospace,"SF Mono",Menlo,"PingFang SC",monospace;
+  font:400 15px/1.75 var(--sans);color:var(--ink-soft)}
+
+/* One measure for the whole article: text, lists, captions, tables, figures and code all span it. */
+.ap-article{--measure:820px}
+.ap-article-page{max-width:calc(var(--measure) + 64px);margin:0 auto;padding:56px 32px 120px;display:grid;grid-template-columns:minmax(0,1fr);gap:28px}
+.ap-article-head{display:grid;gap:12px}
+.ap-article-body{display:grid;gap:48px}
+.ap-article-body>*{min-width:0}
+@media(max-width:700px){.ap-article-page{padding:32px 20px 80px}}
+
+/* Rhythm: paragraphs sit 12px apart; figures, tables, code and quotes get 8px more on each side. */
+.ap-article section{display:grid;gap:12px;scroll-margin-top:96px}
+.ap-article section>*{min-width:0}
+.ap-article section>.fig,.ap-article section>.scroll,.ap-article section>table,.ap-article section>.codeblock,.ap-article section>.quote{margin-block:8px}
+.ap-article h1,.ap-article h2,.ap-article h3{font-family:var(--sans);color:var(--ink);text-wrap:pretty;margin:0}
+.ap-article h1{font-weight:600;font-size:clamp(24px,2.3vw,30px);line-height:1.3;letter-spacing:-.4px}
+.ap-article h2{position:relative;padding-left:14px;margin-bottom:2px;font-weight:600;font-size:clamp(18px,1.5vw,20px);line-height:1.45;letter-spacing:-.2px}
+/* The green mark beside each section heading, drawn as a bar rather than a character. */
+.ap-article h2::before{content:"";position:absolute;left:0;top:.28em;bottom:.28em;width:4px;border-radius:2px;background:var(--green)}
+.ap-article h3{font-weight:600;font-size:16px;line-height:1.5;color:var(--green-deep);margin-top:6px}
+.ap-article p{margin:0}
+.ap-article b,.ap-article strong{font-weight:600;color:var(--ink)}
+.ap-article .lead{font-size:16px;line-height:1.7;color:var(--ink);background:var(--green-wash);border-left:3px solid var(--green);border-radius:0 6px 6px 0;padding:14px 18px}
+.ap-article a{color:var(--green-deep);text-decoration:underline;text-decoration-color:var(--green-line);text-underline-offset:3px}
+.ap-article a:hover{text-decoration-color:currentColor}
+.ap-article :focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.ap-article code,.ap-article .mono{font-family:var(--mono);font-size:.88em}
+.ap-article p code,.ap-article li code,.ap-article td code{background:var(--code-bg);border-radius:3px;padding:.1em .35em}
+.ap-article .note{color:var(--muted);font-size:13.5px}
+.ap-article ul.plain,.ap-article ol{margin:0;padding-left:1.25em;display:grid;gap:6px}
+.ap-article ul.plain li::marker,.ap-article ol li::marker{color:var(--green)}
+.ap-article .codeblock{margin:0;padding:14px 16px;overflow-x:auto;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;font:400 12.5px/1.65 var(--mono);color:var(--ink);white-space:pre}
+.ap-article .codeblock code{font-size:inherit}
+.ap-article .quote{margin:0;padding:12px 16px;background:var(--green-wash);border-left:3px solid var(--green-line);border-radius:0 6px 6px 0;color:var(--ink-soft);display:grid;gap:8px}
+
+.ap-article .ap-byline{margin:0;font-size:13.5px;color:var(--muted)}
+.ap-article .ap-byline b{font-weight:600;color:var(--green-deep)}
+.ap-article .ap-source-note{margin:-8px 0 0;font-size:13px;color:var(--muted)}
+.ap-article .sec{font:500 .62em/1 var(--mono);color:var(--muted);margin-right:.5em;vertical-align:.12em}
+.ap-article .src{font:400 12px/1.7 var(--mono);white-space:nowrap}
+/* The end of every post: the post published just before this one and the one just after.
+   Titles wrap to two lines and end in an ellipsis beyond that; a missing side keeps its place and says so. */
+.ap-article .post-nav{margin:48px 0 0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:stretch}
+.ap-article .pn-card{display:grid;align-content:start;gap:4px;padding:12px 16px;background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--ink);text-decoration:none;transition:border-color .15s}
+.ap-article .pn-next{text-align:right}
+.ap-article .pn-dir{font-size:12px;line-height:1.4;color:var(--muted)}
+.ap-article .pn-title{font-size:14.5px;line-height:1.55;font-weight:500;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+.ap-article a.pn-card:hover{border-color:var(--green)}
+.ap-article a.pn-card:hover .pn-title{color:var(--green-deep)}
+.ap-article .pn-none{background:transparent;border-style:dashed}
+.ap-article .pn-none .pn-title{color:var(--muted);font-weight:400}
+/* Narrow windows: the two stack, previous first, each the full width, so titles keep room for two lines. */
+@media(max-width:560px){.ap-article .post-nav{grid-template-columns:minmax(0,1fr)}.ap-article .pn-next{text-align:left}}
+.ap-article .ap-toc-title{margin:0 0 10px;font-size:11px;letter-spacing:2px;color:var(--muted)}
+.ap-toc ol{list-style:none;margin:0;padding:0;columns:2;column-gap:16px}
+.ap-toc li{break-inside:avoid}
+.ap-article .ap-toc a{display:block;padding:5px 0 5px 12px;font-size:13px;line-height:1.45;color:var(--muted);text-decoration:none;border-left:2px solid var(--line)}
+.ap-article .ap-toc a:hover{color:var(--ink)}
+.ap-article .ap-toc a[aria-current=true]{color:var(--green-deep);border-left-color:var(--green);font-weight:600}
+.ap-article .ap-toc a:focus-visible{outline-offset:-2px}
+/* Wide windows: after the contents rules above, so the single-column contents here win over their two-column default. */
+@media(min-width:1280px){
+ /* The empty third track mirrors the contents column so the measure sits in the middle of the window; it gives way first when the window narrows. */
+ .ap-article-page{max-width:none;grid-template-columns:190px var(--measure) minmax(0,190px);grid-template-rows:auto 1fr;gap:24px 48px;justify-content:center}
+ .ap-article-head{grid-column:2;grid-row:1}
+ .ap-toc{grid-column:1;grid-row:1 / span 2;position:sticky;top:108px;align-self:start;max-height:calc(100svh - 124px);overflow-y:auto}
+ .ap-toc ol{columns:auto}
+ .ap-article-col{grid-column:2;grid-row:2}
+}
+
+.ap-article .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.ap-article .fig{margin:0;display:grid;gap:10px;position:relative}
+.ap-article .ground{background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.ap-article figcaption{font-size:13px;line-height:1.65;color:var(--muted)}
+.ap-article figcaption b{color:var(--ink-soft)}
+.ap-article svg{display:block;width:100%;height:auto}
+.ap-article svg text{font-family:var(--sans);fill:var(--ink)}
+
+.ap-article table{border-collapse:collapse;width:100%;font-size:13.5px;line-height:1.6}
+.ap-article th{font:600 12px/1.4 var(--sans);color:var(--green-deep);background:var(--green-wash);text-align:left;padding:9px 12px;border-bottom:1px solid var(--green-line);white-space:nowrap}
+.ap-article td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.ap-article td:first-child{font-weight:500;color:var(--ink)}
+.ap-article tbody tr:last-child td{border-bottom:0}
+.ap-article .num{font-variant-numeric:tabular-nums}
+.ap-article td.num,.ap-article th.num{text-align:right;white-space:nowrap}
+.ap-article td.num{font-family:var(--mono);font-size:12.5px}
+.ap-article .wide{min-width:760px}
+.ap-article .mid{min-width:560px}
+.ap-article .foot{font-size:13.5px;line-height:1.8;color:var(--muted);display:grid;gap:8px;border-top:1px solid var(--line);padding-top:18px;scroll-margin-top:96px}
+.ap-article .foot ul{margin:0;padding-left:1.15em}
+
+/* Figures that open larger. The frame takes the pointer; the icon button is the keyboard target and the cue on touch screens.
+   Icons are sized here because the article's figure rule stretches every svg to its box. */
+.ap-article .zoomable{cursor:zoom-in;transition:border-color .15s}
+.ap-article .zoomable:hover{border-color:var(--green-line)}
+.ap-article .zoom-btn{position:absolute;top:8px;right:8px;width:32px;height:32px;padding:0;display:grid;place-items:center;color:var(--green-deep);background:var(--panel);border:1px solid var(--green-line);border-radius:6px;cursor:zoom-in;opacity:0;transition:opacity .15s,border-color .15s}
+.ap-article .zoom-btn svg{width:16px;height:16px}
+.ap-article .fig:hover .zoom-btn,.ap-article .zoom-btn:focus-visible{opacity:1}
+.ap-article .zoom-btn:hover{border-color:var(--green)}
+@media(hover:none){.ap-article .fig{grid-template-columns:minmax(0,1fr) auto;column-gap:12px}
+.ap-article .fig>:not(figcaption):not(.zoom-btn){grid-column:1 / -1}
+.ap-article .zoom-btn{position:static;grid-column:2;align-self:start;opacity:1}}
+
+/* The larger view sits inside the article so it shares the tokens; being fixed, it covers the window regardless.
+   The figure sits on a white sheet; all around it is a see-through gray layer, which closes the view when clicked.
+   The close button carries its own white ground, so it reads the same whatever the page shows beneath the layer. */
+.ap-article .lightbox{position:fixed;inset:0;z-index:50;background:var(--scrim);display:grid;grid-template-rows:auto minmax(0,1fr);cursor:zoom-out}
+.ap-article .lightbox[hidden]{display:none}
+.ap-article .lb-bar{display:flex;justify-content:flex-end;padding:12px 12px 4px}
+.ap-article .lb-close{width:40px;height:40px;padding:0;display:grid;place-items:center;color:var(--ink);background:var(--panel);border:0;border-radius:50%;cursor:pointer;transition:background-color .15s}
+.ap-article .lb-close svg{width:22px;height:22px}
+.ap-article .lb-close:hover{background:var(--lit)}
+.ap-article .lb-close:focus-visible{outline:2px solid var(--scrim-ring);outline-offset:2px}
+.ap-article .lb-stage{overflow:auto;padding:0 16px 24px;display:grid;justify-items:center;align-content:center}
+.ap-article .lb-sheet{background:var(--panel);border-radius:8px;padding:16px;display:grid;gap:10px;cursor:auto}
+.ap-article .lb-caption{margin:0;font-size:14px;line-height:1.7;color:var(--muted)}
+/* A figure wider than the window scrolls sideways; it starts at the left edge and its caption stays in view while it scrolls.
+   The sticky offset counts from inside the stage's padding, so 16px puts the caption on the sheet's padding line. */
+.ap-article .lb-stage.lb-wide{justify-items:start}
+.ap-article .lb-wide .lb-caption{position:sticky;left:16px}
+
+.post-claude-code-idle-compaction{--ic-save:#2a78d6;--ic-save-ink:#1c5cab;--ic-save-wash:#eef5fd;--ic-cost:#eb6834;--ic-cost-ink:#b3461a;--ic-cost-wash:#fdf1ec}
+
+
+/* Long reference URLs wrap instead of widening the page on a phone. */
+.post-claude-code-idle-compaction .ic-ref{overflow-wrap:anywhere}
+
+/* Every figure is 940 units wide with 14-unit text at the smallest: 940 × 11 ÷ 14 keeps that text at 11px or more
+   when a phone scrolls the figure inside its box. */
+.post-claude-code-idle-compaction .figw{min-width:739px}
+
+/* Timeline diagram: boxes are colored by role (event, cost, save); titles and key amounts take their box's hue. */
+.post-claude-code-idle-compaction .ic-lane{font-size:19px;font-weight:600}
+.post-claude-code-idle-compaction .ic-note{font-size:14px;fill:var(--muted)}
+.post-claude-code-idle-compaction .ic-total{font-size:22px;font-weight:700}
+.post-claude-code-idle-compaction .ic-ttl{font-size:17px;font-weight:600}
+.post-claude-code-idle-compaction .ic-txt{font-size:15px}
+.post-claude-code-idle-compaction .ic-strong{font-weight:600}
+.post-claude-code-idle-compaction .ic-key{font-size:24px;font-weight:700}
+.post-claude-code-idle-compaction .ic-ink-ev{fill:var(--muted)}
+.post-claude-code-idle-compaction .ic-ink-cost{fill:var(--ic-cost-ink)}
+.post-claude-code-idle-compaction .ic-ink-save{fill:var(--ic-save-ink)}
+.post-claude-code-idle-compaction .ic-box{stroke-width:1.5}
+.post-claude-code-idle-compaction .ic-box-ev{fill:var(--bg);stroke:var(--edge)}
+.post-claude-code-idle-compaction .ic-box-cost{fill:var(--ic-cost-wash);stroke:var(--ic-cost)}
+.post-claude-code-idle-compaction .ic-box-save{fill:var(--ic-save-wash);stroke:var(--ic-save)}
+.post-claude-code-idle-compaction .ic-bar-cost{fill:var(--ic-cost)}
+.post-claude-code-idle-compaction .ic-bar-save{fill:var(--ic-save)}
+.post-claude-code-idle-compaction .ic-arrow{fill:none;stroke:var(--edge);stroke-width:2}
+.post-claude-code-idle-compaction .ic-head{fill:var(--edge)}
+.post-claude-code-idle-compaction .ic-callout{fill:var(--band)}
+.post-claude-code-idle-compaction .ic-callout-bar{fill:var(--mark)}
+
+/* Charts: thin marks in the series hues, a 2px ring in the surface color, text in text tokens. */
+.post-claude-code-idle-compaction .ic-grid{stroke:var(--line);stroke-width:1}
+.post-claude-code-idle-compaction .ic-base{stroke:var(--mark);stroke-width:1}
+.post-claude-code-idle-compaction .ic-tick{font-size:14px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.post-claude-code-idle-compaction .ic-legend{font-size:15px}
+.post-claude-code-idle-compaction .ic-label{font-size:16px;font-weight:600}
+.post-claude-code-idle-compaction .ic-end{font-size:17px;font-weight:700}
+.post-claude-code-idle-compaction .ic-endname{font-size:14px;fill:var(--muted)}
+.post-claude-code-idle-compaction .ic-dot-cost{fill:var(--ic-cost);stroke:var(--panel);stroke-width:2}
+.post-claude-code-idle-compaction .ic-dot-save{fill:var(--ic-save);stroke:var(--panel);stroke-width:2}
+.post-claude-code-idle-compaction .ic-line-cost{fill:none;stroke:var(--ic-cost);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.post-claude-code-idle-compaction .ic-line-save{fill:none;stroke:var(--ic-save);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+
+.post-super-agent-architecture{--fast:#007A87;--slow:#B35900;--watch:#6A3FC9;--ok:#1E7B4C;--warn:#8A6100;--diff:#B3261E;--ext-fill:#EDF4FE;--ext-line:#7FA8E6;--ext-ink:#174A97;--ext-lit:#CFE1FB;--ext-in:#FFFFFF;--prog-fill:#E6F6F6;--prog-line:#57B5BD;--prog-ink:#005F6B;--prog-lit:#BFE8EA;--prog-in:#FFFFFF;--router-fill:#FEF3E2;--router-line:#DFA355;--router-ink:#8A4500;--router-lit:#FADFB4;--router-in:#FFFDF9;--worker-fill:#EAF7EE;--worker-line:#74BE8F;--worker-ink:#17653A;--worker-lit:#C6EBD2;--worker-in:#FFFFFF;--ctrl-fill:#F3EEFD;--ctrl-line:#A78FE3;--ctrl-ink:#5330A8;--ctrl-lit:#E2D7FA;--ctrl-in:#FFFFFF;--store-fill:#FDEEF4;--store-line:#E08FB0;--store-ink:#9C1F54;--store-lit:#F8D0E0;--store-in:#FFFFFF;--drop-fill:#F1F3F5;--drop-line:#C3CCD5;--drop-ink:#535F6C;--drop-lit:#D9E4EC;--drop-in:#F1F3F5;--thread-pr:#1857C2;--thread-im:#B81E72;--thread-mail:#5C5F00;--on-hue:#FFFFFF}
+.post-super-agent-architecture .hero{display:grid;gap:18px}
+.post-super-agent-architecture .traits{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden;margin-top:8px}
+.post-super-agent-architecture .trait{background:var(--panel);padding:14px 16px;display:grid;gap:4px;align-content:start}
+.post-super-agent-architecture .trait b{font:500 18px/1.3 var(--sans)}
+.post-super-agent-architecture .trait span{font-size:14px;line-height:1.6;color:var(--muted)}
+.post-super-agent-architecture .trait .to{font:500 12.5px/1.5 var(--mono);color:var(--ink);margin-top:4px}
+@media (max-width:760px){
+  .post-super-agent-architecture .traits{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:420px){
+  .post-super-agent-architecture .traits{grid-template-columns:minmax(0,1fr)}
+}
+.post-super-agent-architecture .ctl{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;justify-content:space-between}
+.post-super-agent-architecture .seg{display:flex;flex-wrap:wrap;gap:6px}
+.post-super-agent-architecture .seg button,.post-super-agent-architecture .next{font:500 13.5px/1.3 var(--sans);color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:2px;padding:7px 11px;cursor:pointer}
+.post-super-agent-architecture .seg button:hover,.post-super-agent-architecture .next:hover{border-color:var(--ink)}
+.post-super-agent-architecture .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.post-super-agent-architecture .next:disabled{opacity:.45;cursor:default;border-color:var(--line)}
+.post-super-agent-architecture .seglabel{font:500 12px/1 var(--mono);color:var(--muted);margin-right:4px;align-self:center}
+.post-super-agent-architecture .tt{font-weight:600;font-size:13.5px}
+.post-super-agent-architecture .st{font-size:12px;fill:var(--muted)!important}
+.post-super-agent-architecture .mo{font-family:var(--mono)!important;font-size:11.5px}
+.post-super-agent-architecture .mut{fill:var(--muted)!important}
+.post-super-agent-architecture .lb{font-size:12px;paint-order:stroke;stroke:var(--panel);stroke-width:4px;stroke-linejoin:round}
+.post-super-agent-architecture .lb.mo{font-size:11px}
+.post-super-agent-architecture .b{fill:var(--panel);stroke:var(--edge);stroke-width:1.25}
+.post-super-agent-architecture .b2{fill:var(--band);stroke:var(--line);stroke-width:1}
+.post-super-agent-architecture .b3{fill:var(--bg);stroke:var(--line);stroke-width:1}
+.post-super-agent-architecture .bhi{fill:var(--lit);stroke:var(--ink);stroke-width:1.5}
+.post-super-agent-architecture .l{fill:none;stroke:var(--edge);stroke-width:1.5}
+.post-super-agent-architecture .lk{fill:none;stroke:var(--ink);stroke-width:1.75}
+.post-super-agent-architecture .ld{fill:none;stroke:var(--diff);stroke-width:1.75}
+.post-super-agent-architecture .lf{fill:none;stroke:var(--fast);stroke-width:2}
+.post-super-agent-architecture .dot{fill:var(--ink)}
+.post-super-agent-architecture .mk-edge{fill:var(--edge)}
+.post-super-agent-architecture .mk-ink{fill:var(--ink)}
+.post-super-agent-architecture .mk-fast{fill:var(--fast)}
+.post-super-agent-architecture .mk-slow{fill:var(--slow)}
+.post-super-agent-architecture .mk-watch{fill:var(--watch)}
+.post-super-agent-architecture .mk-diff{fill:var(--diff)}
+.post-super-agent-architecture #map{min-width:940px}
+.post-super-agent-architecture #map #src-im,.post-super-agent-architecture #map #src-gh,.post-super-agent-architecture #map #src-mail,.post-super-agent-architecture #map #ch-im,.post-super-agent-architecture #map #ch-mail,.post-super-agent-architecture #map #ch-gh,.post-super-agent-architecture #map #env{--c-fill:var(--ext-fill);--c-line:var(--ext-line);--c-ink:var(--ext-ink);--c-lit:var(--ext-lit);--c-in:var(--ext-in)}
+.post-super-agent-architecture #map #gate,.post-super-agent-architecture #map #table{--c-fill:var(--prog-fill);--c-line:var(--prog-line);--c-ink:var(--prog-ink);--c-lit:var(--prog-lit);--c-in:var(--prog-in)}
+.post-super-agent-architecture #map #drop{--c-fill:var(--drop-fill);--c-line:var(--drop-line);--c-ink:var(--drop-ink);--c-lit:var(--drop-lit);--c-in:var(--drop-in)}
+.post-super-agent-architecture #map #router,.post-super-agent-architecture #map #r-sem,.post-super-agent-architecture #map #r-disp{--c-fill:var(--router-fill);--c-line:var(--router-line);--c-ink:var(--router-ink);--c-lit:var(--router-lit);--c-in:var(--router-in)}
+.post-super-agent-architecture #map #workers,.post-super-agent-architecture #map #w-a,.post-super-agent-architecture #map #w-b,.post-super-agent-architecture #map #w-c{--c-fill:var(--worker-fill);--c-line:var(--worker-line);--c-ink:var(--worker-ink);--c-lit:var(--worker-lit);--c-in:var(--worker-in)}
+.post-super-agent-architecture #map #wd,.post-super-agent-architecture #map #timer{--c-fill:var(--ctrl-fill);--c-line:var(--ctrl-line);--c-ink:var(--ctrl-ink);--c-lit:var(--ctrl-lit);--c-in:var(--ctrl-in)}
+.post-super-agent-architecture #map #db{--c-fill:var(--store-fill);--c-line:var(--store-line);--c-ink:var(--store-ink);--c-lit:var(--store-lit);--c-in:var(--store-in)}
+.post-super-agent-architecture #map .node>rect:first-child{fill:var(--c-fill);stroke:var(--c-line)}
+.post-super-agent-architecture #map #r-sem>rect:first-child,.post-super-agent-architecture #map #r-disp>rect:first-child,.post-super-agent-architecture #map #w-a>rect:first-child,.post-super-agent-architecture #map #w-b>rect:first-child,.post-super-agent-architecture #map #w-c>rect:first-child{fill:var(--c-in)}
+.post-super-agent-architecture #map .node .tt,.post-super-agent-architecture #map .node .st.mo{fill:var(--c-ink)!important}
+.post-super-agent-architecture #map [data-head]{fill:var(--ext-ink)!important}
+.post-super-agent-architecture #map [data-thread="pr"]{fill:var(--thread-pr)!important;font-weight:600}
+.post-super-agent-architecture #map [data-thread="im"]{fill:var(--thread-im)!important;font-weight:600}
+.post-super-agent-architecture #map [data-thread="mail"]{fill:var(--thread-mail)!important;font-weight:600}
+.post-super-agent-architecture #map .edge.fast .lb{fill:var(--fast)}
+.post-super-agent-architecture #map .edge.slow .lb{fill:var(--slow)}
+.post-super-agent-architecture #map .edge.watch .lb{fill:var(--watch)}
+.post-super-agent-architecture .edge path{fill:none;stroke:var(--edge);stroke-width:1.5}
+.post-super-agent-architecture .edge path.ar{marker-end:url(#a-edge)}
+.post-super-agent-architecture .edge path.ar2{marker-end:url(#a-edge);marker-start:url(#a-edge)}
+.post-super-agent-architecture .edge.fast path{stroke:var(--fast);stroke-width:2.25}
+.post-super-agent-architecture .edge.fast path.ar{marker-end:url(#a-fast)}
+.post-super-agent-architecture .edge.slow path{stroke:var(--slow);stroke-width:2.25}
+.post-super-agent-architecture .edge.slow path.ar{marker-end:url(#a-slow)}
+.post-super-agent-architecture .edge.watch path{stroke:var(--watch)}
+.post-super-agent-architecture .edge.watch path.ar{marker-end:url(#a-watch)}
+.post-super-agent-architecture .edge.obs path{stroke-dasharray:2 4}
+.post-super-agent-architecture .edge,.post-super-agent-architecture .node{transition:opacity .18s ease}
+.post-super-agent-architecture #map.play .edge{opacity:.3}
+.post-super-agent-architecture #map.play .node{opacity:.5}
+.post-super-agent-architecture #map.play .edge.lit,.post-super-agent-architecture #map.play .node.lit{opacity:1}
+.post-super-agent-architecture #map.play .edge.lit path{stroke-width:2.5}
+.post-super-agent-architecture #map.play .edge.lit:not(.fast):not(.slow):not(.watch) path{stroke:var(--ink)}
+.post-super-agent-architecture #map.play .edge.lit:not(.fast):not(.slow):not(.watch) path.ar{marker-end:url(#a-ink)}
+.post-super-agent-architecture #map.play .edge.lit:not(.fast):not(.slow):not(.watch) path.ar2{marker-end:url(#a-ink);marker-start:url(#a-ink)}
+.post-super-agent-architecture #map.play .edge.cur path{stroke-width:3;stroke-dasharray:9 6;animation:march .8s linear infinite}
+.post-super-agent-architecture #map.play .node.lit>rect:first-child{fill:var(--c-lit);stroke:var(--c-ink);stroke-width:2}
+@keyframes march{to{stroke-dashoffset:-15}}
+@media (prefers-reduced-motion:reduce){
+  .post-super-agent-architecture #map.play .edge.cur path{animation:none}
+  .post-super-agent-architecture .edge,.post-super-agent-architecture .node{transition:none}
+}
+.post-super-agent-architecture #map[data-lens="art"] .pro,.post-super-agent-architecture #map[data-lens="pro"] .art{display:none}
+.post-super-agent-architecture #map[data-lens="pro"] .unseen>rect:first-child{stroke-dasharray:5 4;fill:transparent;stroke:var(--edge)}
+.post-super-agent-architecture .badge[data-tone="ink"]{--b-tone:var(--ink);--b-on:var(--panel)}
+.post-super-agent-architecture .badge[data-tone="fast"]{--b-tone:var(--fast);--b-on:var(--on-hue)}
+.post-super-agent-architecture .badge[data-tone="slow"]{--b-tone:var(--slow);--b-on:var(--on-hue)}
+.post-super-agent-architecture .badge[data-tone="watch"]{--b-tone:var(--watch);--b-on:var(--on-hue)}
+.post-super-agent-architecture .badge circle{fill:var(--panel);stroke:var(--b-tone);stroke-width:1.25}
+.post-super-agent-architecture .badge text{fill:var(--b-tone)!important;font:600 10.5px var(--mono);text-anchor:middle;dominant-baseline:central}
+.post-super-agent-architecture .badge.now circle{fill:var(--b-tone)}
+.post-super-agent-architecture .badge.now text{fill:var(--b-on)!important}
+.post-super-agent-architecture .panel{display:grid;gap:12px}
+.post-super-agent-architecture .ev{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
+.post-super-agent-architecture .ev b{font-weight:600}
+.post-super-agent-architecture .ev .cost{font:500 12.5px/1.5 var(--mono);color:var(--muted)}
+.post-super-agent-architecture .steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:8px}
+.post-super-agent-architecture .steps li{background:var(--panel);border:1px solid var(--line);min-width:0;display:grid}
+.post-super-agent-architecture .steps button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;line-height:1.65;width:100%}
+.post-super-agent-architecture .steps button:hover{background:var(--band)}
+.post-super-agent-architecture .steps button:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.post-super-agent-architecture .steps .num{font:600 12px/24px var(--mono);width:24px;height:24px;text-align:center;border-radius:50%;border:1px solid var(--edge)}
+.post-super-agent-architecture .steps .done .num{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.post-super-agent-architecture .steps .now{background:var(--lit)}
+.post-super-agent-architecture .steps .pn{display:block;margin-top:6px;color:var(--muted);font-size:13px;line-height:1.6}
+.post-super-agent-architecture .steps .pn::before{content:"原型 ";font:600 11.5px var(--mono);color:var(--ink)}
+.post-super-agent-architecture .overview b{display:block;font-weight:600}
+.post-super-agent-architecture .overview .q{display:block;color:var(--muted);font-size:13.5px}
+.post-super-agent-architecture .overview .c{display:block;font:500 12px/1.6 var(--mono);color:var(--muted);margin-top:2px}
+.post-super-agent-architecture .legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);align-items:center}
+.post-super-agent-architecture .legend i{display:inline-block;width:26px;height:0;border-top:2.25px solid var(--edge);vertical-align:middle;margin-right:6px}
+.post-super-agent-architecture .legend .kf{border-color:var(--fast)}
+.post-super-agent-architecture .legend .ks{border-color:var(--slow)}
+.post-super-agent-architecture .legend .kw{border-color:var(--watch)}
+.post-super-agent-architecture .legend .ko{border-top-style:dotted}
+.post-super-agent-architecture .legend .kb{height:12px;width:20px;border:1.25px dashed var(--edge)}
+.post-super-agent-architecture .legend .key-break{flex-basis:100%;height:0}
+.post-super-agent-architecture .legend .kr{height:14px;width:20px;border:1.25px solid;border-radius:2px}
+.post-super-agent-architecture .legend .kr-ext{background:var(--ext-fill);border-color:var(--ext-line)}
+.post-super-agent-architecture .legend .kr-prog{background:var(--prog-fill);border-color:var(--prog-line)}
+.post-super-agent-architecture .legend .kr-router{background:var(--router-fill);border-color:var(--router-line)}
+.post-super-agent-architecture .legend .kr-worker{background:var(--worker-fill);border-color:var(--worker-line)}
+.post-super-agent-architecture .legend .kr-ctrl{background:var(--ctrl-fill);border-color:var(--ctrl-line)}
+.post-super-agent-architecture .legend .kr-store{background:var(--store-fill);border-color:var(--store-line)}
+.post-super-agent-architecture .legend[data-lens="art"] .pro,.post-super-agent-architecture .legend[data-lens="pro"] .art{display:none}
+.post-super-agent-architecture .scrollhint{display:none;font-size:12.5px;color:var(--muted)}
+@media (max-width:1005px){
+  .post-super-agent-architecture .scrollhint{display:block}
+}
+.post-super-agent-architecture .lensnote{border-left:0;background:var(--band);padding:10px 14px;font-size:14px;line-height:1.7}
+.post-super-agent-architecture .tri{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.post-super-agent-architecture .tri>div{background:var(--panel);display:grid;gap:8px;align-content:start;padding:14px 14px 16px;min-width:0}
+.post-super-agent-architecture .tri h4{margin:0;font:600 14.5px/1.4 var(--sans)}
+.post-super-agent-architecture .tri p{font-size:13.5px;line-height:1.65;color:var(--muted)}
+@media (max-width:820px){
+  .post-super-agent-architecture .tri{grid-template-columns:minmax(0,1fr)}
+}
+.post-super-agent-architecture .pill{font:500 12.5px/1.5 var(--sans);white-space:nowrap}
+.post-super-agent-architecture .pill::before{content:"";display:inline-block;width:.62em;height:.62em;margin-right:.4em;border:1.5px solid currentColor;border-radius:50%;box-sizing:border-box;vertical-align:.02em}
+.post-super-agent-architecture .pill.ok::before{background:currentColor}
+.post-super-agent-architecture .pill.pt::before{background:linear-gradient(90deg,currentColor 50%,transparent 50%)}
+.post-super-agent-architecture .pill.df::before{width:.8em;height:.8em;border:0;border-radius:0;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M5 9h14M5 15h14M19 5 5 19'/%3E%3C/svg%3E") center/contain no-repeat;vertical-align:-.08em}
+.post-super-agent-architecture .pill.ok{color:var(--ok)}
+.post-super-agent-architecture .pill.pt{color:var(--warn)}
+.post-super-agent-architecture .pill.df{color:var(--diff)}
+.post-super-agent-architecture .pill.no{color:var(--muted)}
+.post-super-agent-architecture dl.mech{margin:0;display:grid;gap:12px}
+.post-super-agent-architecture dl.mech div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:4px 14px}
+.post-super-agent-architecture dl.mech dt{font:600 13px/1.75 var(--mono)}
+.post-super-agent-architecture dl.mech dd{margin:0}
+@media (max-width:520px){
+  .post-super-agent-architecture dl.mech div{grid-template-columns:minmax(0,1fr)}
+}
+.post-super-agent-architecture .charts{display:grid;grid-template-columns:minmax(0,55fr) minmax(0,45fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.post-super-agent-architecture .charts>div{background:var(--panel);padding:14px 10px 8px;min-width:0;display:grid;gap:6px;align-content:start}
+.post-super-agent-architecture .charts h4{margin:0 6px;font:600 14px/1.45 var(--sans)}
+.post-super-agent-architecture .charts .k{margin:0 6px;font-size:12.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.post-super-agent-architecture .charts .k i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;border:2px solid var(--muted);box-sizing:border-box}
+.post-super-agent-architecture .charts .k i.s{background:var(--muted)}
+.post-super-agent-architecture .grid{stroke:var(--line);stroke-width:1}
+.post-super-agent-architecture .tick{font:400 11.5px var(--mono);fill:var(--muted)!important}
+.post-super-agent-architecture .rowl{font-size:12.5px}
+.post-super-agent-architecture .rowl.hi{font-weight:600}
+.post-super-agent-architecture .val{font:500 12px var(--mono);font-variant-numeric:tabular-nums;paint-order:stroke;stroke:var(--panel);stroke-width:4px;stroke-linejoin:round}
+.post-super-agent-architecture .hit{fill:transparent;cursor:default}
+.post-super-agent-architecture .row:hover .hit,.post-super-agent-architecture .row:focus .hit{fill:var(--band)}
+.post-super-agent-architecture .row:focus{outline:none}
+.post-super-agent-architecture #tip{position:fixed;z-index:5;pointer-events:none;background:var(--ink);color:var(--bg);padding:7px 10px;font-size:12.5px;line-height:1.5;max-width:260px;border-radius:2px}
+.post-super-agent-architecture #tip b{display:block;font:600 13.5px var(--mono)}
+@media (max-width:993px){
+  .post-super-agent-architecture .charts{grid-template-columns:minmax(0,1fr)}
+  .post-super-agent-architecture #c-time{max-width:640px}
+  .post-super-agent-architecture #c-tok{max-width:480px}
+}
+
+/* Every figure fills its width at any window size, keeping its proportions: no drawing keeps a minimum width of its own,
+   so none scrolls sideways in the page. Its detail is read in the larger view. In the prototype this overrides the mock
+   posts' own minimum widths, which is why it needs !important. */
+.ap-article .ap-article-body figure svg{min-width:0!important}
+</style></head><body><div class="ap-site"><div data-shared-block="nav"></div>
+<main class="ap-article ap-article-page">
+<header class="ap-article-head">
+  <h1>省钱提醒-马上升级你的 claudecode 到最新版以使用idleCompaction功能</h1>
+  <p class="ap-byline"><b>Aloong</b> · <time datetime="2026-11-05">2026-11-05</time></p>
+</header>
+<nav class="ap-toc" aria-label="文章目录"><p class="ap-toc-title">目录</p><ol><li><a href="#why-costly">为什么离开一小时这么贵</a></li><li><a href="#how-it-works">空闲压缩做了什么</a></li><li><a href="#measured">实测省多少</a></li><li><a href="#conditions">什么情况下它不会跑</a></li><li><a href="#tradeoffs">它的代价</a></li><li><a href="#upgrade">怎么升级</a></li><li><a href="#method">这些数字怎么来的</a></li><li><a href="#sources">来源</a></li></ol></nav>
+<div class="ap-article-col">
+<div class="ap-article-body post-claude-code-idle-compaction">
+<section>
+  <p class="lead">先说结论：<b>把 Claude Code 升级到最新版</b>（写这篇时是 v2.1.318），一般运行 <code>claude update</code> 就行，其他安装方式见后文。</p>
+  <p>新版多了一个功能叫空闲压缩（idle compaction），对应的配置项是 <code>idleCompaction</code>。它解决一件很贵的事：上下文已经很大的时候，你离开超过一小时再回来。</p>
+  <p>用订阅的话，升级后什么都不用配，它默认就开着，省的是额度。用 API Key 或云厂商的话，默认不会触发，要先改缓存时效，这笔账得另算，后面会讲。</p>
+  <p>我 10 月用的是 v2.1.286，11 月初升到 v2.1.317，正好前后各有一批记录。我把这些记录拆开算了一遍：</p>
+  <ul class="plain">
+    <li><b>回来这一下</b>：28 次真实记录，不压缩估算要约 94 美元，实际约 25 美元，少花 73%。</li>
+    <li><b>回来之后接着干</b>：这 28 段工作估算少处理约 2.5 亿 token，少了 38%。</li>
+    <li><b>整张账单</b>：估计省 8% 到 14%。</li>
+  </ul>
+  <p>我用的是订阅，不按美元扣费。官方文档把缓存未命中列为额度上涨的原因之一，但额度怎么折算 token 没有公开。所以下面的美元都按 Opus 5.5 的 API 公开价折算，只用来比较相对大小，不等于额度也能省同样的比例。</p>
+</section>
+
+<section id="why-costly">
+  <h2>为什么离开一小时这么贵</h2>
+  <p>模型没有记忆，Claude Code 每发一次请求，都要把整段上下文重新发一遍。prompt cache 让这部分变便宜，但读和写的价格差得很远：</p>
+  <div class="scroll"><table>
+    <thead><tr><th>动作</th><th class="num">相对普通输入的价格</th><th class="num">50 万 token 要花</th></tr></thead>
+    <tbody>
+      <tr><td>读缓存</td><td class="num">0.05 倍</td><td class="num">0.10 美元</td></tr>
+      <tr><td>写缓存（1 小时有效）</td><td class="num">2 倍</td><td class="num">4.00 美元</td></tr>
+    </tbody>
+  </table></div>
+  <p>同样 50 万 token，写是读的 40 倍。Sonnet 5.5 也是这个倍数。</p>
+  <p>订阅用户的主会话，缓存默认保留 1 小时。只要一小时内有请求，缓存就续上了，每轮只付读的价格。一旦离开超过一小时，缓存过期，你回来说的第一句话哪怕只是「继续」，整段上下文也要重新写一遍。</p>
+  <p>我查了自己的记录。10 月里，上下文 20 万以上、离开超过一小时再回来的情况有 141 次，每次第一个请求的中位数是 4.38 美元，合计 629 美元，占当月账单的 8.4%。</p>
+</section>
+
+<section id="how-it-works">
+  <h2>空闲压缩做了什么</h2>
+  <p>会话空闲约 54 分钟时，Claude Code 趁缓存还没过期，自动发一个请求，把对话压缩成摘要。我这边 35 次记录全都发生在最后一次请求之后 53.3 到 54 分钟，耗时中位数 71 秒。</p>
+  <p>这个请求读的是缓存，所以便宜。等你回来，要写进缓存的只剩摘要和重新载入的内容。</p>
+  <figure class="fig" id="fig-idle-timeline">
+    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 552" role="img" aria-label="两条时间线对比离开一小时后回来的花费，上下文 50 万 token，按 Opus 5.5 的 API 价折算，色条是回来时要写进缓存的量。不压缩（旧版，或关掉 idleCompaction）：0 分钟是最后一次请求，缓存开始计时；60 分钟缓存过期，这一步不花钱；你回来时整份重写 50 万，花 4.00 美元，回来这一下合计 4.00 美元。空闲压缩（新版默认）：0 分钟是最后一次请求，缓存开始计时；约 54 分钟读缓存 50 万花 0.10 美元，写摘要约 0.20 美元；你回来时只重写约 8 万，花 0.63 美元，回来这一下合计 0.93 美元。同样 50 万 token，写缓存的单价是读缓存的 40 倍。赶在过期前读这一遍，就躲开了那次整份重写。">
+<text x="24" y="34"><tspan class="ic-lane">不压缩</tspan><tspan class="ic-note" dx="12">旧版，或关掉 idleCompaction</tspan></text>
+<text x="916" y="34" text-anchor="end"><tspan class="ic-note">回来这一下合计</tspan><tspan class="ic-total ic-ink-cost" dx="10">$4.00</tspan></text>
+<g class="ic-node" data-role="ev">
+<rect class="ic-box ic-box-ev" x="24" y="52" width="260" height="150" rx="8"/>
+<text class="ic-ttl ic-ink-ev" x="44" y="86">0 分钟</text>
+<text class="ic-txt" x="44" y="118">最后一次请求</text>
+<text class="ic-txt" x="44" y="144">缓存开始计时</text>
+</g>
+<g class="ic-arrowset" data-length="44" data-head="10"><line class="ic-arrow" x1="290" y1="127" x2="325" y2="127"/><path class="ic-head" d="M334 127 L324 121 L324 133 Z"/></g>
+<g class="ic-node" data-role="ev">
+<rect class="ic-box ic-box-ev" x="340" y="52" width="260" height="150" rx="8"/>
+<text class="ic-ttl ic-ink-ev" x="360" y="86">60 分钟</text>
+<text class="ic-txt" x="360" y="118">缓存过期</text>
+<text class="ic-txt" x="360" y="144">这一步不花钱</text>
+</g>
+<g class="ic-arrowset" data-length="44" data-head="10"><line class="ic-arrow" x1="606" y1="127" x2="641" y2="127"/><path class="ic-head" d="M650 127 L640 121 L640 133 Z"/></g>
+<g class="ic-node" data-role="cost">
+<rect class="ic-box ic-box-cost" x="656" y="52" width="260" height="150" rx="8"/>
+<text class="ic-ttl ic-ink-cost" x="676" y="86">你回来</text>
+<text class="ic-txt" x="676" y="118">整份重写 50 万</text>
+<text class="ic-key ic-ink-cost" x="676" y="156">$4.00</text>
+<rect class="ic-bar-cost" x="676" y="172" width="220" height="10" rx="4"/>
+</g>
+<text x="24" y="260"><tspan class="ic-lane">空闲压缩</tspan><tspan class="ic-note" dx="12">新版默认</tspan></text>
+<text x="916" y="260" text-anchor="end"><tspan class="ic-note">回来这一下合计</tspan><tspan class="ic-total ic-ink-save" dx="10">$0.93</tspan></text>
+<g class="ic-node" data-role="ev">
+<rect class="ic-box ic-box-ev" x="24" y="278" width="260" height="150" rx="8"/>
+<text class="ic-ttl ic-ink-ev" x="44" y="312">0 分钟</text>
+<text class="ic-txt" x="44" y="344">最后一次请求</text>
+<text class="ic-txt" x="44" y="370">缓存开始计时</text>
+</g>
+<g class="ic-arrowset" data-length="44" data-head="10"><line class="ic-arrow" x1="290" y1="353" x2="325" y2="353"/><path class="ic-head" d="M334 353 L324 347 L324 359 Z"/></g>
+<g class="ic-node" data-role="save">
+<rect class="ic-box ic-box-save" x="340" y="278" width="260" height="150" rx="8"/>
+<text class="ic-ttl ic-ink-save" x="360" y="312">约 54 分钟</text>
+<text class="ic-txt" x="360" y="344">读缓存 50 万 $0.10</text>
+<text class="ic-txt" x="360" y="370">写摘要约 $0.20</text>
+</g>
+<g class="ic-arrowset" data-length="44" data-head="10"><line class="ic-arrow" x1="606" y1="353" x2="641" y2="353"/><path class="ic-head" d="M650 353 L640 347 L640 359 Z"/></g>
+<g class="ic-node" data-role="save">
+<rect class="ic-box ic-box-save" x="656" y="278" width="260" height="150" rx="8"/>
+<text class="ic-ttl ic-ink-save" x="676" y="312">你回来</text>
+<text class="ic-txt" x="676" y="344">只重写约 8 万</text>
+<text class="ic-key ic-ink-save" x="676" y="382">$0.63</text>
+<rect class="ic-bar-save" x="676" y="398" width="35.2" height="10" rx="4"/>
+</g>
+<rect class="ic-callout" x="24" y="460" width="892" height="72"/>
+<rect class="ic-callout-bar" x="24" y="460" width="4" height="72"/>
+<text class="ic-txt" x="44" y="489">同样 50 万 token，写缓存的单价是读缓存的 40 倍。</text>
+<text class="ic-txt ic-strong" x="44" y="516">赶在过期前读这一遍，就躲开了那次整份重写。</text>
+</svg></div>
+    <figcaption><b>离开一小时，两种结局。</b>上下文 50 万 token，按 Opus 5.5 的 API 价折算；色条是回来时要写进缓存的量。</figcaption>
+  </figure>
+  <p>以 50 万 token 为例：</p>
+  <ul class="plain">
+    <li><b>不压缩</b>：整份重写，4.00 美元。</li>
+    <li><b>空闲压缩</b>：读缓存 0.10 美元，生成摘要约 0.20 美元，回来重写约 8 万 token 要 0.63 美元，合计 0.93 美元。</li>
+  </ul>
+  <p>回来这一下省的其实不是 token 数量，这 50 万一样要过一遍，省的是单价。数量要到后面才开始省。</p>
+</section>
+
+<section id="measured">
+  <h2>实测省多少</h2>
+  <h3>回来这一下：少花 73%</h3>
+  <p>升级后有 28 次离开再回来，全都过了一小时才回来，所以缓存确实会过期。同样这 28 次，如果没有空闲压缩，第一个请求合计约 94 美元；实际花了约 25 美元，其中压缩请求约 8 美元。</p>
+  <p>压缩请求的用量不写在会话记录里。它读缓存的量是确定的，生成摘要的输出量是我按 1 万 token 估的。按 5 千到 2 万算，这个比例在 67% 到 76% 之间。</p>
+  <figure class="fig" id="fig-return-cost-scatter">
+    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 546" role="img" aria-label="散点图：回来这一下花了多少钱。每个点是一次离开超过一小时再回来的真实记录，横轴是离开前的上下文大小（20 万到 100 万），纵轴是回来第一个请求的费用，按 Opus 5.5 的 API 价折算。10 月不压缩的 141 次（v2.1.286），中位数 4.38 美元，费用随上下文从约 1.5 美元线性涨到约 7.5 美元：上下文越大越贵。11 月 3 日至 5 日空闲压缩的 28 次，中位数 0.97 美元，费用基本平在 1 美元左右。">
+<circle class="ic-dot-cost" cx="30" cy="25" r="6"/><text class="ic-legend" x="44" y="30">不压缩：10 月，v2.1.286，141 次，中位数 $4.38</text>
+<circle class="ic-dot-save" cx="30" cy="51" r="6"/><text class="ic-legend" x="44" y="56">空闲压缩：11 月 3 日至 5 日，28 次，中位数 $0.97</text>
+<line class="ic-base" x1="70" x2="916" y1="476" y2="476"/>
+<text class="ic-tick" x="58" y="481" text-anchor="end">$0</text>
+<line class="ic-grid" x1="70" x2="916" y1="385.5" y2="385.5"/>
+<text class="ic-tick" x="58" y="390.5" text-anchor="end">$2</text>
+<line class="ic-grid" x1="70" x2="916" y1="295" y2="295"/>
+<text class="ic-tick" x="58" y="300" text-anchor="end">$4</text>
+<line class="ic-grid" x1="70" x2="916" y1="204.6" y2="204.6"/>
+<text class="ic-tick" x="58" y="209.6" text-anchor="end">$6</text>
+<line class="ic-grid" x1="70" x2="916" y1="114.1" y2="114.1"/>
+<text class="ic-tick" x="58" y="119.1" text-anchor="end">$8</text>
+<text class="ic-tick" x="118.6" y="502" text-anchor="middle">20 万</text>
+<text class="ic-tick" x="313.1" y="502" text-anchor="middle">40 万</text>
+<text class="ic-tick" x="507.6" y="502" text-anchor="middle">60 万</text>
+<text class="ic-tick" x="702.1" y="502" text-anchor="middle">80 万</text>
+<text class="ic-tick" x="896.6" y="502" text-anchor="middle">100 万</text>
+<text class="ic-tick" x="493" y="530" text-anchor="middle">离开前的上下文大小</text>
+<g class="ic-points" data-series="old" data-count="141">
+<circle class="ic-dot-cost" cx="372" cy="310.7" r="6"/>
+<circle class="ic-dot-cost" cx="320.7" cy="336.2" r="6"/>
+<circle class="ic-dot-cost" cx="341.8" cy="322.7" r="6"/>
+<circle class="ic-dot-cost" cx="204.5" cy="379.4" r="6"/>
+<circle class="ic-dot-cost" cx="389.9" cy="309.8" r="6"/>
+<circle class="ic-dot-cost" cx="400.5" cy="306" r="6"/>
+<circle class="ic-dot-cost" cx="339.3" cy="324.7" r="6"/>
+<circle class="ic-dot-cost" cx="611.5" cy="223.8" r="6"/>
+<circle class="ic-dot-cost" cx="295.9" cy="342.4" r="6"/>
+<circle class="ic-dot-cost" cx="405.3" cy="302.4" r="6"/>
+<circle class="ic-dot-cost" cx="538" cy="250.6" r="6"/>
+<circle class="ic-dot-cost" cx="701.3" cy="190.9" r="6"/>
+<circle class="ic-dot-cost" cx="242.9" cy="363.3" r="6"/>
+<circle class="ic-dot-cost" cx="850.2" cy="139.4" r="6"/>
+<circle class="ic-dot-cost" cx="856.6" cy="137.2" r="6"/>
+<circle class="ic-dot-cost" cx="367.2" cy="315.8" r="6"/>
+<circle class="ic-dot-cost" cx="374.2" cy="313.6" r="6"/>
+<circle class="ic-dot-cost" cx="458" cy="283.9" r="6"/>
+<circle class="ic-dot-cost" cx="210.9" cy="364.4" r="6"/>
+<circle class="ic-dot-cost" cx="535.1" cy="257" r="6"/>
+<circle class="ic-dot-cost" cx="145.1" cy="399.5" r="6"/>
+<circle class="ic-dot-cost" cx="373.2" cy="318.7" r="6"/>
+<circle class="ic-dot-cost" cx="635.5" cy="216.8" r="6"/>
+<circle class="ic-dot-cost" cx="165.2" cy="395.2" r="6"/>
+<circle class="ic-dot-cost" cx="590.7" cy="235.9" r="6"/>
+<circle class="ic-dot-cost" cx="641.9" cy="217.3" r="6"/>
+<circle class="ic-dot-cost" cx="668.9" cy="207.7" r="6"/>
+<circle class="ic-dot-cost" cx="360" cy="320" r="6"/>
+<circle class="ic-dot-cost" cx="124.1" cy="409.2" r="6"/>
+<circle class="ic-dot-cost" cx="762.2" cy="173.3" r="6"/>
+<circle class="ic-dot-cost" cx="173.9" cy="380.9" r="6"/>
+<circle class="ic-dot-cost" cx="767.6" cy="169.6" r="6"/>
+<circle class="ic-dot-cost" cx="355.3" cy="323.3" r="6"/>
+<circle class="ic-dot-cost" cx="843.5" cy="141.6" r="6"/>
+<circle class="ic-dot-cost" cx="637.3" cy="216.2" r="6"/>
+<circle class="ic-dot-cost" cx="529.4" cy="259.7" r="6"/>
+<circle class="ic-dot-cost" cx="756.6" cy="175.5" r="6"/>
+<circle class="ic-dot-cost" cx="322.3" cy="332.6" r="6"/>
+<circle class="ic-dot-cost" cx="374.8" cy="315.5" r="6"/>
+<circle class="ic-dot-cost" cx="667.1" cy="206.6" r="6"/>
+<circle class="ic-dot-cost" cx="212.8" cy="373.8" r="6"/>
+<circle class="ic-dot-cost" cx="486.9" cy="273.1" r="6"/>
+<circle class="ic-dot-cost" cx="499.5" cy="268.9" r="6"/>
+<circle class="ic-dot-cost" cx="653" cy="213.7" r="6"/>
+<circle class="ic-dot-cost" cx="313.1" cy="330.2" r="6"/>
+<circle class="ic-dot-cost" cx="119.9" cy="410.1" r="6"/>
+<circle class="ic-dot-cost" cx="149.4" cy="396.9" r="6"/>
+<circle class="ic-dot-cost" cx="341.1" cy="329.1" r="6"/>
+<circle class="ic-dot-cost" cx="731.8" cy="181.5" r="6"/>
+<circle class="ic-dot-cost" cx="234.8" cy="368.1" r="6"/>
+<circle class="ic-dot-cost" cx="262.4" cy="358.9" r="6"/>
+<circle class="ic-dot-cost" cx="333" cy="329.8" r="6"/>
+<circle class="ic-dot-cost" cx="184.5" cy="375.8" r="6"/>
+<circle class="ic-dot-cost" cx="195.9" cy="372.4" r="6"/>
+<circle class="ic-dot-cost" cx="198.8" cy="371.3" r="6"/>
+<circle class="ic-dot-cost" cx="200.4" cy="371.2" r="6"/>
+<circle class="ic-dot-cost" cx="288.7" cy="338.7" r="6"/>
+<circle class="ic-dot-cost" cx="342.4" cy="319.7" r="6"/>
+<circle class="ic-dot-cost" cx="344.8" cy="318.8" r="6"/>
+<circle class="ic-dot-cost" cx="382.9" cy="303.6" r="6"/>
+<circle class="ic-dot-cost" cx="382.7" cy="313.6" r="6"/>
+<circle class="ic-dot-cost" cx="739.6" cy="180" r="6"/>
+<circle class="ic-dot-cost" cx="814.5" cy="152.9" r="6"/>
+<circle class="ic-dot-cost" cx="337.1" cy="328.8" r="6"/>
+<circle class="ic-dot-cost" cx="550.9" cy="251.2" r="6"/>
+<circle class="ic-dot-cost" cx="638.7" cy="208.6" r="6"/>
+<circle class="ic-dot-cost" cx="846" cy="140.2" r="6"/>
+<circle class="ic-dot-cost" cx="139.9" cy="404.4" r="6"/>
+<circle class="ic-dot-cost" cx="627.6" cy="221.2" r="6"/>
+<circle class="ic-dot-cost" cx="810.2" cy="153.4" r="6"/>
+<circle class="ic-dot-cost" cx="732.5" cy="183.1" r="6"/>
+<circle class="ic-dot-cost" cx="807.1" cy="149.7" r="6"/>
+<circle class="ic-dot-cost" cx="184.9" cy="383.4" r="6"/>
+<circle class="ic-dot-cost" cx="181.1" cy="388" r="6"/>
+<circle class="ic-dot-cost" cx="279.3" cy="351.6" r="6"/>
+<circle class="ic-dot-cost" cx="306.8" cy="338.3" r="6"/>
+<circle class="ic-dot-cost" cx="330.1" cy="332.6" r="6"/>
+<circle class="ic-dot-cost" cx="178.1" cy="387.5" r="6"/>
+<circle class="ic-dot-cost" cx="716.7" cy="189" r="6"/>
+<circle class="ic-dot-cost" cx="411.3" cy="300.5" r="6"/>
+<circle class="ic-dot-cost" cx="155.6" cy="397.7" r="6"/>
+<circle class="ic-dot-cost" cx="335.6" cy="329.6" r="6"/>
+<circle class="ic-dot-cost" cx="386.9" cy="309.7" r="6"/>
+<circle class="ic-dot-cost" cx="401.5" cy="300.3" r="6"/>
+<circle class="ic-dot-cost" cx="450.7" cy="280.4" r="6"/>
+<circle class="ic-dot-cost" cx="599.9" cy="229.5" r="6"/>
+<circle class="ic-dot-cost" cx="683" cy="198" r="6"/>
+<circle class="ic-dot-cost" cx="467.6" cy="280.2" r="6"/>
+<circle class="ic-dot-cost" cx="155.4" cy="391.8" r="6"/>
+<circle class="ic-dot-cost" cx="559.3" cy="246.6" r="6"/>
+<circle class="ic-dot-cost" cx="801.3" cy="156.9" r="6"/>
+<circle class="ic-dot-cost" cx="625.7" cy="221.6" r="6"/>
+<circle class="ic-dot-cost" cx="599.4" cy="232.1" r="6"/>
+<circle class="ic-dot-cost" cx="755.5" cy="172.6" r="6"/>
+<circle class="ic-dot-cost" cx="796.6" cy="156.9" r="6"/>
+<circle class="ic-dot-cost" cx="811.1" cy="154" r="6"/>
+<circle class="ic-dot-cost" cx="355.8" cy="319.9" r="6"/>
+<circle class="ic-dot-cost" cx="588.3" cy="236.4" r="6"/>
+<circle class="ic-dot-cost" cx="562.3" cy="246.8" r="6"/>
+<circle class="ic-dot-cost" cx="309.3" cy="340.8" r="6"/>
+<circle class="ic-dot-cost" cx="547.8" cy="250" r="6"/>
+<circle class="ic-dot-cost" cx="771.3" cy="168.9" r="6"/>
+<circle class="ic-dot-cost" cx="228.4" cy="371.1" r="6"/>
+<circle class="ic-dot-cost" cx="256.9" cy="357.4" r="6"/>
+<circle class="ic-dot-cost" cx="556.7" cy="248" r="6"/>
+<circle class="ic-dot-cost" cx="735" cy="181.4" r="6"/>
+<circle class="ic-dot-cost" cx="815.3" cy="152.7" r="6"/>
+<circle class="ic-dot-cost" cx="375.5" cy="316.3" r="6"/>
+<circle class="ic-dot-cost" cx="482.3" cy="276.2" r="6"/>
+<circle class="ic-dot-cost" cx="771.8" cy="165.3" r="6"/>
+<circle class="ic-dot-cost" cx="834.2" cy="141.9" r="6"/>
+<circle class="ic-dot-cost" cx="437.8" cy="292.3" r="6"/>
+<circle class="ic-dot-cost" cx="471.2" cy="278.4" r="6"/>
+<circle class="ic-dot-cost" cx="486.7" cy="269.3" r="6"/>
+<circle class="ic-dot-cost" cx="504.5" cy="262.5" r="6"/>
+<circle class="ic-dot-cost" cx="730.2" cy="181.8" r="6"/>
+<circle class="ic-dot-cost" cx="582.3" cy="238.5" r="6"/>
+<circle class="ic-dot-cost" cx="782.2" cy="164.7" r="6"/>
+<circle class="ic-dot-cost" cx="293.9" cy="346" r="6"/>
+<circle class="ic-dot-cost" cx="375.4" cy="316.1" r="6"/>
+<circle class="ic-dot-cost" cx="732.5" cy="183.6" r="6"/>
+<circle class="ic-dot-cost" cx="424.5" cy="297.7" r="6"/>
+<circle class="ic-dot-cost" cx="475" cy="277.9" r="6"/>
+<circle class="ic-dot-cost" cx="386.1" cy="311.7" r="6"/>
+<circle class="ic-dot-cost" cx="497.6" cy="270.3" r="6"/>
+<circle class="ic-dot-cost" cx="569.1" cy="243.2" r="6"/>
+<circle class="ic-dot-cost" cx="640.3" cy="217" r="6"/>
+<circle class="ic-dot-cost" cx="399" cy="308.8" r="6"/>
+<circle class="ic-dot-cost" cx="402.8" cy="307.2" r="6"/>
+<circle class="ic-dot-cost" cx="524.8" cy="263.3" r="6"/>
+<circle class="ic-dot-cost" cx="532.9" cy="260.4" r="6"/>
+<circle class="ic-dot-cost" cx="543.7" cy="256" r="6"/>
+<circle class="ic-dot-cost" cx="548.2" cy="252.4" r="6"/>
+<circle class="ic-dot-cost" cx="574.7" cy="244.6" r="6"/>
+<circle class="ic-dot-cost" cx="610.4" cy="231.9" r="6"/>
+<circle class="ic-dot-cost" cx="648.4" cy="215.3" r="6"/>
+<circle class="ic-dot-cost" cx="650.6" cy="216.2" r="6"/>
+<circle class="ic-dot-cost" cx="587.6" cy="234.1" r="6"/>
+<circle class="ic-dot-cost" cx="654.3" cy="212.4" r="6"/>
+<circle class="ic-dot-cost" cx="658.6" cy="210.7" r="6"/>
+<circle class="ic-dot-cost" cx="339.9" cy="328.2" r="6"/>
+</g>
+<g class="ic-points" data-series="new" data-count="28">
+<circle class="ic-dot-save" cx="442.1" cy="430.4" r="6"/>
+<circle class="ic-dot-save" cx="451.7" cy="425.9" r="6"/>
+<circle class="ic-dot-save" cx="184.6" cy="431.5" r="6"/>
+<circle class="ic-dot-save" cx="131.6" cy="439.2" r="6"/>
+<circle class="ic-dot-save" cx="336.7" cy="434.1" r="6"/>
+<circle class="ic-dot-save" cx="481.3" cy="431" r="6"/>
+<circle class="ic-dot-save" cx="320.1" cy="435.2" r="6"/>
+<circle class="ic-dot-save" cx="397.2" cy="430.6" r="6"/>
+<circle class="ic-dot-save" cx="177.1" cy="434.2" r="6"/>
+<circle class="ic-dot-save" cx="165.6" cy="426.9" r="6"/>
+<circle class="ic-dot-save" cx="699.1" cy="428.5" r="6"/>
+<circle class="ic-dot-save" cx="265.9" cy="432.6" r="6"/>
+<circle class="ic-dot-save" cx="586.8" cy="427.7" r="6"/>
+<circle class="ic-dot-save" cx="129.6" cy="439.6" r="6"/>
+<circle class="ic-dot-save" cx="567.5" cy="427.7" r="6"/>
+<circle class="ic-dot-save" cx="147.2" cy="432" r="6"/>
+<circle class="ic-dot-save" cx="155.9" cy="435.2" r="6"/>
+<circle class="ic-dot-save" cx="665.3" cy="425.8" r="6"/>
+<circle class="ic-dot-save" cx="575.7" cy="431.8" r="6"/>
+<circle class="ic-dot-save" cx="179.9" cy="433.1" r="6"/>
+<circle class="ic-dot-save" cx="472.5" cy="425.6" r="6"/>
+<circle class="ic-dot-save" cx="603.6" cy="433.1" r="6"/>
+<circle class="ic-dot-save" cx="203.8" cy="446.3" r="6"/>
+<circle class="ic-dot-save" cx="444.4" cy="445.8" r="6"/>
+<circle class="ic-dot-save" cx="133" cy="447.2" r="6"/>
+<circle class="ic-dot-save" cx="283.4" cy="439.4" r="6"/>
+<circle class="ic-dot-save" cx="578" cy="433.4" r="6"/>
+<circle class="ic-dot-save" cx="340" cy="429.4" r="6"/>
+</g>
+<circle class="ic-dot-cost" cx="167.2" cy="177.4" r="6"/><text class="ic-label" x="183.2" y="183.4">不压缩：上下文越大越贵</text>
+<circle class="ic-dot-save" cx="527" cy="376.5" r="6"/><text class="ic-label" x="543" y="382.5">空闲压缩：基本平在 $1 左右</text>
+</svg></div>
+    <figcaption><b>回来这一下，花了多少钱。</b>每个点是我的一次真实记录：离开超过一小时再回来，按 Opus 5.5 的 API 价折算。空闲压缩一组已计入压缩请求本身，其中生成摘要的输出量按 1 万 token 估算。</figcaption>
+  </figure>
+  <p>不压缩的费用跟着上下文线性涨，压缩后基本平在 1 美元左右。所以上下文越大，省的比例越高：</p>
+  <div class="scroll"><table class="mid">
+    <thead><tr><th class="num">离开前的上下文</th><th class="num">不压缩</th><th class="num">空闲压缩</th><th class="num">少花</th></tr></thead>
+    <tbody>
+      <tr><td class="num">20 万</td><td class="num">1.60 美元</td><td class="num">0.87 美元</td><td class="num">45%</td></tr>
+      <tr><td class="num">50 万</td><td class="num">4.00 美元</td><td class="num">0.93 美元</td><td class="num">77%</td></tr>
+      <tr><td class="num">80 万</td><td class="num">6.40 美元</td><td class="num">0.99 美元</td><td class="num">84%</td></tr>
+    </tbody>
+  </table></div>
+  <p>这张表里，回来要重写的量按我的中位数 8 万算，我的规则文件和记忆比较多。如果你的只有 3 万，三档分别是 70%、86%、91%。</p>
+
+  <h3>回来之后：每轮读得少，但要补读</h3>
+  <p>压缩之后上下文小了。我回来时上下文的中位数是 10.9 万，之后每轮读缓存的量也跟着变小。</p>
+  <p>但摘要会丢细节，Claude 可能要把一部分内容重新读回来。回来后的 20 个请求里，压缩过的会话上下文涨了 12.2 万，没压缩的只涨 5 万。这个差距不全是读回来的：两组做的不是同一批任务，我的规则还要求压缩后重新载入用到的 skill，别人未必有这笔。我把差的这部分都算成压缩的成本。它要按写缓存的价格付钱，所以省的比例不会一直停在 77%：</p>
+  <figure class="fig" id="fig-after-return-cost">
+    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 546" role="img" aria-label="折线图：回来之后接着干，差距还在。从 50 万 token 的上下文回来后的累计费用，按 Opus 5.5 的 API 价折算，横轴是回来之后的请求数（0 到 30），纵轴是美元。不压缩每轮都要读一遍 50 万以上的上下文，累计费用从 4.00 美元涨到 30 个请求后的 7.78 美元；空闲压缩每轮读得少，但要多写重新读回来的内容，从 0.93 美元涨到 3.66 美元。">
+<line class="ic-line-cost" x1="22" x2="42" y1="25" y2="25"/><text class="ic-legend" x="52" y="30">不压缩：每轮都要读一遍 50 万以上的上下文</text>
+<line class="ic-line-save" x1="22" x2="42" y1="51" y2="51"/><text class="ic-legend" x="52" y="56">空闲压缩：每轮读得少，但要多写重新读回来的内容</text>
+<line class="ic-base" x1="70" x2="780" y1="476" y2="476"/>
+<text class="ic-tick" x="58" y="481" text-anchor="end">$0</text>
+<line class="ic-grid" x1="70" x2="780" y1="388.9" y2="388.9"/>
+<text class="ic-tick" x="58" y="393.9" text-anchor="end">$2</text>
+<line class="ic-grid" x1="70" x2="780" y1="301.8" y2="301.8"/>
+<text class="ic-tick" x="58" y="306.8" text-anchor="end">$4</text>
+<line class="ic-grid" x1="70" x2="780" y1="214.7" y2="214.7"/>
+<text class="ic-tick" x="58" y="219.7" text-anchor="end">$6</text>
+<line class="ic-grid" x1="70" x2="780" y1="127.6" y2="127.6"/>
+<text class="ic-tick" x="58" y="132.6" text-anchor="end">$8</text>
+<text class="ic-tick" x="70" y="502" text-anchor="middle">0</text>
+<text class="ic-tick" x="306.7" y="502" text-anchor="middle">10</text>
+<text class="ic-tick" x="543.3" y="502" text-anchor="middle">20</text>
+<text class="ic-tick" x="780" y="502" text-anchor="middle">30</text>
+<text class="ic-tick" x="425" y="530" text-anchor="middle">回来之后的请求数</text>
+<path class="ic-line-cost" d="M70 301.8 L93.7 296.7 L117.3 291.7 L141 286.3 L164.7 281.2 L188.3 276.1 L212 270.6 L235.7 265.3 L259.3 259.9 L283 254.9 L306.7 249.8 L330.3 244.6 L354 238.7 L377.7 233 L401.3 227.2 L425 221.3 L448.7 215.4 L472.3 210.2 L496 204.3 L519.7 198.9 L543.3 193.2 L567 187.9 L590.7 182.5 L614.3 176.8 L638 170.9 L661.7 165.5 L685.3 160.1 L709 154.1 L732.7 148.6 L756.3 143.1 L780 137.2"/>
+<circle class="ic-dot-cost" cx="70" cy="301.8" r="5"/>
+<circle class="ic-dot-cost" cx="780" cy="137.2" r="5"/>
+<text class="ic-end" x="794" y="135.2">$7.78</text>
+<text class="ic-endname" x="794" y="157.2">不压缩</text>
+<text class="ic-end" x="84" y="331.8">$4.00</text>
+<path class="ic-line-save" d="M70 435.5 L93.7 432.3 L117.3 428.7 L141 423.2 L164.7 420.3 L188.3 412 L212 406.9 L235.7 403.9 L259.3 398.2 L283 395.1 L306.7 392.4 L330.3 388.9 L354 385.1 L377.7 379.8 L401.3 377.9 L425 375.8 L448.7 373.3 L472.3 370.6 L496 367.5 L519.7 364.2 L543.3 361.1 L567 358.4 L590.7 354.7 L614.3 352.1 L638 344.9 L661.7 342.1 L685.3 338.6 L709 334.4 L732.7 328.1 L756.3 322.9 L780 316.5"/>
+<circle class="ic-dot-save" cx="70" cy="435.5" r="5"/>
+<circle class="ic-dot-save" cx="780" cy="316.5" r="5"/>
+<text class="ic-end" x="794" y="314.5">$3.66</text>
+<text class="ic-endname" x="794" y="336.5">空闲压缩</text>
+<text class="ic-end" x="84" y="465.5">$0.93</text>
+</svg></div>
+    <figcaption><b>回来之后接着干，差距还在。</b>从 50 万 token 的上下文回来后的累计费用，按 Opus 5.5 的 API 价折算。每一轮新增的上下文取两组记录的中位数：压缩后 30 个请求涨 18.7 万，不压缩涨 7.1 万。模型输出的费用两边相同，未计入。</figcaption>
+  </figure>
+  <p>按这组中位数算，30 个请求后的差距从 3.07 美元变成 4.12 美元，还是少花一半多。这只能当作近似。</p>
+  <p>直接数 token 也能看到差别。这 28 段工作实际处理了 3.96 亿 token，包括压缩请求读的那一遍；不压缩的话估算要 6.43 亿，少了 2.5 亿。</p>
+
+  <h3>整张账单：8% 到 14%</h3>
+  <div class="scroll"><table class="mid">
+    <thead><tr><th>口径</th><th class="num">账单</th><th class="num">省下</th><th class="num">比例</th></tr></thead>
+    <tbody>
+      <tr><td>11 月 3 日至 5 日，真实记录</td><td class="num">1,045 美元</td><td class="num">约 93 美元</td><td class="num">约 8%</td></tr>
+      <tr><td>10 月，假设每次都压缩</td><td class="num">7,522 美元</td><td class="num">约 1,053 美元</td><td class="num">14%</td></tr>
+    </tbody>
+  </table></div>
+  <p>第一行的账单已经是省过的，比例按「账单加省下的」算。两行都扣掉了压缩请求本身和读回来的内容，第一行还扣掉了没回来的压缩。换不同的假设（摘要的输出量、读回来的量），第一行在 6% 到 10%，第二行在 11% 到 17%。</p>
+  <p>这个比例很看习惯。我的上下文偏大，10 月那 141 次的中位数是 57 万，又经常让会话停着等我。回来第一个请求这笔钱，在我 7 到 10 月的账单里每月占 8% 到 23%。如果你的上下文很少到 20 万，或者很少离开一小时，能省的会少很多。</p>
+  <p>想看自己的情况，运行 <code>/usage</code>，Session 部分有一行 <code>Prompt cache (main)</code>，会列出缓存未命中的次数和重写的 token 数。</p>
+</section>
+
+<section id="conditions">
+  <h2>什么情况下它不会跑</h2>
+  <p>官方文档写的条件是同时满足下面这些：</p>
+  <ul class="plain">
+    <li><b>会话类型</b>：交互式终端、VS Code 聊天面板，或桌面 App 的 Code 标签页（会话跑在本机或 SSH 上）。</li>
+    <li><b>自动压缩开着</b>：<code>autoCompactEnabled</code> 没关。</li>
+    <li><b>缓存是 1 小时</b>：订阅用户在套餐额度内默认就是。API Key、云厂商，以及超额后走 usage credits 时默认 5 分钟，不会触发。API 用户想用，要设 <code>"promptCacheTtl": "1h"</code>，代价是每次写缓存都从 1.25 倍涨到 2 倍，所以这篇的比例不能直接套用，值不值要看你多常离开。</li>
+    <li><b>上下文够大</b>：默认 20 万 token。上下文窗口只有 20 万的会话，到不了门槛就先自动压缩了，这种情况可以调低门槛。</li>
+    <li><b>电脑醒着</b>：要一直醒到那个时候。</li>
+  </ul>
+  <p>调门槛用这个环境变量，写在 <code>settings.json</code> 的 <code>env</code> 里，最低 10 万：</p>
+  <p><code>CLAUDE_CODE_IDLE_COMPACT_MIN_TOKENS</code></p>
+  <p>最容易踩的是最后一条：合上笔记本走开一小时，它就跑不了。知道自己要离开很久又要合盖的话，走之前手动跑一次 <code>/compact</code>，趁缓存还在，一样便宜。</p>
+</section>
+
+<section id="tradeoffs">
+  <h2>它的代价</h2>
+  <p><b>摘要会丢细节。</b> 压缩后 Claude 手里只剩摘要。官方文档写的是：会重新读最多 5 个最近改过的文件，技能正文每个最多保留 5,000 token、总共 25,000 token。读回来的那笔钱能算出来，但丢了细节之后答得有没有变差，我量化不了。做到一半的复杂任务，回来后最好先让它确认一下当前状态。</p>
+  <p><b>不回来就白花。</b> 压缩在你离开时就做了，不回来这笔也花了，50 万上下文约 0.30 美元。我 35 次压缩里有 7 次到写这篇时还没回去。算下来，回来的概率超过约 9% 就划算。</p>
+  <p><b>回来得太早也亏。</b> 压缩在约 54 分钟就做了。如果你 55 分钟回来，缓存本来还在，终端里的对话却已经换成摘要了；VS Code 和桌面 App 只有缓存过期才用摘要。我这 28 次都没碰上，最早的一次也是离开约 65 分钟才回来。</p>
+  <p><b>也不是每次都拦得住。</b> 升级后，上下文 20 万以上、离开超过一小时的有 36 次，35 次压缩了，1 次没触发，原因我没查清。</p>
+  <p>不想要可以关掉：在终端里运行 <code>/config</code>，改 <b>Idle compaction</b> 这一行；或者写进 <code>settings.json</code>：</p>
+  <pre class="codeblock"><code>{
+  "idleCompaction": false
+}</code></pre>
+</section>
+
+<section id="upgrade">
+  <h2>怎么升级</h2>
+  <pre class="codeblock"><code># 看当前版本
+claude --version
+
+# 原生安装
+claude update
+
+# npm 安装
+npm install -g @anthropic-ai/claude-code@latest</code></pre>
+  <p>Homebrew 的 <code>claude-code</code> 跟的是 <code>stable</code> 渠道，要最新版得装 <code>claude-code@latest</code>。已经开着的会话不会变，重启后才用上新版。</p>
+  <p>建议直接升到最新，因为这个功能是分几个版本补齐的：</p>
+  <div class="scroll"><table class="mid">
+    <thead><tr><th>版本</th><th>变化</th></tr></thead>
+    <tbody>
+      <tr><td>v2.1.290</td><td>配置项 <code>idleCompaction</code> 从这版起生效</td></tr>
+      <tr><td>v2.1.299</td><td>终端加入空闲压缩，changelog 第一次写到它</td></tr>
+      <tr><td>v2.1.302</td><td><code>/config</code> 增加开关</td></tr>
+      <tr><td>v2.1.314</td><td>支持 VS Code 和桌面 App；关了遥测的订阅用户也能跑；Bedrock、Vertex、Foundry 和 LLM 网关开了 1 小时缓存后也能跑</td></tr>
+      <tr><td>v2.1.318</td><td>修复空闲压缩可能把对话替换成一段不是摘要的回复</td></tr>
+    </tbody>
+  </table></div>
+  <p>最后一条修的是这个功能本身的问题，所以我建议到 v2.1.318。另外，如果你的环境取不到 Anthropic 的功能开关，比如关了遥测，v2.1.314 之前这个功能根本不会跑。</p>
+  <p>用 <code>stable</code> 渠道的注意一下：写这篇时它还在 v2.1.311，后两条都没有。可以等它跟上，也可以在 <code>/config</code> 的 <b>Auto-update channel</b> 切到 <code>latest</code>。</p>
+  <p>升级后想确认它跑过，看提示就行。终端里有一行 <code>Compacted while idle, before the prompt cache expired</code>，VS Code 和桌面 App 的提示里有 <code>a summary written while you were away</code>。</p>
+</section>
+
+<section id="method">
+  <h2>这些数字怎么来的</h2>
+  <ul class="plain">
+    <li><b>数据</b>：我这台机器上 2,833 个主会话和 829 个子 agent 的记录，2026 年 6 月 23 日到 11 月 5 日。一个 <code>message.id</code> 算一个请求。</li>
+    <li><b>离开再回来</b>：相邻两次请求隔了一小时以上，离开前上下文在 20 万以上，回来第一个请求写缓存的量超过上下文的一半。</li>
+    <li><b>不压缩的对照</b>：第一个请求按整份重写算。之后每轮多读「离开前的上下文 − 回来时的上下文 − 7.2 万」，一直算到下一次离开超过一小时或下一次压缩。7.2 万是两组记录在 20 个请求时的增长差，算作读回来的量，它本身还按写缓存的价格计一次。</li>
+    <li><b>样本的局限</b>：11 月的记录只有两天多。10 月那一行假设 141 次都能触发，经常合盖或关机的人会打折扣。</li>
+  </ul>
+</section>
+
+<footer class="foot" id="sources" data-toc="来源">
+  <div>引用链接</div>
+  <p class="ic-ref">[1] Claude Code 文档：idleCompaction 配置项<br><a href="https://code.claude.com/docs/en/settings-reference#idlecompaction" target="_blank" rel="noreferrer">https://code.claude.com/docs/en/settings-reference#idlecompaction</a></p>
+  <p class="ic-ref">[2] Claude Code 文档：Prompt caching（缓存时效、压缩的费用）<br><a href="https://code.claude.com/docs/en/prompt-caching" target="_blank" rel="noreferrer">https://code.claude.com/docs/en/prompt-caching</a></p>
+  <p class="ic-ref">[3] Claude Code 文档：压缩后保留什么<br><a href="https://code.claude.com/docs/en/context-window#what-survives-compaction" target="_blank" rel="noreferrer">https://code.claude.com/docs/en/context-window#what-survives-compaction</a></p>
+  <p class="ic-ref">[4] Claude Code 文档：Manage costs（<code>/usage</code> 的缓存统计）<br><a href="https://code.claude.com/docs/en/costs" target="_blank" rel="noreferrer">https://code.claude.com/docs/en/costs</a></p>
+  <p class="ic-ref">[5] Anthropic 定价（缓存读写倍率）<br><a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noreferrer">https://platform.claude.com/docs/en/about-claude/pricing</a></p>
+  <p class="ic-ref">[6] Claude Code changelog<br><a href="https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer">https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md</a></p>
+</footer>
+
+</div>
+<nav class="post-nav" aria-label="上一篇和下一篇" id="postNav"></nav>
+</div>
+<div class="lightbox" role="dialog" aria-modal="true" aria-label="大图" hidden>
+  <div class="lb-bar"><button type="button" class="lb-close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
+  <div class="lb-stage"><div class="lb-sheet"><div class="lb-figure"></div><p class="lb-caption"></p></div></div>
+</div>
+</main></div>
+<template id="mock-sa-head"><h1>Super-agent 架构图解</h1>
+  <p class="ap-byline"><b>Aloong</b> · <time datetime="2026-11-05">2026-11-05</time> · 解读 <a href="https://mp.weixin.qq.com/s/zoS7GlReWPhfCjENGxXCdg" target="_blank" rel="noreferrer">DeepSeek Harness 团队《Super-agent 设计探索》</a></p>
+  <p class="ap-source-note">原文发表于 2026-10-31，是架构探讨，不是产品发布。下文的「文章」「作者」都指这篇原文。</p></template>
+<template id="mock-sa-toc"><li><a href="#map-section">总图</a></li><li><a href="#s2">§2双层架构</a></li><li><a href="#s3">§3事件驱动</a></li><li><a href="#s4">§4面向人的交互</a></li><li><a href="#s5">§5计算、状态、环境</a></li><li><a href="#s6">§6Watchdog</a></li><li><a href="#s7">§7实验</a></li><li><a href="#proto">公开原型实现了多少</a></li><li><a href="#ideas">借用的系统思想</a></li><li><a href="#open">§8 开放问题</a></li><li><a href="#sources">来源</a></li></template>
+<template id="mock-sa-body"><div class="hero">
+  <p class="lead">单任务的上限取决于模型能力，多任务的上限取决于人的注意力。</p>
+  <p>作者观察到，一个人通常只能同时跟进 3 到 5 个活跃 Session。Super-agent 把 Session 变成系统内部的实现细节，用户始终只面对一个跨平台、持续在线的 Agent。文章列出四个特征，用五个模块支撑：</p>
+  <div class="traits">
+    <div class="trait"><b>连续</b><span>在 IM 提方案 A，再到 PR 评论改成 B，它都能接上。</span><div class="to"><a href="#s2">§2 双层</a> · <a href="#s4">§4 交互</a></div></div>
+    <div class="trait"><b>高效</b><span>不用等上一个任务完成，就能接下一条指令。</span><div class="to"><a href="#s2">§2 双层</a> · <a href="#s4">§4 交互</a></div></div>
+    <div class="trait"><b>主动</b><span>持续观察环境事件，值得处理才行动，否则保持安静。</span><div class="to"><a href="#s3">§3 事件驱动</a></div></div>
+    <div class="trait"><b>持久</b><span>始终在线，长期运行中遇到异常能自动恢复。</span><div class="to"><a href="#s5">§5 分离</a> · <a href="#s6">§6 Watchdog</a></div></div>
+  </div>
+</div>
+
+<section id="map-section">
+  <h2>总图：跟一条事件走一遍</h2>
+  <p>选一种事件，看它走哪条路、要不要调用模型。切到「公开原型」可以对照代码实际的做法。</p>
+  <div class="ctl">
+    <div class="seg" role="group" aria-label="选择事件" id="tabs"></div>
+    <div class="seg" role="group" aria-label="选择视图">
+      <span class="seglabel">视图</span>
+      <button type="button" id="lens-art" aria-pressed="true">文章设计</button>
+      <button type="button" id="lens-pro" aria-pressed="false">公开原型</button>
+    </div>
+  </div>
+  <figure class="fig">
+    <div class="scroll ground">
+    <svg id="map" data-lens="art" viewBox="0 36 1200 530" role="img" aria-label="Super-agent 总架构：环境事件先过程序层策略，再查 Thread 订阅表。已订阅的事件由程序直通 Worker，未订阅的事件进入 Router 做语义判断和分派。Worker 通过端侧 daemon 访问执行环境，向 Router 汇报，由 Router 统一对外回复。Router 和 Worker 的计算无状态，状态存在 Session 数据库。Watchdog 在主系统外部巡检。">
+      <defs>
+        <marker id="a-edge" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk-edge" d="M0 0L10 5L0 10z"/></marker>
+        <marker id="a-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk-ink" d="M0 0L10 5L0 10z"/></marker>
+        <marker id="a-fast" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk-fast" d="M0 0L10 5L0 10z"/></marker>
+        <marker id="a-slow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk-slow" d="M0 0L10 5L0 10z"/></marker>
+        <marker id="a-watch" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk-watch" d="M0 0L10 5L0 10z"/></marker>
+      </defs>
+
+      <!-- compute enclosure -->
+      <rect class="b2" x="590" y="44" width="400" height="400" rx="3"/>
+      <text class="st art" x="606" y="64">§5.1 云端无状态计算容器：可水平扩展、重启、替换</text>
+      <text class="st pro" x="606" y="64">单机单进程：tmux + 目录锁，不是云端分离</text>
+
+      <!-- column heads -->
+      <text class="st mo" data-head x="20" y="62">§3 环境事件 Trigger</text>
+      <text class="st mo" data-head x="1056" y="62">§4.2 多信道</text>
+
+      <!-- sources -->
+      <g class="node" id="src-im"><rect class="b" x="20" y="72" width="130" height="46" rx="3"/>
+        <text class="tt art" x="30" y="91">IM 群聊</text><text class="st art" x="30" y="108">消息、话题</text>
+        <text class="tt pro" x="30" y="91">飞书</text><text class="st pro" x="30" y="108">事件流，默认关闭</text></g>
+      <g class="node" id="src-gh"><rect class="b" x="20" y="126" width="130" height="46" rx="3"/>
+        <text class="tt" x="30" y="145">GitHub</text><text class="st art" x="30" y="162">PR、评审、CI</text><text class="st pro" x="30" y="162">轮询，默认 60 秒</text></g>
+      <g class="node unseen" id="src-mail"><rect class="b" x="20" y="180" width="130" height="46" rx="3"/>
+        <text class="tt" x="30" y="199">邮件、日程</text><text class="st art" x="30" y="216">往来、提醒</text><text class="st pro" x="30" y="216">本次检索未见</text></g>
+
+      <!-- program layer -->
+      <g class="node" id="gate"><rect class="b" x="204" y="97" width="136" height="104" rx="3"/>
+        <text class="tt art" x="216" y="120">程序层策略</text><text class="st mo art" x="216" y="138">§3.1 Fast Path</text>
+        <text class="st art" x="216" y="160">来源、群组、白名单</text><text class="st art" x="216" y="179">不调用模型</text>
+        <text class="tt pro" x="216" y="120">Scope 过滤</text><text class="st mo pro" x="216" y="138">intake.ts</text>
+        <text class="st pro" x="216" y="160">是否在监听范围</text><text class="st pro" x="216" y="179">不调用模型</text></g>
+      <g class="node" id="drop"><rect class="b3" x="204" y="237" width="136" height="44" rx="3"/>
+        <text class="tt" x="272" y="256" text-anchor="middle">丢弃</text><text class="st" x="272" y="273" text-anchor="middle">大部分噪音止步于此</text></g>
+
+      <!-- subscription table -->
+      <g class="node" id="table"><rect class="b" x="376" y="77" width="136" height="144" rx="3"/>
+        <text class="tt art" x="388" y="100">Thread 订阅表</text><text class="tt pro" x="388" y="100">Ticket 订阅表</text>
+        <text class="st mo" x="388" y="118">§3.2 程序查表</text>
+        <text class="mo" data-thread="pr" x="388" y="144">PR #12 → A B</text>
+        <text class="mo" data-thread="im" x="388" y="163">IM-7   → B</text>
+        <text class="mo" data-thread="mail" x="388" y="182">邮件-3 → C</text>
+        <text class="mo mut" x="388" y="206">其余：无人负责</text></g>
+
+      <!-- router -->
+      <g class="node" id="router"><rect class="b" x="606" y="74" width="368" height="152" rx="3"/>
+        <text class="tt art" x="622" y="98" style="font-size:15px">Router 层</text>
+        <text class="st art" x="694" y="98">§2.1 常驻 Session，轻量模型，全局序点和记忆</text>
+        <text class="tt pro" x="622" y="98" style="font-size:15px">主 Session</text>
+        <text class="st pro" x="712" y="98">orchestrator，配了 bash 和 read</text></g>
+      <g class="node" id="r-sem"><rect class="b3" x="622" y="112" width="160" height="100" rx="3"/>
+        <text class="tt" x="634" y="134">语义层策略</text>
+        <text class="st" x="634" y="154">LLM 按提示词判断</text>
+        <text class="st" x="634" y="172">要不要行动</text>
+        <text class="st mo" x="634" y="198">§3.1 Slow Path</text></g>
+      <g class="node" id="r-disp"><rect class="b3" x="806" y="112" width="152" height="100" rx="3"/>
+        <text class="tt" x="818" y="134">分派与协调</text>
+        <text class="st" x="818" y="154">新任务冷启动</text>
+        <text class="st" x="818" y="172">跨任务协调</text>
+        <text class="st" x="818" y="190">统一对外回复</text></g>
+
+      <!-- workers -->
+      <g class="node" id="workers"><rect class="b" x="606" y="292" width="368" height="138" rx="3"/>
+        <text class="tt art" x="622" y="314" style="font-size:15px">Worker 层</text>
+        <text class="st art" x="700" y="314">§2.2 上下文隔离，完整工具，最强模型</text>
+        <text class="tt pro" x="622" y="314" style="font-size:15px">Worker</text>
+        <text class="st pro" x="680" y="314">每工单一个 Session，默认最多 3 个</text></g>
+      <g class="node" id="w-a"><rect class="b3" x="622" y="326" width="104" height="90" rx="3"/>
+        <text class="tt" x="632" y="348">Worker A</text><text class="st" x="632" y="367">隔离上下文</text><text class="mo mut" data-thread="pr" x="632" y="388">PR #12</text></g>
+      <g class="node" id="w-b"><rect class="b3" x="738" y="326" width="104" height="90" rx="3"/>
+        <text class="tt" x="748" y="348">Worker B</text><text class="st" x="748" y="367">隔离上下文</text><text class="mo mut" data-thread="pr" x="748" y="388">PR #12</text><text class="mo mut" data-thread="im" x="748" y="405">IM-7</text></g>
+      <g class="node" id="w-c"><rect class="b3" x="854" y="326" width="104" height="90" rx="3"/>
+        <text class="tt" x="864" y="348">Worker C</text><text class="st" x="864" y="367">隔离上下文</text><text class="mo mut" data-thread="mail" x="864" y="388">邮件-3</text></g>
+
+      <!-- channels -->
+      <g class="node" id="ch-im"><rect class="b" x="1056" y="72" width="130" height="46" rx="3"/>
+        <text class="tt art" x="1066" y="91">IM</text><text class="st art" x="1066" y="108">≤100 词，低打扰</text>
+        <text class="tt pro" x="1066" y="91">飞书</text><text class="st pro" x="1066" y="108">100 词由代码强制</text></g>
+      <g class="node unseen" id="ch-mail"><rect class="b" x="1056" y="126" width="130" height="46" rx="3"/>
+        <text class="tt" x="1066" y="145">邮件、文档</text><text class="st art" x="1066" y="162">结构化摘要</text><text class="st pro" x="1066" y="162">本次检索未见</text></g>
+      <g class="node" id="ch-gh"><rect class="b" x="1056" y="180" width="130" height="46" rx="3"/>
+        <text class="tt" x="1066" y="199">GitHub</text><text class="st art" x="1066" y="216">结构化 PR 说明</text><text class="st pro" x="1066" y="216">Worker 也直接发言</text></g>
+
+      <!-- environment -->
+      <g class="node" id="env"><rect class="b" x="1056" y="292" width="130" height="138" rx="3"/>
+        <text class="tt art" x="1066" y="314">执行环境</text><text class="st mo art" x="1066" y="331">§5.2 留在原地</text>
+        <text class="st art" x="1066" y="353">端侧 daemon</text><text class="st art" x="1066" y="372">开发机、云托管、</text><text class="st art" x="1066" y="390">间歇在线设备</text><text class="st art" x="1066" y="414">不存会话状态</text>
+        <text class="tt pro" x="1066" y="314">本机目录</text><text class="st mo pro" x="1066" y="331">git worktree</text>
+        <text class="st pro" x="1066" y="353">和主 Session</text><text class="st pro" x="1066" y="372">在同一台机器</text><text class="st pro" x="1066" y="396">daemon、BYOM</text><text class="st pro" x="1066" y="414">本次检索未见</text></g>
+
+      <!-- db -->
+      <g class="node" id="db"><rect class="b" x="606" y="488" width="368" height="64" rx="3"/>
+        <text class="tt art" x="622" y="512">Session 数据库</text><text class="st mo art" x="726" y="512">§5.1</text>
+        <text class="st art" x="622" y="535">持久化所有 Session 状态，计算容器换了任务也不丢</text>
+        <text class="tt pro" x="622" y="512">SQLite + JSONL</text>
+        <text class="st pro" x="622" y="535">控制状态在 SQLite，Session 在 JSONL；能重启恢复</text></g>
+
+      <!-- watchdog -->
+      <g class="node" id="wd"><rect class="b" x="204" y="488" width="308" height="64" rx="3"/>
+        <text class="tt art" x="216" y="512">Watchdog Session</text><text class="st mo art" x="340" y="512">§6 主系统之外</text>
+        <text class="st art" x="216" y="535">查基础设施故障，也判断任务有没有实质进展</text>
+        <text class="tt pro" x="216" y="512">Hourly check</text>
+        <text class="st pro" x="216" y="535">只查服务状态并重启，要操作者自己配置</text></g>
+      <g class="node" id="timer"><rect class="b3" x="20" y="496" width="130" height="48" rx="3"/>
+        <text class="tt" x="30" y="516">定时消息</text><text class="st mo" x="30" y="534">Control Loop</text></g>
+
+      <!-- edges -->
+      <g class="edge" id="e-src"><path d="M150 95H168M150 149H168M150 203H168M168 95V203"/><path class="ar" d="M168 149H204"/></g>
+      <g class="edge" id="e-drop"><path class="ar" d="M272 201V237"/></g>
+      <g class="edge" id="e-pass"><path class="ar" d="M340 149H376"/><text class="lb" x="358" y="138" text-anchor="middle">放行</text></g>
+      <g class="edge slow" id="e-slow"><path class="ar" d="M512 130H622"/>
+        <text class="lb" x="519" y="104">未订阅</text><text class="lb mo" x="519" y="120">Slow Path</text></g>
+      <g class="edge obs" id="e-obs"><path class="ar" d="M512 180H606"/>
+        <text class="lb art" x="519" y="171">全量观测</text><text class="lb pro" x="519" y="171">仅通知</text></g>
+      <g class="edge fast" id="e-fast"><path class="ar" d="M512 205H552V360H606"/>
+        <text class="lb" x="536" y="286" text-anchor="end">后续事件</text><text class="lb mo" x="536" y="303" text-anchor="end">Fast Path 直通</text></g>
+      <g class="edge" id="e-sub"><path class="ar" d="M606 395H440V221"/><text class="lb" x="450" y="388">订阅、退订、交回</text></g>
+      <g class="edge" id="e-sem"><path class="ar" d="M782 162H806"/></g>
+      <g class="edge" id="e-spawn"><path class="ar" d="M730 226V292"/><text class="lb art" x="720" y="263" text-anchor="end">创建 Worker、分派</text></g>
+      <g class="edge" id="e-report"><path class="ar" d="M860 292V226"/><text class="lb art" x="870" y="263">汇报关键结论</text></g>
+      <g class="edge" id="e-out"><path d="M974 149H1026M1026 95V203"/><path class="ar" d="M1026 95H1056"/><path class="ar" d="M1026 149H1056"/><path class="ar" d="M1026 203H1056"/><text class="lb" x="1000" y="140" text-anchor="middle" style="font-size:11.5px">统一回复</text></g>
+      <g class="edge" id="e-exec"><path class="ar2" d="M974 361H1056"/><text class="lb art" x="1015" y="346" text-anchor="middle">命令、结果</text><text class="lb pro" x="1015" y="346" text-anchor="middle">本地执行</text></g>
+      <g class="edge" id="e-state"><path class="ar2" d="M790 444V488"/><text class="lb" x="802" y="470">读写 Session 状态</text></g>
+      <g class="edge" id="e-timer"><path class="ar" d="M150 520H204"/></g>
+      <g class="edge watch art" id="e-wdr"><path class="ar" d="M512 520H606"/><text class="lb" x="559" y="510" text-anchor="middle">读状态</text></g>
+      <g class="edge watch" id="e-wdf"><path class="ar" d="M480 488V418H606"/><text class="lb art" x="490" y="434">介入修复</text><text class="lb pro mo" x="490" y="434">status、restart</text></g>
+      <g class="edge pro" id="e-wout"><path class="ar" d="M950 292V262H1121V226"/><text class="lb" x="996" y="254">ack、开 PR、回评审</text></g>
+
+      <!-- prototype-only overlays -->
+      <g class="pro" id="chip"><rect class="bhi" x="534" y="122" width="50" height="18" rx="2"/><text class="mo" x="559" y="135" text-anchor="middle">Gate</text></g>
+      <g class="pro" id="engine"><rect class="bhi" x="622" y="240" width="312" height="38" rx="3"/><text class="tt" x="778" y="264" text-anchor="middle" style="font-size:12.5px">Engine 确定性控制面，状态唯一写入者（文章没画）</text></g>
+
+      <g id="badges"></g>
+    </svg>
+    </div>
+    <div class="legend" data-lens="art">
+      <span><i class="kf"></i>Fast Path：程序直达</span>
+      <span><i class="ks"></i>Slow Path：进 LLM</span>
+      <span><i class="kw"></i>外部控制回路</span>
+      <span><i class="ko"></i>观测，不做决定</span>
+      <span id="key-unseen" hidden><i class="kb"></i>虚线框：原型里本次检索未见</span>
+      <span class="key-break"></span>
+      <span><i class="kr kr-ext"></i>外部系统</span>
+      <span><i class="kr kr-prog"></i>程序层（不调模型）</span>
+      <span><i class="kr kr-router"></i><span class="art">Router（轻量模型）</span><span class="pro">主 Session</span></span>
+      <span><i class="kr kr-worker"></i><span class="art">Worker（最强模型）</span><span class="pro">Worker</span></span>
+      <span><i class="kr kr-ctrl"></i><span class="art">控制回路（主系统之外）</span><span class="pro">控制回路</span></span>
+      <span><i class="kr kr-store"></i>持久状态</span>
+    </div>
+    <div class="lensnote" id="lensnote" hidden>当前是公开原型 <a href="https://github.com/deepseek-ai/dsh-superagent-prototype/tree/6337fc823ce20251c8de8085948165c81aaa701e" target="_blank" rel="noreferrer">commit 6337fc8</a> 的结构。原型 README 写明它和内部版、和文章描述的实现都不完全相同，所以这里没有的东西，不代表 DeepSeek 内部没有。</div>
+    <div class="panel">
+      <div class="ev"><b id="ev-title"></b><span class="cost" id="ev-cost"></span></div>
+      <ol class="steps" id="steps"></ol>
+      <div><button type="button" class="next" id="next" hidden>下一步</button></div>
+    </div>
+    <figcaption>文章的总架构图把两级过滤画成 Router 之前的一个框，没有说语义层由谁运行，也没有说已订阅事件要不要过语义层。这里按<a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/src/core/intake.ts#L25-L62" target="_blank" rel="noreferrer">公开原型的实际顺序</a>来画：过了监听范围检查就查订阅，未订阅的才进 Router，语义判断在 Router 的 Session 里完成。</figcaption>
+  </figure>
+</section>
+
+<section id="s2">
+  <h2><span class="sec">§2</span>双层架构：把连续性和吞吐量拆开</h2>
+  <p>所有事件进同一个 Session，上下文最连续，但会被单个 ReAct Loop 的串行速度卡住。每条事件新开一个 Session，吞吐最高，但结果彼此割裂。双层架构让两层各管一头。</p>
+  <figure class="fig">
+    <div class="tri">
+      <div><h4>全进一个 Session</h4>
+        <svg viewBox="0 0 360 180" role="img" aria-label="所有事件进入一个 Session，串行处理，只有一条回复通道。">
+          <defs><marker id="m2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk-edge" d="M0 0L10 5L0 10z"/></marker></defs>
+          <text class="st" x="10" y="42">事件</text>
+          <path class="l" marker-end="url(#m2a)" d="M10 60H96"/><path class="l" marker-end="url(#m2a)" d="M10 95H96"/><path class="l" marker-end="url(#m2a)" d="M10 130H96"/>
+          <rect class="b" x="96" y="40" width="150" height="110" rx="3"/>
+          <text class="tt" x="171" y="76" text-anchor="middle">一个 Session</text>
+          <text class="mo" x="171" y="100" text-anchor="middle">A B A C B …</text>
+          <text class="st" x="171" y="124" text-anchor="middle">串行，细节混杂</text>
+          <path class="l" marker-end="url(#m2a)" d="M246 95H296"/>
+          <rect class="b3" x="296" y="75" width="54" height="40" rx="3"/><text class="tt" x="323" y="100" text-anchor="middle">用户</text>
+        </svg>
+        <p>上下文连续。任务耗时长、吞吐低，多任务的中间细节还会互相影响。</p></div>
+      <div><h4>每条事件一个 Session</h4>
+        <svg viewBox="0 0 360 180" role="img" aria-label="每条事件各开一个 Session，各自向用户回复，没有全局上下文。">
+          <defs><marker id="m2b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk-edge" d="M0 0L10 5L0 10z"/></marker><marker id="m2bd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path class="mk-diff" d="M0 0L10 5L0 10z"/></marker></defs>
+          <text class="st" x="10" y="20">事件</text>
+          <path class="l" marker-end="url(#m2b)" d="M10 45H96"/><path class="l" marker-end="url(#m2b)" d="M10 95H96"/><path class="l" marker-end="url(#m2b)" d="M10 145H96"/>
+          <rect class="b" x="96" y="26" width="104" height="38" rx="3"/><text class="tt" x="148" y="50" text-anchor="middle">Session 1</text>
+          <rect class="b" x="96" y="76" width="104" height="38" rx="3"/><text class="tt" x="148" y="100" text-anchor="middle">Session 2</text>
+          <rect class="b" x="96" y="126" width="104" height="38" rx="3"/><text class="tt" x="148" y="150" text-anchor="middle">Session 3</text>
+          <path class="ld" marker-end="url(#m2bd)" d="M200 45L296 85"/><path class="ld" marker-end="url(#m2bd)" d="M200 95H296"/><path class="ld" marker-end="url(#m2bd)" d="M200 145L296 105"/>
+          <text class="lb" x="218" y="30">各自回复</text>
+          <rect class="b3" x="296" y="75" width="54" height="40" rx="3"/><text class="tt" x="323" y="100" text-anchor="middle">用户</text>
+        </svg>
+        <p>并发最高。任务之间缺全局上下文，多个 Session 各说各的，交互混乱。</p></div>
+      <div><h4>Router + Worker</h4>
+        <svg viewBox="0 0 360 180" role="img" aria-label="事件进入 Router，Router 分派给多个隔离的 Worker，Worker 向 Router 汇报，只有 Router 对用户回复。">
+          <defs><marker id="m2c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk-edge" d="M0 0L10 5L0 10z"/></marker><marker id="m2cf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path class="mk-ink" d="M0 0L10 5L0 10z"/></marker></defs>
+          <text class="st" x="10" y="70">事件</text>
+          <path class="l" marker-end="url(#m2c)" d="M10 80L84 104"/><path class="l" marker-end="url(#m2c)" d="M10 112H84"/><path class="l" marker-end="url(#m2c)" d="M10 144L84 120"/>
+          <rect class="bhi" x="84" y="78" width="84" height="68" rx="3"/><text class="tt" x="126" y="108" text-anchor="middle">Router</text><text class="st" x="126" y="126" text-anchor="middle">全局上下文</text>
+          <rect class="b3" x="99" y="6" width="54" height="34" rx="3"/><text class="tt" x="126" y="28" text-anchor="middle">用户</text>
+          <path class="lk" marker-end="url(#m2cf)" d="M126 78V40"/><text class="lb" x="136" y="63">一个声音</text>
+          <path class="l" marker-start="url(#m2c)" marker-end="url(#m2c)" d="M168 94L226 45"/><path class="l" marker-start="url(#m2c)" marker-end="url(#m2c)" d="M168 106L226 100"/><path class="l" marker-start="url(#m2c)" marker-end="url(#m2c)" d="M168 126L226 155"/>
+          <rect class="b" x="226" y="26" width="124" height="38" rx="3"/><text class="tt" x="288" y="50" text-anchor="middle">Worker 1</text>
+          <rect class="b" x="226" y="81" width="124" height="38" rx="3"/><text class="tt" x="288" y="105" text-anchor="middle">Worker 2</text>
+          <rect class="b" x="226" y="136" width="124" height="38" rx="3"/><text class="tt" x="288" y="160" text-anchor="middle">Worker 3</text>
+        </svg>
+        <p>Router 保持连续，Worker 并发执行。代价是多个会话带来更多 token 消耗（见 <a href="#s7">§7</a>）。</p></div>
+    </div>
+    <figcaption>三种组织方式的差别在两处：事件进了几份上下文，用户听到几个声音。</figcaption>
+  </figure>
+
+  <div class="scroll"><table class="mid">
+    <thead><tr><th></th><th>Router 层</th><th>Worker 层</th></tr></thead>
+    <tbody>
+      <tr><td>职责</td><td>人类交互、任务分派、跨任务协调，是全局的序点和记忆</td><td>在独立上下文里专注完成单一任务</td></tr>
+      <tr><td>模型</td><td>较轻量的模型往往够用</td><td>通常配能力最强的模型</td></tr>
+      <tr><td>工具</td><td>不直接执行任务，甚至可以不配 Bash</td><td>完整执行工具，内部还能开 Subagent 或 Agent Team</td></tr>
+      <tr><td>对外</td><td>统一向用户回复</td><td>不直接面对人，向 Router 汇报</td></tr>
+      <tr><td>协作</td><td>中转少数跨任务协同</td><td>同层通常不直连，靠共同订阅 Thread 发现冲突</td></tr>
+    </tbody>
+  </table></div>
+  <p>和常见的 Agent Team 有什么不同：Team Lead 要深入单个任务、规划子任务、高频协调成员，自身推理负担很重。Router 只处理任务之间的高层关联，不介入单任务内部的拆解。这里的「双层」是逻辑划分，每层内部都可以再有结构。</p>
+
+  <h3>为什么单个 Router 没那么容易成为瓶颈</h3>
+  <figure class="fig">
+    <div class="scroll ground">
+      <svg viewBox="0 0 1200 224" role="img" aria-label="事件平稳时每次 LLM 调用处理一条 Trigger。事件密集时，一轮推理期间到达的 Trigger 会积压，并在下一次调用中一并注入。">
+        <defs><marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="mk-ink" d="M0 0L10 5L0 10z"/></marker></defs>
+        <text class="tt" x="20" y="72">事件平稳</text><text class="st" x="20" y="90">逐条进入</text>
+        <circle class="dot" cx="190" cy="30" r="4"/><path class="lk" marker-end="url(#m3)" d="M190 36V56"/>
+        <circle class="dot" cx="450" cy="30" r="4"/><path class="lk" marker-end="url(#m3)" d="M450 36V56"/>
+        <circle class="dot" cx="710" cy="30" r="4"/><path class="lk" marker-end="url(#m3)" d="M710 36V56"/>
+        <text class="st" x="202" y="34">Trigger</text>
+        <rect class="b" x="170" y="56" width="160" height="38" rx="3"/><text class="st" x="250" y="80" text-anchor="middle">LLM 调用，1 条</text>
+        <rect class="b" x="430" y="56" width="160" height="38" rx="3"/><text class="st" x="510" y="80" text-anchor="middle">LLM 调用，1 条</text>
+        <rect class="b" x="690" y="56" width="160" height="38" rx="3"/><text class="st" x="770" y="80" text-anchor="middle">LLM 调用，1 条</text>
+        <text class="st" x="890" y="80">单次响应延迟低</text>
+
+        <text class="tt" x="20" y="176">事件密集</text><text class="st" x="20" y="194">积压后合并</text>
+        <circle class="dot" cx="190" cy="132" r="4"/><path class="lk" marker-end="url(#m3)" d="M190 138V160"/>
+        <circle class="dot" cx="220" cy="118" r="4"/><circle class="dot" cx="270" cy="118" r="4"/><circle class="dot" cx="320" cy="118" r="4"/>
+        <path class="lk" d="M220 124V134M270 124V134M320 124V134"/><path class="lk" marker-end="url(#m3)" d="M220 134H374V160"/>
+        <circle class="dot" cx="410" cy="118" r="4"/><circle class="dot" cx="455" cy="118" r="4"/><circle class="dot" cx="510" cy="118" r="4"/><circle class="dot" cx="560" cy="118" r="4"/>
+        <path class="lk" d="M410 124V134M455 124V134M510 124V134M560 124V134"/><path class="lk" marker-end="url(#m3)" d="M410 134H616V160"/>
+        <rect class="b" x="170" y="160" width="182" height="38" rx="3"/><text class="st" x="261" y="184" text-anchor="middle">调用 1，1 条</text>
+        <rect class="bhi" x="354" y="160" width="240" height="38" rx="3"/><text class="tt" x="474" y="184" text-anchor="middle" style="font-size:12.5px">调用 2，3 条一并注入</text>
+        <rect class="bhi" x="596" y="160" width="270" height="38" rx="3"/><text class="tt" x="731" y="184" text-anchor="middle" style="font-size:12.5px">调用 3，4 条一并注入</text>
+        <text class="st" x="890" y="184">单个决定分摊的推理时间更低</text>
+      </svg>
+    </div>
+    <figcaption>示意图，长度不按比例。Router 每步通常是长输入、短输出，批量注入主要增加 Prefill，而 Prefill 是并行计算的，所以单次耗时的增长慢于 batch 大小。</figcaption>
+  </figure>
+  <div class="scroll"><table class="mid">
+    <thead><tr><th>Router 压测（§7.2，Worker 用 Mock）</th><th class="num">约 1 条/分钟</th><th class="num">约 40 条/分钟</th></tr></thead>
+    <tbody>
+      <tr><td>平均 batch 大小</td><td class="num">1.0</td><td class="num">2.8</td></tr>
+      <tr><td>单次请求耗时</td><td class="num">2.5 秒</td><td class="num">3.9 秒</td></tr>
+      <tr><td>单个决定分摊的推理时间</td><td class="num">6.4 秒</td><td class="num">1.6 秒</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">看这组数字时注意：文章没有定义「分摊时间」，低负载下它是单次请求耗时的 2.5 倍，所以它不等于单次耗时除以 batch 大小。一种可能的解释是一个决定要用多次请求，这是调研时的推断。40 条/分钟是最高测试点，真正的上限没有测到。</p>
+</section>
+
+<section id="s3">
+  <h2><span class="sec">§3</span>事件驱动：让环境推着 Agent 走</h2>
+  <p>驱动 Agent 的主要输入，从人类逐条键入的提示词，变成群聊消息、邮件、日程提醒、评审评论、CI 结果这类半结构化事件，统称 Trigger。一条 Trigger 的生命周期要回答四个问题。</p>
+  <dl class="mech">
+    <div><dt>§3.1 过滤</dt><dd>环境事件噪音高、触发率低。程序层用确定性规则筛掉大部分消息，语义层再由 LLM 判断。语义层的策略用提示词写，可以随时开关或新增。</dd></div>
+    <div><dt>§3.2 路由</dt><dd>同一个 PR、IM 话题或邮件串下的连续事件构成一条 Thread。Router 为新 Thread 创建 Worker 后，Worker 订阅这条 Thread，后续事件由程序直达。订阅是多对多的：共同订阅一个 PR 的多个 Worker 收到相同事件，不用点对点通信也有机会自行解决冲突。</dd></div>
+    <div><dt>§3.3 注入</dt><dd>把上下文窗口当 Cache 管。注入过多会稀释模型注意力，过少会迫使模型反复调用工具。下面这张图是它的完整机制。</dd></div>
+    <div><dt>§3.4 提前行动</dt><dd>借鉴投机执行，根据环境信号在后台先试，有价值就交付，没价值就丢弃。作者的内部群配了一条「静默复现并修复」策略：只有确认问题并找到简单修复才发声，否则全程安静。</dd></div>
+  </dl>
+
+  <h3>Inline &amp; Spill 和链式召回</h3>
+  <figure class="fig">
+    <div class="scroll ground">
+      <svg viewBox="0 0 1200 340" role="img" aria-label="模型从当前 Trigger 出发，沿内联的 ID 逐跳读取：Trigger 42 到 Thread 8，到 Worker 3，再到 Thread 15。每个对象只内联摘要和下一跳 ID，其余内容留在窗口外按需续读。">
+        <defs><marker id="m4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path class="mk-ink" d="M0 0L10 5L0 10z"/></marker><marker id="m4e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="mk-edge" d="M0 0L10 5L0 10z"/></marker></defs>
+
+        <rect class="b" x="20" y="24" width="200" height="186" rx="3"/>
+        <text class="tt" x="32" y="48">Trigger #42</text><text class="st" x="32" y="66">当前事件，已注入窗口</text>
+        <rect class="b3" x="32" y="78" width="176" height="30" rx="2"/><text class="st" x="42" y="98">前 50 字、相邻消息</text>
+        <rect class="bhi" x="32" y="116" width="176" height="30" rx="2"/><text class="mo" x="42" y="136">thread_id: #08</text>
+        <rect class="b3" x="32" y="154" width="176" height="30" rx="2"/><text class="mo mut" x="42" y="174">worker_id: #03</text>
+
+        <rect class="b" x="340" y="24" width="200" height="186" rx="3"/>
+        <text class="tt" x="352" y="48">Thread #08</text><text class="st" x="352" y="66">第 1 跳</text>
+        <rect class="b3" x="352" y="78" width="176" height="30" rx="2"/><text class="st" x="362" y="98">近期事件摘要</text>
+        <rect class="b3" x="352" y="116" width="176" height="30" rx="2"/><text class="mo mut" x="362" y="136">trigger_ids: #39 #40</text>
+        <rect class="bhi" x="352" y="154" width="176" height="30" rx="2"/><text class="mo" x="362" y="174">worker_ids: #02 #03</text>
+
+        <rect class="b" x="660" y="24" width="200" height="148" rx="3"/>
+        <text class="tt" x="672" y="48">Worker #03</text><text class="st" x="672" y="66">第 2 跳</text>
+        <rect class="b3" x="672" y="78" width="176" height="30" rx="2"/><text class="st" x="682" y="98">进度与状态摘要</text>
+        <rect class="bhi" x="672" y="116" width="176" height="30" rx="2"/><text class="mo" x="682" y="136">thread_id: #15</text>
+
+        <rect class="b" x="980" y="24" width="200" height="110" rx="3"/>
+        <text class="tt" x="992" y="48">Thread #15</text><text class="st" x="992" y="66">第 3 跳</text>
+        <rect class="b3" x="992" y="78" width="176" height="30" rx="2"/><text class="st" x="1002" y="98">关联的 Pull Request</text>
+
+        <path class="lk" marker-end="url(#m4)" d="M208 131H340"/><text class="lb mo" x="274" y="122" text-anchor="middle">read_thread(#08)</text>
+        <path class="lk" marker-end="url(#m4)" d="M528 169H600V131H660"/><text class="lb mo" x="600" y="190" text-anchor="middle">read_worker(#03)</text>
+        <path class="lk" marker-end="url(#m4)" d="M848 131H914V93H980"/><text class="lb mo" x="926" y="150" text-anchor="middle">read_thread(#15)</text>
+
+        <path class="l" stroke-dasharray="5 4" marker-end="url(#m4e)" d="M120 210V262"/><text class="lb mo" x="130" y="240">read_trigger(#42)</text>
+        <rect class="b3" x="20" y="262" width="200" height="56" rx="3" stroke-dasharray="5 4"/><text class="tt" x="32" y="285">Trigger #42 剩余内容</text><text class="st" x="32" y="305">Spill：留在窗口外，需要才读</text>
+        <path class="l" stroke-dasharray="5 4" marker-end="url(#m4e)" d="M440 210V262"/><text class="lb mo" x="450" y="240">read_trigger(#40)</text>
+        <rect class="b3" x="340" y="262" width="200" height="56" rx="3" stroke-dasharray="5 4"/><text class="tt" x="352" y="285">Trigger #40 详情</text><text class="st" x="352" y="305">同样遵循 Inline &amp; Spill</text>
+      </svg>
+    </div>
+    <figcaption>Inline 是把近期很可能用到的信息直接放进窗口，Spill 是把超出预算的内容留在窗口外、只留引用。对象一律带唯一 ID，并内联紧密关联对象的 ID，于是它们在底层连成一张引用图，模型可以顺着它走。这也是 Router 不用全量历史，却能在用户提起旧任务时找回上下文的原因。</figcaption>
+  </figure>
+  <p class="note">三步做法：从最少信息开始，只给 ID 和摘要；按局部性逐步 Inline，比如前 50 字、IM 的相邻消息、同一评审讨论里的相邻评论；超过上限就 Spill，一种简单做法是截断并保留续读入口。</p>
+</section>
+
+<section id="s4">
+  <h2><span class="sec">§4</span>面向人的交互：前台不被后台卡住</h2>
+  <figure class="fig">
+    <div class="scroll ground">
+      <svg viewBox="0 0 1200 384" role="img" aria-label="经典 ReAct Loop 中，工具执行期间到达的用户消息 2 要等到工具结束才被处理。异步 ReAct Loop 中，start 立即返回，同一时刻到达的消息 2 马上得到回复，工具完成后结果作为新事件投递。">
+        <defs>
+          <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="none"/><line x1="0" y1="0" x2="0" y2="8" stroke="currentColor" stroke-width="1" opacity=".3"/></pattern>
+          <marker id="m5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="mk-edge" d="M0 0L10 5L0 10z"/></marker>
+          <marker id="m5d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path class="mk-diff" d="M0 0L10 5L0 10z"/></marker>
+          <marker id="m5f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path class="mk-ink" d="M0 0L10 5L0 10z"/></marker>
+        </defs>
+        <!-- same-moment guide -->
+        <path class="l" stroke-dasharray="3 4" d="M520 50V240"/>
+        <text class="lb" x="530" y="196">同一时刻到达</text>
+
+        <text class="tt" x="20" y="86">经典 ReAct</text><text class="st" x="20" y="104">半双工</text>
+        <rect class="b3" x="130" y="72" width="100" height="44" rx="3"/><text class="st" x="180" y="99" text-anchor="middle">用户消息 1</text>
+        <rect class="b" x="238" y="72" width="110" height="44" rx="3"/><text class="tt" x="293" y="91" text-anchor="middle" style="font-size:12.5px">LLM 调用</text><text class="mo mut" x="293" y="107" text-anchor="middle">run()</text>
+        <rect class="b3" x="356" y="72" width="484" height="44" rx="3"/><rect x="356" y="72" width="484" height="44" fill="url(#hatch)" style="color:var(--ink)"/><text class="lb" x="598" y="99" text-anchor="middle" style="stroke:var(--bg)">同步阻塞，等工具返回</text>
+        <rect class="b3" x="848" y="72" width="100" height="44" rx="3"/><text class="st" x="898" y="99" text-anchor="middle">工具结果</text>
+        <rect class="b" x="956" y="72" width="104" height="44" rx="3"/><text class="tt" x="1008" y="99" text-anchor="middle" style="font-size:12.5px">回复消息 1</text>
+        <rect class="bhi" x="1068" y="72" width="112" height="44" rx="3"/><text class="tt" x="1124" y="99" text-anchor="middle" style="font-size:12.5px">才处理消息 2</text>
+        <rect class="b2" x="292" y="130" width="606" height="30" rx="3"/><text class="st" x="595" y="150" text-anchor="middle">同步执行耗时工具</text>
+        <path class="l" marker-end="url(#m5)" d="M292 116V130"/><path class="l" marker-end="url(#m5)" d="M898 130V116"/>
+        <rect class="bhi" x="460" y="16" width="120" height="32" rx="3"/><text class="tt" x="520" y="37" text-anchor="middle" style="font-size:12.5px">用户消息 2</text>
+        <path class="ld" marker-end="url(#m5d)" d="M580 32H1124V72"/><text class="lb" x="852" y="24" text-anchor="middle">只能等工具结束</text>
+
+        <line x1="20" y1="214" x2="1180" y2="214" class="grid"/>
+
+        <text class="tt" x="20" y="258">异步 ReAct</text><text class="st" x="20" y="276">全双工</text>
+        <rect class="b3" x="130" y="240" width="100" height="44" rx="3"/><text class="st" x="180" y="267" text-anchor="middle">用户消息 1</text>
+        <rect class="b" x="238" y="240" width="110" height="44" rx="3"/><text class="tt" x="293" y="259" text-anchor="middle" style="font-size:12.5px">LLM 调用</text><text class="mo mut" x="293" y="275" text-anchor="middle">start()</text>
+        <rect class="b3" x="356" y="240" width="96" height="44" rx="3"/><text class="mo" x="404" y="267" text-anchor="middle">Started</text>
+        <rect class="bhi" x="460" y="240" width="120" height="44" rx="3"/><text class="tt" x="520" y="267" text-anchor="middle" style="font-size:12.5px">用户消息 2</text>
+        <rect class="bhi" x="588" y="240" width="120" height="44" rx="3"/><text class="tt" x="648" y="267" text-anchor="middle" style="font-size:12.5px">立刻回复</text>
+        <rect class="b3" x="848" y="240" width="100" height="44" rx="3"/><text class="st" x="898" y="267" text-anchor="middle">完成事件</text>
+        <rect class="b" x="956" y="240" width="104" height="44" rx="3"/><text class="tt" x="1008" y="267" text-anchor="middle" style="font-size:12.5px">交付结果</text>
+        <rect class="b2" x="292" y="312" width="606" height="34" rx="3"/><text class="st" x="595" y="334" text-anchor="middle">后台异步执行耗时工具，模型可随时调用 stop() 终止</text>
+        <path class="l" marker-end="url(#m5)" d="M292 284V312"/>
+        <path class="l" stroke-dasharray="3 3" marker-end="url(#m5)" d="M404 312V284"/><text class="lb" x="412" y="303">立即返回</text>
+        <path class="l" marker-end="url(#m5)" d="M898 312V284"/><text class="lb" x="906" y="303">完成后作为新事件投递</text>
+      </svg>
+    </div>
+    <figcaption>用户消息 2 在两种模式下同一时刻到达。经典模式要等工具结束才能处理它（红线），异步模式在当前推理步结束后就处理。</figcaption>
+  </figure>
+  <p class="note">文章说这个异步机制「已在 DeepSeek Harness 中实现，但尚未默认开启」。核对公开代码：<a href="https://github.com/deepseek-ai/deepseek-harness/blob/ce7073d51254c26cd63b22a60835b8f948deb447/packages/shell/tool-bash/src/index.ts#L39-L58" target="_blank" rel="noreferrer"><code>run_in_background</code> 和超时转后台默认都是开的</a>，也没有名为 <code>start()</code> / <code>stop()</code> 的工具。没有默认的是「耗时调用一律异步」：模型不主动放后台时，bash 仍在前台最多等 60 秒。把「未默认开启」理解成这一点是调研时的推断，也可能指未公开的内部配置。</p>
+
+  <h3>§4.2 输出要匹配信道</h3>
+  <div class="scroll"><table class="mid">
+    <thead><tr><th>信道</th><th>风格</th><th>规范</th></tr></thead>
+    <tbody>
+      <tr><td>IM 等即时通讯</td><td>低打扰的轻量沟通，只在需要决策或验收时通知</td><td>只问直接问题，给简短结论，单次回复不超过 100 词</td></tr>
+      <tr><td>GitHub、邮件、文档</td><td>结构化、高信息密度的异步交付</td><td>PR 写完整的问题背景、改动说明和验证结果；邮件和文档给结构化摘要</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="s5">
+  <h2><span class="sec">§5</span>计算、状态、环境：分两步解耦</h2>
+  <figure class="fig">
+    <div class="tri">
+      <div><h4>现状：绑在一台设备上</h4>
+        <svg viewBox="0 0 360 250" role="img" aria-label="现有本地 Agent 的计算、会话状态和执行环境都在同一台设备上。">
+          <rect class="b2" x="20" y="14" width="320" height="222" rx="3"/><text class="st" x="34" y="36">一台本地设备</text>
+          <rect class="b" x="50" y="50" width="260" height="50" rx="3"/><text class="tt" x="180" y="80" text-anchor="middle">Agent Loop（计算）</text>
+          <rect class="b" x="50" y="112" width="260" height="50" rx="3"/><text class="tt" x="180" y="142" text-anchor="middle">Session（状态）</text>
+          <rect class="b" x="50" y="174" width="260" height="50" rx="3"/><text class="tt" x="180" y="204" text-anchor="middle">仓库、工具链（环境）</text>
+        </svg>
+        <p>设备休眠或离线，Agent 就停了，也访问不到其他设备上的环境。</p></div>
+      <div><h4>第一步 §5.1：计算与状态分离</h4>
+        <svg viewBox="0 0 360 250" role="img" aria-label="计算放进云端无状态容器，状态存入数据库。执行环境如何接入还没有解决。">
+          <defs><marker id="m6a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk-edge" d="M0 0L10 5L0 10z"/></marker></defs>
+          <rect class="b2" x="14" y="14" width="332" height="118" rx="3"/><text class="st" x="28" y="36">云端</text>
+          <rect class="b" x="28" y="46" width="130" height="72" rx="3"/><text class="tt" x="93" y="76" text-anchor="middle">Agent Loop</text><text class="st" x="93" y="96" text-anchor="middle">无状态，可替换</text>
+          <rect class="b" x="202" y="46" width="130" height="72" rx="3"/><text class="tt" x="267" y="76" text-anchor="middle">Session 数据库</text><text class="st" x="267" y="96" text-anchor="middle">持久化</text>
+          <path class="l" marker-start="url(#m6a)" marker-end="url(#m6a)" d="M158 82H202"/>
+          <path class="l" stroke-dasharray="5 4" d="M93 132V178"/><text class="lb" x="104" y="162">环境怎么接？</text>
+          <rect class="b3" x="28" y="178" width="304" height="58" rx="3" stroke-dasharray="5 4"/><text class="tt" x="180" y="202" text-anchor="middle">执行环境</text><text class="st" x="180" y="222" text-anchor="middle">未提交的修改、私有凭据、内网依赖</text>
+        </svg>
+        <p>Agent 摆脱单机生命周期，云端持久在线。但真实环境很难同步到云端。</p></div>
+      <div><h4>第二步 §5.2：计算与环境分离</h4>
+        <svg viewBox="0 0 360 250" role="img" aria-label="云端 Agent Loop 通过端侧 daemon 按需连接开发机、云托管环境和间歇在线设备。">
+          <defs><marker id="m6b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk-edge" d="M0 0L10 5L0 10z"/></marker><marker id="m6bf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk-ink" d="M0 0L10 5L0 10z"/></marker></defs>
+          <rect class="b2" x="14" y="14" width="332" height="118" rx="3"/><text class="st" x="28" y="36">云端</text>
+          <rect class="b" x="28" y="46" width="130" height="72" rx="3"/><text class="tt" x="93" y="76" text-anchor="middle">Agent Loop</text><text class="st" x="93" y="96" text-anchor="middle">无状态，可替换</text>
+          <rect class="b" x="202" y="46" width="130" height="72" rx="3"/><text class="tt" x="267" y="76" text-anchor="middle">Session 数据库</text><text class="st" x="267" y="96" text-anchor="middle">持久化</text>
+          <path class="l" marker-start="url(#m6b)" marker-end="url(#m6b)" d="M158 82H202"/>
+          <path class="lk" marker-end="url(#m6bf)" d="M60 118V178"/><path class="lk" marker-end="url(#m6bf)" d="M93 118V146H178V178"/><path class="lk" stroke-dasharray="5 4" marker-end="url(#m6bf)" d="M126 118V136H296V178"/>
+          <text class="lb" x="190" y="164">命令、结果</text>
+          <rect class="b" x="14" y="178" width="104" height="58" rx="3"/><text class="tt" x="66" y="200" text-anchor="middle" style="font-size:12.5px">开发机</text><text class="st" x="66" y="220" text-anchor="middle">daemon</text>
+          <rect class="b" x="128" y="178" width="104" height="58" rx="3"/><text class="tt" x="180" y="200" text-anchor="middle" style="font-size:12.5px">云托管环境</text><text class="st" x="180" y="220" text-anchor="middle">daemon</text>
+          <rect class="b" x="242" y="178" width="104" height="58" rx="3"/><text class="tt" x="294" y="200" text-anchor="middle" style="font-size:12.5px">间歇在线设备</text><text class="st" x="294" y="220" text-anchor="middle">上线后再触发</text>
+        </svg>
+        <p>环境留在原地。端侧 daemon 只执行命令、返回结果，不存会话状态（BYOM）。</p></div>
+    </div>
+    <figcaption>第一步让 Agent 的生命周期不再依赖单台设备，第二步让它可以在多台设备之间切换，并接入间歇在线的设备。</figcaption>
+  </figure>
+  <p>这个思路和 <a href="https://www.anthropic.com/research/managed-agents" target="_blank" rel="noreferrer">Anthropic 的「脑手分离」</a>一致：brain 对应计算，session 对应状态，hands 对应环境。文章自己指出的区别是场景：Anthropic 讲托管服务里的沙箱和客户 VPC 资源，这里首先要接的是可能间歇在线的个人机器。</p>
+  <p class="note">调研时的推断：这个场景差异会改变故障恢复方式。Anthropic 的容器是可丢弃的 cattle，坏了就换一个；个人机器上有未提交的修改和本地凭据，没法重建。</p>
+  <p class="note">代价写在 §8.4：云端 Loop 一旦被入侵或被提示词注入攻破，它连接的全部设备都有被控制的风险。作者把这列为开放问题。</p>
+</section>
+
+<section id="s6">
+  <h2><span class="sec">§6</span>Watchdog：主系统之外的控制回路</h2>
+  <p>许多异常不是进程崩溃，而是模型陷入无效循环或偏离目标。所以除了基础设施的存活，还要监控任务本身的进展。可以在总图里<a href="#map-section" id="replay-watch">回放 Worker 跑偏的场景</a>。</p>
+  <div class="scroll"><table class="mid">
+    <thead><tr><th></th><th>进程存活探测、监控脚本</th><th>Watchdog Session</th></tr></thead>
+    <tbody>
+      <tr><td>监控什么</td><td>进程是否活着</td><td>接口报错、状态恢复失败，以及每个 Worker 有没有实质进展、方向是否偏离整体目标</td></tr>
+      <tr><td>谁来判断</td><td>预设规则</td><td>模型</td></tr>
+      <tr><td>怎么介入</td><td>告警或重启</td><td>及时修复；遇到外部偶发故障就持续复查，直到恢复</td></tr>
+      <tr><td>怎么用它</td><td>看日志和看板</td><td>用自然语言问故障原因，让它在线增删提示词、调整触发规则</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="s7">
+  <h2><span class="sec">§7</span>实验：用更多 token 换更短、更稳的完成时间</h2>
+  <p>作者用群聊和 GitHub CI 消息流驱动四种方案。每次约 300 条消息，其中约 20 条是工作请求，每种方案跑 5 次。编码工作用一个只消耗时间的工具替代，所以这里衡量的是调度能力，不是单任务执行能力。</p>
+  <figure class="fig">
+    <div class="charts">
+      <div>
+        <h4>任务完成时间 P50 到 P95（分钟）</h4>
+        <div class="k"><span><i></i>P50</span><span><i class="s"></i>P95</span></div>
+        <div class="scroll"><svg id="c-time" viewBox="0 0 640 224" role="img" aria-label="四种方案的 P50 和 P95 任务完成时间。Super-agent 12.4 到 15.7 分钟；去掉直通 12.6 到 15.5；单 Session 中性提示 20.4 到 29.5；单 Session 提示优先委派 13.8 到 29.0。"></svg></div>
+      </div>
+      <div>
+        <h4>单次实验读缓存 token（万，全部 Session）</h4>
+        <div class="k"><span>&nbsp;</span></div>
+        <div class="scroll"><svg id="c-tok" viewBox="0 0 480 224" role="img" aria-label="四种方案的单次实验读缓存 token。Super-agent 2323 万；去掉直通 3177 万；单 Session 中性提示 605 万；单 Session 提示优先委派 1082 万。"></svg></div>
+      </div>
+    </div>
+    <figcaption>两种 Super-agent 方案的 P95 都在 16 分钟以内，两种单 Session 方案的 P95 都接近 30 分钟。代价是读缓存 token：Super-agent 是中性提示方案的 3.8 倍。</figcaption>
+  </figure>
+  <div class="scroll"><table class="mid">
+    <thead><tr><th>方案</th><th class="num">P50（分钟）</th><th class="num">P95（分钟）</th><th class="num">读缓存 token</th></tr></thead>
+    <tbody>
+      <tr><td>Super-agent</td><td class="num">12.4</td><td class="num">15.7</td><td class="num">2323 万</td></tr>
+      <tr><td>Super-agent，去掉直通</td><td class="num">12.6</td><td class="num">15.5</td><td class="num">3177 万</td></tr>
+      <tr><td>单 Session + Subagent 工具，中性提示</td><td class="num">20.4</td><td class="num">29.5</td><td class="num">605 万</td></tr>
+      <tr><td>单 Session + Subagent 工具，提示优先委派</td><td class="num">13.8</td><td class="num">29.0</td><td class="num">1082 万</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="plain">
+    <li><b>单 Session 的问题在于靠提示词决定分不分工。</b>中性提示下，5 次运行模型一次都没调用 Subagent。提示优先委派后有 4 次委派，剩下 1 次判断工作「很小」自己做，形成长尾。</li>
+    <li><b>直通省的是 Router 开销。</b>去掉直通后完成时间基本不变，但 Router 要做的决定多了约 30%，读缓存 token 从 2323 万增加到 3177 万，增幅约 37%。</li>
+  </ul>
+  <h3>读这组数字要带上的限定</h3>
+  <ul class="plain note">
+    <li>作者声明实验基于合成负载和简化环境，结果仅作初步参考。</li>
+    <li>累计完成曲线的图注写明消息间隔和工作时长按 1/4 缩放，模型调用耗时是真实值。表格没有单独说明，按同一组实验理解，分钟数不是真实耗时。</li>
+    <li>每种方案只跑 5 次，没有给置信区间。提示优先委派方案的 P95 主要受 1 次长尾运行影响。</li>
+    <li>正文说直通「不提高任务完成质量」，但编码被替换成只消耗时间的工具，实验里没有质量指标。</li>
+    <li>公开仓库里没有实验负载和脚本，无法复现。</li>
+  </ul>
+</section>
+
+<section id="proto">
+  <h2>公开原型实现了多少</h2>
+  <p>对照 <a href="https://github.com/deepseek-ai/dsh-superagent-prototype/tree/6337fc823ce20251c8de8085948165c81aaa701e" target="_blank" rel="noreferrer">dsh-superagent-prototype@6337fc8</a> 的静态阅读结果，没有运行代码。它是一个面向单个 GitHub 仓库的主动编码 agent，README 明确写了「研究原型，非 DeepSeek 正式产品」。路由内核（§2 到 §4）基本都有，§5 和 §6 的主体在这个版本里没有看到。「本次检索未见」来自全仓多同义词检索，不代表内部版没有。</p>
+  <p><b>代码里多出来的一层：</b>文章没有画确定性控制面，原型却以它为核心。<a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/docs/007-architecture.md?plain=1#L46-L48" target="_blank" rel="noreferrer"><code>Engine</code></a> 是 Trigger、Thread、Decision、Ticket 的唯一写入者，方法全部同步。LLM Session 负责决策，序点实际落在 Engine 上（后半句是调研时的推断）。读代码时注意术语：文章的 Router 在代码里叫 <code>orchestrator</code>，订阅的主体是 Ticket，Worker 是 Ticket 的执行者。</p>
+  <div class="scroll"><table class="wide">
+    <thead><tr><th>机制</th><th>状态</th><th>原型里的样子</th><th>证据</th></tr></thead>
+    <tbody>
+      <tr><td>Router + Worker 双层</td><td><span class="pill ok">已实现</span></td><td>单个常驻主 Session，每个 Ticket 一个 Worker Session，默认最多 3 个并发</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/src/policy.ts#L93" target="_blank" rel="noreferrer">policy.ts:93</a></td></tr>
+      <tr><td>两级过滤</td><td><span class="pill ok">已实现</span></td><td>程序层是 Scope 和 Gate，语义层就在主 Session 内。默认 observe 模式只研判、不接主动工作</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/src/policy.ts#L84" target="_blank" rel="noreferrer">policy.ts:84</a></td></tr>
+      <tr><td>订阅直通，多对多</td><td><span class="pill ok">已实现</span></td><td>一条消息扇出给所有订阅的 Ticket，发送者不需要通过权限检查</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/src/core/intake.ts#L34-L52" target="_blank" rel="noreferrer">intake.ts:34</a></td></tr>
+      <tr><td>批处理</td><td><span class="pill ok">已实现</span></td><td>同一 Thread 的积压合并成一次研判；一次路由调用可带 1 到 20 个决定</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/src/core/evals.ts#L110-L112" target="_blank" rel="noreferrer">evals.ts:110</a><br><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/src/app/tools/main.ts#L129" target="_blank" rel="noreferrer">main.ts:129</a></td></tr>
+      <tr><td>Inline &amp; Spill</td><td><span class="pill ok">已实现</span></td><td>Trigger 卡片 160 字符加总长和续读指针，研判窗口里的存根 50 字符</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/src/app/cards.ts#L8-L11" target="_blank" rel="noreferrer">cards.ts:8</a><br><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/src/app/assessment.ts#L37" target="_blank" rel="noreferrer">assessment.ts:37</a></td></tr>
+      <tr><td>链式召回</td><td><span class="pill ok">已实现</span></td><td>统一走 <code>orchestrator_read</code>，中间跳是 Ticket。Worker 只能读自己的 Ticket，完整引用图只对 Router 开放</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/src/app/resources.ts#L24-L55" target="_blank" rel="noreferrer">resources.ts:24</a></td></tr>
+      <tr><td>退订</td><td><span class="pill pt">部分实现</span></td><td>Worker 只能退后来挂上的 Thread，起源 Thread 和绑定的 PR 退不了</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/src/core/tickets.ts#L185-L195" target="_blank" rel="noreferrer">tickets.ts:185</a></td></tr>
+      <tr><td>投机执行</td><td><span class="pill pt">部分实现</span></td><td>没有专门机制，靠规则、auto 模式、静默接单和 dropped 组合。默认规则只有文案和视觉修复</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/src/policy.ts#L62-L65" target="_blank" rel="noreferrer">policy.ts:62</a></td></tr>
+      <tr><td>多信道</td><td><span class="pill pt">部分实现</span></td><td>只有 GitHub（轮询）和飞书（默认关闭）。100 词是代码强制，比提示词约束更硬，但回复只对飞书生效</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/src/app/outbox.ts#L29" target="_blank" rel="noreferrer">outbox.ts:29</a></td></tr>
+      <tr><td>Watchdog</td><td><span class="pill pt">部分实现</span></td><td>部署文档里的 Hourly check，由操作者在另一个 profile 配置，只查服务状态并重启。没有 Worker 进展判断</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/docs/006-deployment.md?plain=1#L133-L138" target="_blank" rel="noreferrer">006-deployment:133</a></td></tr>
+      <tr><td>Router 工具集</td><td><span class="pill df">与文章不同</span></td><td>配了 bash 和 read，「不读代码」只是提示词规则。文章说的是「甚至可以不配」</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/docs/007-architecture.md?plain=1#L507" target="_blank" rel="noreferrer">007-architecture:507</a></td></tr>
+      <tr><td>Worker 不直接对人</td><td><span class="pill df">与文章不同</span></td><td>Worker 自己发 ack，自己开 PR、回评审。结果通知和提问才由 Router 发</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/src/app/tools/executor.ts#L28-L40" target="_blank" rel="noreferrer">executor.ts:28</a></td></tr>
+      <tr><td>Router 观测所有事件</td><td><span class="pill df">与文章不同</span></td><td>只推放行的候选、人类跟进通知和 Worker 报告。人类跟进仍会唤醒 Router，名单外的 bot 和默认配置下的 CI 才真正绕过</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/prompts/subscriptions.md?plain=1#L4" target="_blank" rel="noreferrer">subscriptions.md:4</a></td></tr>
+      <tr><td>异步 start / stop</td><td><span class="pill df">与文章不同</span></td><td>没有这两个工具。前台命令等 5 秒转后台，用 job_kill 终止，语义相当、形态不同</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/cordis.patch.yml#L49-L50" target="_blank" rel="noreferrer">cordis.patch.yml:49</a></td></tr>
+      <tr><td>云端无状态计算、状态分离</td><td><span class="pill no">本次检索未见</span></td><td>单机单进程，SQLite 加目录锁。能重启恢复，但没有分离</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/src/app/runtime.ts#L93-L98" target="_blank" rel="noreferrer">runtime.ts:93</a></td></tr>
+      <tr><td>端侧 daemon、BYOM、间歇在线</td><td><span class="pill no">本次检索未见</span></td><td>工作目录默认在本机 stateDir 下，和主 Session 同一台机器</td><td class="src"><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/blob/6337fc823ce20251c8de8085948165c81aaa701e/docs/003-execution.md?plain=1#L25" target="_blank" rel="noreferrer">003-execution:25</a></td></tr>
+      <tr><td>邮件、日程信道</td><td><span class="pill no">本次检索未见</span></td><td>仓库只带 GitHub 和飞书两个 Source</td><td class="src">全仓检索</td></tr>
+      <tr><td>Router 分片</td><td><span class="pill no">本次检索未见</span></td><td>文章自己也把它列为未来方向</td><td class="src">全仓检索</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="ideas" data-toc="借用的系统思想">
+  <h2>每个设计借用的系统思想</h2>
+  <p>作者的结论是，这里没有全新的理论，而是把计算机系统的经典思想用到了 Agent 上。这张表可以当记忆卡。</p>
+  <div class="scroll"><table class="mid">
+    <thead><tr><th>系统思想</th><th>在 Super-agent 里的对应</th><th>章节</th></tr></thead>
+    <tbody>
+      <tr><td>Fast Path / Slow Path</td><td>程序过滤和语义过滤；订阅直通和 Router 分派</td><td class="src">§3.1 §3.2</td></tr>
+      <tr><td>序点 Sequence Point</td><td>Router 汇总所有跨任务的信息和决策</td><td class="src">§2.1</td></tr>
+      <tr><td>批处理 Batching</td><td>积压的 Trigger 合并进一次 LLM 调用</td><td class="src">§2.1</td></tr>
+      <tr><td>水平切分 Sharding</td><td>规模变大后切分 Router，用连续性换吞吐</td><td class="src">§2.1 §8.1</td></tr>
+      <tr><td>Cache 与局部性</td><td>把上下文窗口当 Cache，优先放时空相邻的信息</td><td class="src">§3.3</td></tr>
+      <tr><td>Inline / Spill</td><td>常用信息内联进窗口，其余留在窗口外只留引用</td><td class="src">§3.3</td></tr>
+      <tr><td>投机执行</td><td>后台提前尝试，有价值才交付</td><td class="src">§3.4</td></tr>
+      <tr><td>半双工到全双工</td><td>start() 立即返回，完成后投递新事件</td><td class="src">§4.1</td></tr>
+      <tr><td>存算分离</td><td>无状态 Agent Loop 加 Session 数据库</td><td class="src">§5</td></tr>
+      <tr><td>Control Loop</td><td>主系统外由定时消息驱动的 Watchdog</td><td class="src">§6</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="open" data-toc="§8 开放问题">
+  <h2><span class="sec">§8</span>作者自己列的开放问题</h2>
+  <ul class="plain">
+    <li><b>怎么扩展双层架构。</b>Router 何时切分、粒度多大，Worker 何时需要直接通信，都没有定论。运行周期拉长到跨月后，长程记忆是主要瓶颈。</li>
+    <li><b>脱离 Session 后怎么协作。</b>聊天窗口有路径依赖，交互可以更多发生在领域特化的界面里，比如 GitHub。用户中途介入和接管的方式还要探索。</li>
+    <li><b>上下文边界和 A2A。</b>共用一个实例就是共享上下文。多个隔离实例之间怎么安全通信，比如个人助手和团队 Super-agent 之间。</li>
+    <li><b>安全与隐私。</b>事件驱动带来更多不可信输入，云端和端侧的连接默认互相信任。作者认为，这个问题解决不好，Super-agent 只能在很小的可信范围内工作。</li>
+  </ul>
+</section>
+
+<footer class="foot" id="sources" data-toc="来源">
+  <div>来源，核对于 2026-11-03：</div>
+  <ul>
+    <li><a href="https://mp.weixin.qq.com/s/zoS7GlReWPhfCjENGxXCdg" target="_blank" rel="noreferrer">《Super-agent 设计探索：迈向更自主的 Agent 系统》</a>，DeepSeek Harness 团队。本文的数字除特别说明外都来自这篇文章。</li>
+    <li><a href="https://github.com/deepseek-ai/dsh-superagent-prototype/tree/6337fc823ce20251c8de8085948165c81aaa701e" target="_blank" rel="noreferrer">dsh-superagent-prototype@6337fc8</a>，<a href="https://github.com/deepseek-ai/deepseek-harness/tree/ce7073d51254c26cd63b22a60835b8f948deb447" target="_blank" rel="noreferrer">deepseek-harness@ce7073d</a>。</li>
+    <li><a href="https://www.anthropic.com/research/managed-agents" target="_blank" rel="noreferrer">Scaling Managed Agents: Decoupling the brain from the hands</a>，Anthropic。</li>
+  </ul>
+</footer>
+
+<div id="tip" hidden></div>
+</template>
+<script type="text/plain" id="mock-sa-js">(function(){
+  var $ = function(id){return document.getElementById(id)};
+  var map = $('map');
+  var SC = {
+    noise:{tab:'闲聊噪音',title:'非监听群：「中午去食堂还是点外卖？」',cost:'LLM 调用 0 次',steps:[
+      {n:['src-im','gate'],e:['e-src'],at:[186,136],t:'消息进入系统，程序层按来源、群组和白名单做确定性检查。'},
+      {n:['drop'],e:['e-drop'],at:[288,219],t:'不在监听范围，直接丢弃。全程不调用模型，这就是 Fast Path 省下的成本。'}]},
+    quiet:{tab:'无需介入的讨论',title:'用户群：「新版本界面看着挺清爽」',cost:'LLM 判断，不发言',steps:[
+      {n:['src-im','gate'],e:['e-src'],at:[186,136],t:'来自监听中的用户群，程序层放行。'},
+      {n:['table'],e:['e-pass'],at:[358,166],t:'查订阅表：这个话题没有 Worker 负责。'},
+      {n:['router','r-sem'],e:['e-slow'],at:[576,145],atp:[572,152],t:'走 Slow Path 进 Router，LLM 按提示词判断不需要介入，保持安静。',p:'未订阅的消息先过 Gate，再以候选卡片进主 Session。默认 observe 模式只研判、不接主动工作。'}]},
+    fresh:{tab:'新任务冷启动',title:'用户群缺陷反馈：「切换会话时偶发白屏」',cost:'Router 决策 + Worker 执行',steps:[
+      {n:['src-im','gate'],e:['e-src'],at:[186,136],t:'程序层放行。'},
+      {n:['table'],e:['e-pass'],at:[358,166],t:'查订阅表：新问题，没有订阅者。'},
+      {n:['router','r-sem'],e:['e-slow'],at:[576,145],atp:[572,152],t:'Router 的语义层判断这是缺陷反馈，值得处理。'},
+      {n:['r-disp','workers','w-a'],e:['e-sem','e-spawn','e-sub'],at:[746,259],atp:[606,259],t:'Router 创建 Worker，Worker 订阅这条 Thread。此后同一话题的消息不用再经 Router 分派。'},
+      {n:['env'],e:['e-exec','e-wout'],at:[1015,377],t:'Worker 在隔离的上下文里工作，通过端侧 daemon 在真实环境中复现和修复。',p:'执行目录是本机 git worktree，没有 daemon。Worker 还会自己发 ack、在 GitHub 开 PR。'},
+      {n:['router'],e:['e-report'],at:[844,259],atp:[948,244],t:'Worker 向 Router 汇报关键结论，推理过程和工具调用都留在 Worker 内部。'},
+      {n:['ch-im'],e:['e-out'],at:[1008,112],t:'Router 统一对外回复，IM 上只给简短结论，单次不超过 100 词。',p:'结果通知由 Router 发，100 词上限由代码强制。'}]},
+    follow:{tab:'后续事件直通',title:'同一个 PR 的评审评论：「改用方案 B」',cost:'Router 不用做决定',steps:[
+      {n:['src-gh','gate'],e:['e-src'],at:[186,136],t:'同一个 PR 下的新评论，程序层放行。'},
+      {n:['table'],e:['e-pass'],at:[358,166],t:'查订阅表：PR #12 已被 Worker A 和 B 订阅。'},
+      {n:['workers','w-a','w-b'],e:['e-fast'],at:[568,262],t:'程序直通给两个 Worker，Router 不用再调用工具转发。两个 Worker 看到同样的事件，有机会自行发现和解决冲突。'},
+      {n:['router'],e:['e-obs'],at:[572,198],t:'Router 仍可观测这条事件，掌握全局状态，但不用决定它去哪。',p:'不是全量观测。人类跟进发 follow_up 通知，会唤醒 Router，但只能用来叫停；名单外的 bot 和默认配置下的 CI 才真正绕过。'},
+      {n:['table'],e:['e-sub'],at:[424,320],t:'如果评论超出当前任务范围，Worker 可以退订，或交回 Router 重新分派。',p:'只能退后来挂上的 Thread，起源 Thread 和绑定的 PR 退不了。'}]},
+    watch:{tab:'Worker 跑偏',title:'没有外部事件，定时消息触发一次巡检',cost:'外部控制回路',steps:[
+      {n:['timer','wd'],e:['e-timer'],at:[177,505],t:'定时消息驱动 Watchdog Session，它运行在主系统之外。'},
+      {n:['db'],e:['e-wdr'],at:[559,536],atp:[464,460],t:'读取状态，由模型判断每个 Worker 有没有实质进展、方向是否偏离。进程活着不等于任务在推进。',p:'Hourly check 只按 status 退出码分支，没有语义判断。'},
+      {n:['workers'],e:['e-wdf'],at:[464,452],atp:[496,460],t:'发现异常就介入修复；遇到外部偶发故障就持续复查。维护者还能用自然语言问它原因，让它在线改提示词和触发规则。',p:'退出码 1 时重启服务，重启失败才读日志并尽力修复。'}]}
+  };
+  var ORDER=['noise','quiet','fresh','follow','watch'];
+  var state={sc:'all',step:0,lens:'art'};
+  var tabs=$('tabs');
+  function mkTab(id,label){var b=document.createElement('button');b.type='button';b.id='tab-'+id;b.textContent=label;b.setAttribute('aria-pressed','false');b.addEventListener('click',function(){go(id,0)});tabs.appendChild(b)}
+  mkTab('all','总览');ORDER.forEach(function(k){mkTab(k,SC[k].tab)});
+
+  function clear(){map.querySelectorAll('.lit,.cur').forEach(function(x){x.classList.remove('lit','cur')});$('badges').textContent=''}
+  var TONE={'e-slow':'slow','e-fast':'fast','e-wdr':'watch','e-wdf':'watch'};
+  function toneOf(st){for(var i=0;i<st.e.length;i++)if(TONE[st.e[i]])return TONE[st.e[i]];return 'ink'}
+  function badge(n,at,now,tone){
+    var ns='http://www.w3.org/2000/svg',g=document.createElementNS(ns,'g');g.setAttribute('class','badge'+(now?' now':''));g.setAttribute('data-tone',tone);
+    var c=document.createElementNS(ns,'circle');c.setAttribute('cx',at[0]);c.setAttribute('cy',at[1]);c.setAttribute('r',now?9:8);
+    var t=document.createElementNS(ns,'text');t.setAttribute('x',at[0]);t.setAttribute('y',at[1]);t.textContent=n;
+    g.appendChild(c);g.appendChild(t);$('badges').appendChild(g);
+  }
+  function render(){
+    var steps=$('steps');steps.textContent='';clear();
+    tabs.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',b.id==='tab-'+state.sc?'true':'false')});
+    if(state.sc==='all'){
+      map.classList.remove('play');
+      $('ev-title').textContent='五种事件，五种走法';$('ev-cost').textContent='';$('next').hidden=true;
+      ORDER.forEach(function(k){
+        var s=SC[k],li=document.createElement('li'),b=document.createElement('button');b.type='button';b.className='overview';b.style.gridTemplateColumns='minmax(0,1fr)';
+        var x=document.createElement('b');x.textContent=s.tab;var q=document.createElement('span');q.className='q';q.textContent=s.title;var c=document.createElement('span');c.className='c';c.textContent=s.cost;
+        var box=document.createElement('span');box.appendChild(x);box.appendChild(q);box.appendChild(c);b.appendChild(box);
+        b.addEventListener('click',function(){go(k,0)});li.appendChild(b);steps.appendChild(li);
+      });
+      return;
+    }
+    map.classList.add('play');
+    var s=SC[state.sc];$('ev-title').textContent=s.title;$('ev-cost').textContent=s.cost;
+    s.steps.forEach(function(st,i){
+      var done=i<=state.step,now=i===state.step;
+      if(done){
+        st.n.forEach(function(id){$(id).classList.add('lit')});
+        st.e.forEach(function(id){var e=$(id);e.classList.add('lit');if(now)e.classList.add('cur')});
+        badge(i+1,(state.lens==='pro'&&st.atp)||st.at,now,toneOf(st));
+      }
+      var li=document.createElement('li');if(now)li.className='now';if(done)li.classList.add('done');
+      var b=document.createElement('button');b.type='button';var n=document.createElement('span');n.className='num';n.textContent=i+1;
+      var tx=document.createElement('span');tx.textContent=st.t;
+      if(state.lens==='pro'&&st.p){var p=document.createElement('span');p.className='pn';p.textContent=st.p;tx.appendChild(p)}
+      b.appendChild(n);b.appendChild(tx);b.addEventListener('click',function(){go(state.sc,i)});li.appendChild(b);steps.appendChild(li);
+    });
+    var nx=$('next');nx.hidden=false;var last=state.step>=s.steps.length-1;nx.disabled=last;nx.textContent=last?'已走完':'下一步';
+  }
+  function go(sc,i){state.sc=sc;state.step=i;render()}
+  $('next').addEventListener('click',function(){var s=SC[state.sc];if(s&&state.step<s.steps.length-1)go(state.sc,state.step+1)});
+  function lens(l){state.lens=l;map.setAttribute('data-lens',l);document.querySelector('.legend').setAttribute('data-lens',l);$('lens-art').setAttribute('aria-pressed',l==='art'?'true':'false');$('lens-pro').setAttribute('aria-pressed',l==='pro'?'true':'false');$('lensnote').hidden=l!=='pro';$('key-unseen').hidden=l!=='pro';render()}
+  $('lens-art').addEventListener('click',function(){lens('art')});
+  $('lens-pro').addEventListener('click',function(){lens('pro')});
+  $('replay-watch').addEventListener('click',function(){go('watch',0)});
+  render();
+
+  /* charts: one scale per panel, emphasis on Super-agent, tooltip + table twin */
+  var EXP=[
+    {s:'Super-agent',f:'Super-agent',p50:12.4,p95:15.7,tok:2323,hi:true},
+    {s:'去掉直通',f:'Super-agent，去掉直通',p50:12.6,p95:15.5,tok:3177},
+    {s:'单 Session，中性提示',f:'单 Session + Subagent，中性提示',p50:20.4,p95:29.5,tok:605},
+    {s:'单 Session，优先委派',f:'单 Session + Subagent，提示优先委派',p50:13.8,p95:29.0,tok:1082}];
+  var NS='http://www.w3.org/2000/svg';
+  function el(t,a,p,txt){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);if(txt!==undefined)e.textContent=txt;if(p)p.appendChild(e);return e}
+  var tip=$('tip');
+  function showTip(x,y,val,label){tip.textContent='';var b=document.createElement('b');b.textContent=val;var s=document.createElement('span');s.textContent=label;tip.appendChild(b);tip.appendChild(s);tip.hidden=false;
+    var w=tip.offsetWidth,h=tip.offsetHeight;tip.style.left=Math.max(8,Math.min(innerWidth-w-8,x+14))+'px';tip.style.top=Math.max(8,Math.min(innerHeight-h-8,y-h-10))+'px'}
+  function hideTip(){tip.hidden=true}
+  function wire(g,val,label){
+    g.setAttribute('tabindex','0');g.setAttribute('aria-label',label+'：'+val);
+    g.addEventListener('pointermove',function(e){showTip(e.clientX,e.clientY,val,label)});
+    g.addEventListener('pointerleave',hideTip);
+    g.addEventListener('focus',function(){var r=g.getBoundingClientRect();showTip(r.left+r.width/2,r.top+6,val,label)});
+    g.addEventListener('blur',hideTip);
+  }
+  var L=164,T=8,RH=46,N=EXP.length,B=T+RH*N;
+  (function(){
+    var svg=$('c-time'),R=600,x=function(v){return L+v*(R-L)/30};
+    [0,10,20,30].forEach(function(v){el('line',{class:'grid',x1:x(v),x2:x(v),y1:T,y2:B},svg);el('text',{class:'tick',x:x(v),y:B+20,'text-anchor':'middle'},svg,v)});
+    EXP.forEach(function(d,i){
+      var y=T+RH*i+RH/2,g=el('g',{class:'row'},svg);
+      el('rect',{class:'hit',x:0,y:T+RH*i,width:640,height:RH},g);
+      var col=d.hi?'var(--ink)':'var(--mark)';
+      el('text',{class:'rowl'+(d.hi?' hi':''),x:10,y:y+4},g,d.s);
+      el('line',{x1:x(d.p50),x2:x(d.p95),y1:y,y2:y,stroke:col,'stroke-width':2,'stroke-linecap':'round'},g);
+      el('circle',{cx:x(d.p50),cy:y,r:5,fill:'var(--panel)',stroke:col,'stroke-width':2},g);
+      el('circle',{cx:x(d.p95),cy:y,r:6,fill:col,stroke:'var(--panel)','stroke-width':2},g);
+      el('text',{class:'val',x:x(d.p95)+11,y:y+4},g,d.p95.toFixed(1));
+      if(d.hi)el('text',{class:'val','text-anchor':'end',x:x(d.p50)-10,y:y+4},g,d.p50.toFixed(1));
+      wire(g,'P50 '+d.p50.toFixed(1)+' · P95 '+d.p95.toFixed(1)+' 分钟',d.f);
+    });
+  })();
+  (function(){
+    var svg=$('c-tok'),R=430,x=function(v){return L+v*(R-L)/3500},H=18;
+    [0,1000,2000,3000].forEach(function(v){el('line',{class:'grid',x1:x(v),x2:x(v),y1:T,y2:B},svg);el('text',{class:'tick',x:x(v),y:B+20,'text-anchor':'middle'},svg,v)});
+    EXP.forEach(function(d,i){
+      var y=T+RH*i+RH/2,g=el('g',{class:'row'},svg),col=d.hi?'var(--ink)':'var(--mark)',x1=x(d.tok);
+      el('rect',{class:'hit',x:0,y:T+RH*i,width:480,height:RH},g);
+      el('text',{class:'rowl'+(d.hi?' hi':''),x:10,y:y+4},g,d.s);
+      el('path',{d:'M'+L+' '+(y-H/2)+'H'+(x1-4)+'a4 4 0 0 1 4 4V'+(y+H/2-4)+'a4 4 0 0 1 -4 4H'+L+'z',fill:col},g);
+      el('text',{class:'val',x:x1+8,y:y+4},g,d.tok);
+      wire(g,d.tok+' 万',d.f);
+    });
+  })();
+})();
+</script>
+<script>
+(() => {
+  // The contents mark. Set up again whenever the article is swapped, since its sections and links change with it.
+  let links = [], targets = [], requested = -1;
+  const addressed = () => links.findIndex(a => a.hash === location.hash);
+  const atPageEnd = () => scrollY + innerHeight >= document.documentElement.scrollHeight - 2;
+  function spy() {
+    let current = -1;
+    targets.forEach((t, i) => { if (t.getBoundingClientRect().top <= innerHeight * .35) current = i; });
+    if (atPageEnd()) current = requested >= 0 ? requested : links.length - 1;
+    links.forEach((a, i) => { if (i === current) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
+  }
+  window.setupToc = () => {
+    links = [...document.querySelectorAll('.ap-toc a')];
+    targets = links.map(a => document.getElementById(a.getAttribute('href').slice(1)));
+    links.forEach((a, i) => a.addEventListener('click', () => { requested = i; requestAnimationFrame(spy); }));
+    requested = addressed();
+    spy();
+  };
+  addEventListener('hashchange', () => { requested = addressed(); spy(); });
+  addEventListener('scroll', () => { if (!atPageEnd()) requested = -1; spy(); }, {passive: true});
+  addEventListener('resize', spy);
+  setupToc();
+})();
+</script>
+<script>
+(() => {
+  // Larger view of a figure: a copy of its drawing area (its frame, or the block of drawings when it has no frame), as
+  // it looks at that moment. It is as big as the window allows, at most twice its width in the page. It is never narrower
+  // than 800px or 85% of its widest drawing's own width, so its text stays legible and on a phone it scrolls sideways.
+  const box = document.querySelector('.lightbox');
+  const bar = box.querySelector('.lb-bar');
+  const stage = box.querySelector('.lb-stage');
+  const sheet = box.querySelector('.lb-sheet');
+  const holder = box.querySelector('.lb-figure');
+  const caption = box.querySelector('.lb-caption');
+  const close = box.querySelector('.lb-close');
+  let opener = null, source = null;
+  const drawingArea = figure => figure.querySelector(':scope > .ground') ?? [...figure.children].find(c => c.tagName !== 'FIGCAPTION' && c.querySelector('svg'));
+  // Room left for the figure: the stage keeps 16px each side and 24px below; the sheet adds 16px padding all round
+  // and 10px between figure and caption.
+  function place(width) {
+    holder.style.width = width + 'px';
+    sheet.style.width = (width + 32) + 'px';
+  }
+  function size() {
+    const drawn = Math.max(0, ...[...source.querySelectorAll('svg')].map(s => s.viewBox.baseVal?.width || 0));
+    const minW = Math.max(800, Math.round(drawn * .85));
+    const roomW = innerWidth - 64;
+    caption.style.maxWidth = '';
+    let width = Math.max(minW, Math.min(roomW, source.getBoundingClientRect().width * 2));
+    place(width);
+    // Shrink to the window's height, measured on the copy itself: a block of drawings and text does not keep one ratio.
+    for (let pass = 0; pass < 2; pass++) {
+      const roomH = innerHeight - bar.offsetHeight - 24 - 32 - 10 - caption.offsetHeight;
+      const h = holder.offsetHeight;
+      if (h <= roomH) break;
+      width = Math.max(minW, width * roomH / h);
+      place(width);
+    }
+    const wide = width > roomW;
+    stage.classList.toggle('lb-wide', wide);
+    caption.style.maxWidth = wide ? roomW + 'px' : '';
+  }
+  function open(figure, button) {
+    source = drawingArea(figure);
+    // The post's own figure styles are scoped to its class, so the copy sits inside that class too.
+    holder.className = 'lb-figure ' + [...figure.closest('.ap-article-body').classList].filter(c => c.startsWith('post-')).join(' ');
+    const copy = source.cloneNode(true);
+    copy.classList.remove('zoomable', 'scroll');
+    holder.replaceChildren(copy);
+    caption.textContent = figure.querySelector('figcaption')?.textContent ?? '';
+    opener = button;
+    box.hidden = false;
+    document.documentElement.style.overflow = 'hidden';
+    size();
+    stage.scrollLeft = 0;
+    close.focus();
+  }
+  function shut() {
+    box.hidden = true;
+    holder.replaceChildren();
+    document.documentElement.style.overflow = '';
+    opener?.focus();
+  }
+  window.wireFigures = () => {
+    for (const figure of document.querySelectorAll('.ap-article-body figure.fig')) {
+      // Every figure opens larger. Clicks land on its drawing area; a figure's own controls sit outside that area.
+      const frame = drawingArea(figure);
+      if (!frame) continue;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'zoom-btn';
+      button.setAttribute('aria-label', '查看大图');
+      button.title = '查看大图';
+      button.innerHTML = "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><polyline points=\"15 3 21 3 21 9\"/><polyline points=\"9 21 3 21 3 15\"/><line x1=\"21\" x2=\"14\" y1=\"3\" y2=\"10\"/><line x1=\"3\" x2=\"10\" y1=\"21\" y2=\"14\"/></svg>";
+      figure.append(button);
+      frame.classList.add('zoomable');
+      frame.addEventListener('click', () => open(figure, button));
+      button.addEventListener('click', () => open(figure, button));
+    }
+  };
+  close.addEventListener('click', shut);
+  // Anything outside the sheet is the gray layer, and clicking it closes the view.
+  box.addEventListener('click', e => { if (!e.target.closest('.lb-sheet, .lb-close')) shut(); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && !box.hidden) shut(); });
+  addEventListener('resize', () => { if (!box.hidden) size(); });
+  wireFigures();
+})();
+</script>
+<div data-demo-harness><span class="dh-tag">Demo ·</span><div class="dh-group"><span class="dh-title">Article</span><div class="dh-opts" id="dhArticle"><button type="button" class="dh-opt" data-article="idle" aria-pressed="true">Idle compaction</button><button type="button" class="dh-opt" data-article="sa" aria-pressed="false">Super-agent</button></div></div><div class="dh-group"><span class="dh-title">Neighbors</span><div class="dh-opts" id="dhNeighbors"><button type="button" class="dh-opt" data-neighbors="both" aria-pressed="true">Both</button><button type="button" class="dh-opt" data-neighbors="no-earlier" aria-pressed="false">Earliest post</button><button type="button" class="dh-opt" data-neighbors="no-later" aria-pressed="false">Newest post</button></div></div><div class="dh-group"><span class="dh-title">Titles</span><div class="dh-opts" id="dhTitles"><button type="button" class="dh-opt" data-titles="published" aria-pressed="true">As published</button><button type="button" class="dh-opt" data-titles="long" aria-pressed="false">Over two lines</button></div></div><p class="dh-note">App: each post is its own page, and its neighbors are set by where it sits among published posts, by publish date; no such controls.</p></div>
+<script src="../demo-harness.js"></script>
+<script>
+(() => {
+  // Mock neighbors, by publish date. Super-agent is the newest post, so its own state is "Newest post"; under "Both" its
+  // later side borrows a real title, only to show the layout. The later post of the idle-compaction post is Super-agent,
+  // which has its own prototype; no other neighbor has one, so those stay static samples.
+  const LONG = {earlier: '惨痛教训-复盘用子 agent 做对抗性测试后一个晚上多花掉 2.6 亿 token：一个子 agent 每 4 秒查一次进度，拆开会话记录才看清钱花在了哪里', later: '你的 skill 为什么没有按预期工作——聊一聊如何评估和优化 skills，以及触发、记忆、执行三道关各自的失效机制，歧义被默认值填满、每个词都过它自己的解释器'};
+  const MOCKS = {
+    idle: {earlier: "惨痛教训-复盘用子 agent 做对抗性测试后一个晚上多花掉 2.6 亿 token", later: "Super-agent 架构图解", laterWired: true, neighbors: 'both'},
+    sa: {earlier: "省钱提醒-马上升级你的 claudecode 到最新版以使用idleCompaction功能", later: "惨痛教训-复盘用子 agent 做对抗性测试后一个晚上多花掉 2.6 亿 token", laterWired: false, neighbors: 'no-later'},
+  };
+  const state = {article: 'idle', neighbors: 'both', titles: 'published'};
+  const saved = {};
+  const head = document.querySelector('.ap-article-head');
+  const tocList = document.querySelector('.ap-toc ol');
+  const body = document.querySelector('.ap-article-body');
+  // Saved without the larger-view buttons that were added on load, so they are added once, with their handlers, after a swap.
+  const bare = () => { const c = body.cloneNode(true); c.querySelectorAll('.zoom-btn').forEach(b => b.remove()); c.querySelectorAll('.zoomable').forEach(e => e.classList.remove('zoomable')); return c.innerHTML; };
+  saved.idle = {head: head.innerHTML, toc: tocList.innerHTML, body: bare(), cls: body.className};
+  saved.sa = {head: document.getElementById('mock-sa-head').innerHTML, toc: document.getElementById('mock-sa-toc').innerHTML, body: document.getElementById('mock-sa-body').innerHTML, cls: 'ap-article-body post-super-agent-architecture'};
+  const card = (side, title, wired) => {
+    const dir = side === 'earlier' ? '上一篇' : '下一篇';
+    const cls = side === 'earlier' ? 'pn-prev' : 'pn-next';
+    const attrs = wired ? ' href="prototype-post.html" data-goto="blog/post" data-goto-href="../blog/prototype-post.html"' : '';
+    return '<a class="pn-card ' + cls + '"' + attrs + '><span class="pn-dir">' + dir + '</span><span class="pn-title">' + title + '</span></a>';
+  };
+  const none = side => '<span class="pn-card ' + (side === 'earlier' ? 'pn-prev' : 'pn-next') + ' pn-none"><span class="pn-dir">' + (side === 'earlier' ? '上一篇' : '下一篇') + '</span><span class="pn-title">' + (side === 'earlier' ? '已是最早的一篇' : '已是最新的一篇') + '</span></span>';
+  function renderNav() {
+    const m = MOCKS[state.article];
+    const long = state.titles === 'long';
+    const prev = state.neighbors === 'no-earlier' ? none('earlier') : card('earlier', long ? LONG.earlier : m.earlier, false);
+    const next = state.neighbors === 'no-later' ? none('later') : card('later', long ? LONG.later : m.later, !long && m.laterWired);
+    document.getElementById('postNav').innerHTML = prev + next;
+    document.querySelectorAll('[data-article]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.article === state.article)));
+    document.querySelectorAll('[data-neighbors]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.neighbors === state.neighbors)));
+    document.querySelectorAll('[data-titles]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.titles === state.titles)));
+  }
+  function showArticle(name) {
+    const s = saved[name];
+    head.innerHTML = s.head;
+    tocList.innerHTML = s.toc;
+    body.className = s.cls;
+    body.innerHTML = s.body;
+    state.article = name;
+    state.neighbors = MOCKS[name].neighbors;
+    // The Super-agent post's own script draws its charts and runs its playback, as it does on its page.
+    if (name === 'sa') { const s = document.createElement('script'); s.textContent = document.getElementById('mock-sa-js').textContent; document.body.append(s); s.remove(); }
+    setupToc();
+    wireFigures();
+    renderNav();
+    scrollTo(0, 0);
+  }
+  document.querySelectorAll('[data-article]').forEach(b => b.addEventListener('click', () => { if (b.dataset.article !== state.article) showArticle(b.dataset.article); }));
+  document.querySelectorAll('[data-neighbors]').forEach(b => b.addEventListener('click', () => { state.neighbors = b.dataset.neighbors; renderNav(); }));
+  document.querySelectorAll('[data-titles]').forEach(b => b.addEventListener('click', () => { state.titles = b.dataset.titles; renderNav(); }));
+  renderNav();
+})();
+</script>
+<script src="../_shared/navigation.js"></script>
+<script>document.addEventListener('click',e=>{const el=e.target.closest('[data-goto]');if(!el)return;e.preventDefault();if(window.parent!==window)parent.postMessage({type:'proto-nav',target:el.dataset.goto},'*');else location.href=el.dataset.gotoHref;});</script>
+</body></html>

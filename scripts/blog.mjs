@@ -176,7 +176,14 @@ function renderContents(entries) {
   return `<nav class="ap-toc" aria-label="文章目录"><p class="ap-toc-title">目录</p><ol>${items}</ol></nav>`;
 }
 
-function renderPost(post, body, {stylesheet, script}) {
+/** One side of the end-of-post row: the neighbor's card, or a card that keeps the place and says there is none. */
+function neighborCard(side, neighbor) {
+  const [cls, dir, none] = side === 'earlier' ? ['pn-prev', '上一篇', '已是最早的一篇'] : ['pn-next', '下一篇', '已是最新的一篇'];
+  if (!neighbor) return `<span class="pn-card ${cls} pn-none"><span class="pn-dir">${dir}</span><span class="pn-title">${none}</span></span>`;
+  return `<a class="pn-card ${cls}" href="/blog/${neighbor.slug}"><span class="pn-dir">${dir}</span><span class="pn-title">${escapeHtml(neighbor.title)}</span></a>`;
+}
+
+function renderPost(post, body, {stylesheet, script, earlier, later}) {
   const title = escapeHtml(post.title);
   const source = post.source ? ` · 解读 <a href="${escapeHtml(post.source.url)}">${escapeHtml(post.source.label)}</a>` : '';
   const note = post.note ? `\n    <p class="ap-source-note">${escapeHtml(post.note)}</p>` : '';
@@ -206,7 +213,7 @@ function renderPost(post, body, {stylesheet, script}) {
       <div class="ap-article-body post-${post.slug}">
 ${markExternalLinks(body)}
       </div>
-      <p class="ap-article-back"><a class="ap-link" href="/blog">全部文章</a></p>
+      <nav class="post-nav" aria-label="上一篇和下一篇">${neighborCard('earlier', earlier)}${neighborCard('later', later)}</nav>
     </div>
   </main>
 </body>
@@ -267,13 +274,16 @@ export async function buildBlog({contentDir, outDir}) {
   }
   const blogDir = join(outDir, 'blog');
   await mkdir(blogDir, {recursive: true});
+  // The Blog order: newest first, and the sort is stable, so posts with the same date keep their manifest order.
+  // A post's 上一篇 is the one after it in this order, published earlier, and its 下一篇 the one before it.
+  const newest = [...manifest].sort((a, b) => b.date.localeCompare(a.date));
   for (const {post, body, stylesheet, script} of pages) {
-    await writeFile(join(blogDir, `${post.slug}.html`), renderPost(post, body, {stylesheet, script}));
+    const at = newest.indexOf(post);
+    await writeFile(join(blogDir, `${post.slug}.html`), renderPost(post, body, {stylesheet, script, earlier: newest[at + 1], later: newest[at - 1]}));
     if (stylesheet) await copyFile(join(postsDir, `${post.slug}.css`), join(blogDir, `${post.slug}.css`));
     if (script) await copyFile(join(postsDir, `${post.slug}.js`), join(blogDir, `${post.slug}.js`));
     await copyFile(join(postsDir, `${post.slug}.webp`), join(blogDir, `${post.slug}.webp`));
   }
-  const newest = [...manifest].sort((a, b) => b.date.localeCompare(a.date));
   await fillSlot(join(outDir, 'index.html'), HOME_SLOT, renderHome(newest));
   await fillSlot(join(outDir, 'blog.html'), LIST_SLOT, renderList(newest));
 }

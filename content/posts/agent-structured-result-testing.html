@@ -34,7 +34,7 @@
   <p>先看整个流程。图中的“宿主”，就是承载 Agent、连接模型与工具的应用程序。主线是主模型仍负责最终回复的情况；文件发送被持久工作流接管后，继续使用原有执行回执。</p>
   <figure class="fig" id="fig-results-flow">
     <div class="scroll ground">
-      <svg class="figw" viewBox="0 0 780 610" role="img" aria-label="结构化结果测试流程。用户提出要求后，主模型理解目标并调用工具，工具执行并返回真实结果；还需查找或处理时回到主模型。之后判断最终回复由谁负责。由主模型负责时，主模型输出 message 与 results，宿主校验结构：合法则关联本轮交互并保存，message 发给用户，results 供测试断言；非法则记录协议失败，不重跑已执行操作。持久工作流已接管时，沿用工作流回执与执行记录。results、工作流回执与执行记录，以及工具执行留下的执行证据，都进入测试核对结论与实际行为。">
+      <svg viewBox="0 0 780 610" role="img" aria-label="结构化结果测试流程。用户提出要求后，主模型理解目标并调用工具，工具执行并返回真实结果；还需查找或处理时回到主模型。之后判断最终回复由谁负责。由主模型负责时，主模型输出 message 与 results，宿主校验结构：合法则关联本轮交互并保存，message 发给用户，results 供测试断言；非法则记录协议失败，不重跑已执行操作。持久工作流已接管时，沿用工作流回执与执行记录。results、工作流回执与执行记录，以及工具执行留下的执行证据，都进入测试核对结论与实际行为。">
         <defs>
           <marker id="agent-structured-result-testing-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="sr-mk" d="M0 0L10 5L0 10z"/></marker>
           <marker id="agent-structured-result-testing-arrow-proof" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="sr-mk-proof" d="M0 0L10 5L0 10z"/></marker>
@@ -169,7 +169,7 @@ expect(newAttachmentRecords).toHaveLength(0);</code></pre>
   <p>接着，在同一个模型上下文里，再要求它发送一张确实存在的图片，检查对应文件是否进入发送流程。上一轮没找到、下一轮能找到，这个正反组合才能防止模型一直报告同一个结论，也能防止测试误用旧记录。</p>
   <figure class="fig" id="fig-paired-rounds">
     <div class="scroll ground">
-      <svg class="figw" viewBox="0 0 780 340" role="img" aria-label="同一个模型上下文里的两轮。第一轮查找不存在的图片：模型报告的结论是 not_found，与本轮执行证据核对，即搜索范围确实是目标授权目录，搜索已经完成、结果没有被截断且为空，没有创建发送任务，没有产生附件发送记录。第二轮发送一张确实存在的图片：模型报告的结论是能找到，与本轮执行证据核对，即对应文件进入发送流程。">
+      <svg viewBox="0 0 780 340" role="img" aria-label="同一个模型上下文里的两轮。第一轮查找不存在的图片：模型报告的结论是 not_found，与本轮执行证据核对，即搜索范围确实是目标授权目录，搜索已经完成、结果没有被截断且为空，没有创建发送任务，没有产生附件发送记录。第二轮发送一张确实存在的图片：模型报告的结论是能找到，与本轮执行证据核对，即对应文件进入发送流程。">
         <defs>
           <marker id="agent-structured-result-testing-arrow-rounds" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="sr-mk" d="M0 0L10 5L0 10z"/></marker>
         </defs>

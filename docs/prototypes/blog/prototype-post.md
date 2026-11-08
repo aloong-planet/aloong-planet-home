@@ -12,3 +12,7 @@ Per the project capabilities, i18n and theming are disabled; both are skipped, a
 
 ## Uncovered dimensions
 Only the fixed light appearance and the single existing language are covered. Links to external sources are real and leave the prototype.
+
+## Invalidated conclusions
+- The widths on this page no longer hold: the article and figures at most 1000px wide, text at 46em, lists at 50em, captions at 60em, and the lead at 32em. One 820px measure for everything in the article column replaces them; `prototype-post-width.html` shows it.
+- The figures on this page were drawn for the 1000px width and have not been checked at 820px.

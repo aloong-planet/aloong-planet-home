@@ -1,5 +1,5 @@
-// Marks the section being read in a post's contents.
-// A block, so these names cannot collide with a post's own script.
+// Marks the section being read in a post's contents, and opens any figure in a larger view.
+// Blocks, so these names cannot collide with a post's own script.
 {
   /** @type {HTMLAnchorElement[]} */
   const links = [...document.querySelectorAll('.ap-toc a')].filter(link => link instanceof HTMLAnchorElement);
@@ -36,4 +36,135 @@
   }, {passive: true});
   addEventListener('resize', markCurrent);
   markCurrent();
+}
+
+// The larger view. Every figure opens one, from a click on its drawing area or from its button. The view holds a copy of
+// the drawing area as it looks at that moment, so a figure mid-playback shows that step; the copy's controls do nothing.
+{
+  // Icons: the inner elements of Lucide's own SVGs (lucide-static 0.460.0), copied as published. The site has no icon
+  // module, and an inline SVG follows the text color and keeps its size exactly, where a typed symbol would not.
+  const ICONS = {
+    'maximize-2': '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/>',
+    'x': '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  };
+  /** @param {keyof typeof ICONS} name @param {number} size */
+  const icon = (name, size) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
+
+  const article = document.querySelector('.ap-article');
+  // A figure's drawing area: its frame, or its block of drawings when it has none. Its own controls sit outside this area.
+  /** @param {Element} figure */
+  const drawingArea = figure => figure.querySelector(':scope > .ground') ?? [...figure.children].find(child => child.tagName !== 'FIGCAPTION' && child.querySelector('svg'));
+  const figures = [...document.querySelectorAll('.ap-article-body figure.fig')].filter(figure => drawingArea(figure));
+  // What a click inside a drawing acts on by itself, such as a link to another section.
+  const ACTIVE = 'a[href], button, input, select, textarea, summary, label';
+
+  if (article && figures.length > 0) {
+    const box = document.createElement('div');
+    box.className = 'lightbox';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-label', '大图');
+    box.hidden = true;
+    box.innerHTML = `<div class="lb-bar"><button type="button" class="lb-close" aria-label="关闭" title="关闭">${icon('x', 22)}</button></div><div class="lb-stage"><div class="lb-sheet"><div class="lb-figure"></div><p class="lb-caption"></p></div></div>`;
+    article.append(box);
+    const bar = /** @type {HTMLElement} */ (box.querySelector('.lb-bar'));
+    const stage = /** @type {HTMLElement} */ (box.querySelector('.lb-stage'));
+    const sheet = /** @type {HTMLElement} */ (box.querySelector('.lb-sheet'));
+    const holder = /** @type {HTMLElement} */ (box.querySelector('.lb-figure'));
+    const caption = /** @type {HTMLElement} */ (box.querySelector('.lb-caption'));
+    const close = /** @type {HTMLButtonElement} */ (box.querySelector('.lb-close'));
+    /** @type {HTMLElement | null} */
+    let opener = null;
+    /** @type {Element | null} */
+    let source = null;
+
+    /** @param {number} width */
+    const place = width => {
+      holder.style.width = `${width}px`;
+      sheet.style.width = `${width + 32}px`;
+    };
+    // As large as the window allows, at most twice the area's width in the page, and never narrower than 800px or 85% of
+    // its widest drawing's own width, so its text stays legible; on a narrower window the view scrolls sideways.
+    // Room: the stage keeps 16px each side and 24px below; the sheet adds 16px padding all round and 10px before the caption.
+    function size() {
+      if (!source) return;
+      const drawn = Math.max(0, ...[...source.querySelectorAll('svg')].map(svg => svg.viewBox?.baseVal?.width ?? 0));
+      const floor = Math.max(800, Math.round(drawn * .85));
+      const roomW = innerWidth - 64;
+      caption.style.maxWidth = '';
+      let width = Math.max(floor, Math.min(roomW, source.getBoundingClientRect().width * 2));
+      place(width);
+      // Shrink to the window's height, measured on the copy itself: a block of drawings and text does not keep one ratio.
+      for (let pass = 0; pass < 2; pass++) {
+        const roomH = innerHeight - bar.offsetHeight - 24 - 32 - 10 - caption.offsetHeight;
+        const height = holder.offsetHeight;
+        if (height <= roomH) break;
+        width = Math.max(floor, width * roomH / height);
+        place(width);
+      }
+      const wide = width > roomW;
+      stage.classList.toggle('lb-wide', wide);
+      caption.style.maxWidth = wide ? `${roomW}px` : '';
+    }
+
+    /** @param {Element} figure @param {HTMLElement} button */
+    function open(figure, button) {
+      source = drawingArea(figure) ?? null;
+      if (!source) return;
+      // The post's own figure styles are scoped to its class, so the copy sits inside that class too.
+      const body = figure.closest('.ap-article-body');
+      holder.className = ['lb-figure', ...[...(body?.classList ?? [])].filter(name => name.startsWith('post-'))].join(' ');
+      const copy = /** @type {Element} */ (source.cloneNode(true));
+      copy.classList.remove('zoomable', 'scroll');
+      holder.replaceChildren(copy);
+      caption.textContent = figure.querySelector('figcaption')?.textContent ?? '';
+      opener = button;
+      box.hidden = false;
+      document.documentElement.style.overflow = 'hidden';
+      size();
+      stage.scrollLeft = 0;
+      close.focus();
+    }
+    function shut() {
+      box.hidden = true;
+      holder.replaceChildren();
+      source = null;
+      document.documentElement.style.overflow = '';
+      opener?.focus();
+    }
+
+    for (const figure of figures) {
+      const area = drawingArea(figure);
+      if (!area) continue;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'zoom-btn';
+      button.setAttribute('aria-label', '查看大图');
+      button.title = '查看大图';
+      button.innerHTML = icon('maximize-2', 16);
+      figure.append(button);
+      area.classList.add('zoomable');
+      // A link or control inside the drawing area keeps its own action and does not open the view.
+      area.addEventListener('click', event => {
+        if (event.target instanceof Element && event.target.closest(ACTIVE)) return;
+        open(figure, button);
+      });
+      button.addEventListener('click', () => open(figure, button));
+    }
+    close.addEventListener('click', shut);
+    box.addEventListener('click', event => {
+      if (!(event.target instanceof Element)) return;
+      // The copy's links do nothing, like the rest of its controls.
+      const active = event.target.closest(ACTIVE);
+      if (active && holder.contains(active)) event.preventDefault();
+      // Anything outside the sheet is the gray layer, and clicking it closes the view.
+      if (!event.target.closest('.lb-sheet, .lb-close')) shut();
+    });
+    addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !box.hidden) shut();
+    });
+    addEventListener('resize', () => {
+      if (!box.hidden) size();
+    });
+  }
 }

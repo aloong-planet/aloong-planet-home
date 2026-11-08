@@ -158,7 +158,6 @@
       <g id="badges"></g>
     </svg>
     </div>
-    <div class="scrollhint">这张图比屏幕宽，可以左右滑动查看。</div>
     <div class="legend" data-lens="art">
       <span><i class="kf"></i>Fast Path：程序直达</span>
       <span><i class="ks"></i>Slow Path：进 LLM</span>
@@ -247,7 +246,7 @@
   <h3>为什么单个 Router 没那么容易成为瓶颈</h3>
   <figure class="fig">
     <div class="scroll ground">
-      <svg viewBox="0 0 1200 224" style="min-width:760px" role="img" aria-label="事件平稳时每次 LLM 调用处理一条 Trigger。事件密集时，一轮推理期间到达的 Trigger 会积压，并在下一次调用中一并注入。">
+      <svg viewBox="0 0 1200 224" role="img" aria-label="事件平稳时每次 LLM 调用处理一条 Trigger。事件密集时，一轮推理期间到达的 Trigger 会积压，并在下一次调用中一并注入。">
         <defs><marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="mk-ink" d="M0 0L10 5L0 10z"/></marker></defs>
         <text class="tt" x="20" y="72">事件平稳</text><text class="st" x="20" y="90">逐条进入</text>
         <circle class="dot" cx="190" cy="30" r="4"/><path class="lk" marker-end="url(#m3)" d="M190 36V56"/>
@@ -297,7 +296,7 @@
   <h3>Inline &amp; Spill 和链式召回</h3>
   <figure class="fig">
     <div class="scroll ground">
-      <svg viewBox="0 0 1200 340" style="min-width:880px" role="img" aria-label="模型从当前 Trigger 出发，沿内联的 ID 逐跳读取：Trigger 42 到 Thread 8，到 Worker 3，再到 Thread 15。每个对象只内联摘要和下一跳 ID，其余内容留在窗口外按需续读。">
+      <svg viewBox="0 0 1200 340" role="img" aria-label="模型从当前 Trigger 出发，沿内联的 ID 逐跳读取：Trigger 42 到 Thread 8，到 Worker 3，再到 Thread 15。每个对象只内联摘要和下一跳 ID，其余内容留在窗口外按需续读。">
         <defs><marker id="m4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path class="mk-ink" d="M0 0L10 5L0 10z"/></marker><marker id="m4e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="mk-edge" d="M0 0L10 5L0 10z"/></marker></defs>
 
         <rect class="b" x="20" y="24" width="200" height="186" rx="3"/>
@@ -340,7 +339,7 @@
   <h2><span class="sec">§4</span>面向人的交互：前台不被后台卡住</h2>
   <figure class="fig">
     <div class="scroll ground">
-      <svg viewBox="0 0 1200 384" style="min-width:880px" role="img" aria-label="经典 ReAct Loop 中，工具执行期间到达的用户消息 2 要等到工具结束才被处理。异步 ReAct Loop 中，start 立即返回，同一时刻到达的消息 2 马上得到回复，工具完成后结果作为新事件投递。">
+      <svg viewBox="0 0 1200 384" role="img" aria-label="经典 ReAct Loop 中，工具执行期间到达的用户消息 2 要等到工具结束才被处理。异步 ReAct Loop 中，start 立即返回，同一时刻到达的消息 2 马上得到回复，工具完成后结果作为新事件投递。">
         <defs>
           <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="none"/><line x1="0" y1="0" x2="0" y2="8" stroke="currentColor" stroke-width="1" opacity=".3"/></pattern>
           <marker id="m5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="mk-edge" d="M0 0L10 5L0 10z"/></marker>
@@ -460,12 +459,12 @@
       <div>
         <h4>任务完成时间 P50 到 P95（分钟）</h4>
         <div class="k"><span><i></i>P50</span><span><i class="s"></i>P95</span></div>
-        <div class="scroll"><svg id="c-time" viewBox="0 0 640 224" style="min-width:490px" role="img" aria-label="四种方案的 P50 和 P95 任务完成时间。Super-agent 12.4 到 15.7 分钟；去掉直通 12.6 到 15.5；单 Session 中性提示 20.4 到 29.5；单 Session 提示优先委派 13.8 到 29.0。"></svg></div>
+        <div class="scroll"><svg id="c-time" viewBox="0 0 640 224" role="img" aria-label="四种方案的 P50 和 P95 任务完成时间。Super-agent 12.4 到 15.7 分钟；去掉直通 12.6 到 15.5；单 Session 中性提示 20.4 到 29.5；单 Session 提示优先委派 13.8 到 29.0。"></svg></div>
       </div>
       <div>
         <h4>单次实验读缓存 token（万，全部 Session）</h4>
         <div class="k"><span>&nbsp;</span></div>
-        <div class="scroll"><svg id="c-tok" viewBox="0 0 480 224" style="min-width:400px" role="img" aria-label="四种方案的单次实验读缓存 token。Super-agent 2323 万；去掉直通 3177 万；单 Session 中性提示 605 万；单 Session 提示优先委派 1082 万。"></svg></div>
+        <div class="scroll"><svg id="c-tok" viewBox="0 0 480 224" role="img" aria-label="四种方案的单次实验读缓存 token。Super-agent 2323 万；去掉直通 3177 万；单 Session 中性提示 605 万；单 Session 提示优先委派 1082 万。"></svg></div>
       </div>
     </div>
     <figcaption>两种 Super-agent 方案的 P95 都在 16 分钟以内，两种单 Session 方案的 P95 都接近 30 分钟。代价是读缓存 token：Super-agent 是中性提示方案的 3.8 倍。</figcaption>

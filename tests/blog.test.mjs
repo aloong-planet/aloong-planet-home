@@ -77,7 +77,9 @@ test('a manifest entry, a body and a cover produce the post page, the homepage e
   assert.deepEqual(await readFile(join(s.outDir, 'blog/first.webp')), COVER);
   assert.match(page, /<h1>标题 first<\/h1>/);
   assert.match(page, /正文/);
-  assert.match(page, /<a class="ap-link" href="\/blog">全部文章<\/a>/);
+  // The end of the post: with one post published, both sides keep their place and say there is none. No link back to the Blog list.
+  assert.ok(page.includes('<nav class="post-nav" aria-label="上一篇和下一篇"><span class="pn-card pn-prev pn-none"><span class="pn-dir">上一篇</span><span class="pn-title">已是最早的一篇</span></span><span class="pn-card pn-next pn-none"><span class="pn-dir">下一篇</span><span class="pn-title">已是最新的一篇</span></span></nav>'), page);
+  assert.doesNotMatch(page, /href="\/blog"/);
   assert.match(page, /<link rel="canonical" href="https:\/\/aloongplanet\.com\/blog\/first">/);
   assert.match(page, /<title>标题 first · Aloong Planet<\/title>/);
   assert.doesNotMatch(home, /blog:home/);
@@ -105,8 +107,22 @@ test('the Blog page lists every post newest first with the newest leading, and e
   ]);
 });
 
+test('each post ends with the post published just before it and the one just after, in the Blog order', async () => {
+  const s = await site([post('old', '2026-01-01'), post('same-two', '2026-03-01'), post('same-one', '2026-03-01'), post('lead-z', '2026-05-01'), post('lead-a', '2026-05-01'), post('mid', '2026-02-01')]);
+  await s.build();
+  // [上一篇, 下一篇] for each page, worked out by hand from the Blog order lead-z, lead-a, same-two, same-one, mid, old.
+  const expected = {'lead-z': ['/blog/lead-a', null], 'lead-a': ['/blog/same-two', '/blog/lead-z'], 'same-two': ['/blog/same-one', '/blog/lead-a'], 'same-one': ['/blog/mid', '/blog/same-two'], mid: ['/blog/old', '/blog/same-one'], old: [null, '/blog/mid']};
+  for (const [slug, [prev, next]] of Object.entries(expected)) {
+    const nav = /<nav class="post-nav"[^>]*>([\s\S]*?)<\/nav>/.exec(await s.read(`blog/${slug}.html`))?.[1] ?? '';
+    const side = cls => new RegExp(`<a class="pn-card ${cls}" href="([^"]+)"`).exec(nav)?.[1] ?? (nav.includes(`<span class="pn-card ${cls} pn-none">`) ? null : 'missing');
+    assert.deepEqual([side('pn-prev'), side('pn-next')], [prev, next], slug);
+  }
+  const mid = await s.read('blog/mid.html');
+  assert.ok(mid.includes('<a class="pn-card pn-prev" href="/blog/old"><span class="pn-dir">上一篇</span><span class="pn-title">标题 old</span></a><a class="pn-card pn-next" href="/blog/same-one"><span class="pn-dir">下一篇</span><span class="pn-title">标题 same-one</span></a>'), mid);
+});
+
 test('titles and summaries are shown as text, never parsed as markup', async () => {
-  const s = await site([post('x', '2026-11-05', {title: 'a<b>&"c $& end', summary: "s<i>&\"t $' end"})]);
+  const s = await site([post('x', '2026-11-05', {title: 'a<b>&"c $& end', summary: "s<i>&\"t $' end"}), post('y', '2026-11-04')]);
   await s.build();
   for (const name of ['index.html', 'blog.html']) {
     const html = await s.read(name);
@@ -118,6 +134,11 @@ test('titles and summaries are shown as text, never parsed as markup', async () 
   assert.ok(page.includes('<h1>a&lt;b&gt;&amp;&quot;c $&amp; end</h1>'));
   assert.ok(page.includes('<title>a&lt;b&gt;&amp;&quot;c $&amp; end · Aloong Planet</title>'));
   assert.ok(page.includes(`content="s&lt;i&gt;&amp;&quot;t $' end"`));
+  // The earlier post's 下一篇 card names x, as text.
+  const earlier = await s.read('blog/y.html');
+  assert.ok(earlier.includes('<span class="pn-title">a&lt;b&gt;&amp;&quot;c $&amp; end</span>'), earlier);
+  // The byline's own <b> is markup; the title's must not be.
+  assert.ok(!earlier.includes('a<b>&"c'), earlier);
 });
 
 test('a post loads its own files only when it has them, and unlisted files are not deployed', async () => {

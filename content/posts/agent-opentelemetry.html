@@ -3,7 +3,7 @@
   <p>从使用上看，我只需要在微信里发一条消息，但背后的实现并不只是把消息转交给模型。为了控制文件访问范围、隔离不同操作，并让各个模块的职责保持清晰，我引入了权限控制、独立进程和文件沙箱，也把模型决策、工具执行、工作流和消息发送分开处理。</p>
   <p>这些设计让系统的边界更明确，同时也增加了执行链路的复杂度。一条看似简单的“把这份笔记发给我”，可能经过消息接收、模型理解、工具调用、沙箱初始化、文件查找、上传和消息提交。其中有些步骤串行执行，有些并行发生，还有跨进程通信和异常恢复。</p>
   <figure class="fig" id="fig-execution-chain">
-    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 112" role="img" aria-label="一条消息可能经过的七个环节，按顺序是消息接收、模型理解、工具调用、沙箱初始化、文件查找、上传和消息提交。消息接收属于微信入站，模型理解和工具调用在 App Server，沙箱初始化和文件查找在沙箱子进程，上传和消息提交属于上传链路。">
+    <div class="scroll ground"><svg viewBox="0 0 940 112" role="img" aria-label="一条消息可能经过的七个环节，按顺序是消息接收、模型理解、工具调用、沙箱初始化、文件查找、上传和消息提交。消息接收属于微信入站，模型理解和工具调用在 App Server，沙箱初始化和文件查找在沙箱子进程，上传和消息提交属于上传链路。">
       <defs><marker id="agent-opentelemetry-arrow-2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="ot-head" d="M0 0L10 5L0 10z"/></marker></defs>
       <g class="ot-green"><path class="ot-brace" d="M26 44V36H122V44"/><text class="ot-tag" x="74" y="26" text-anchor="middle">微信入站</text><rect class="ot-box" x="26" y="52" width="96" height="44" rx="3"/><text class="ot-name" x="74" y="79" text-anchor="middle">消息接收</text></g>
       <g class="ot-blue"><path class="ot-brace" d="M166 44V36H386V44"/><text class="ot-tag" x="276" y="26" text-anchor="middle">App Server</text><rect class="ot-box" x="166" y="52" width="96" height="44" rx="3"/><text class="ot-name" x="214" y="79" text-anchor="middle">模型理解</text><rect class="ot-box" x="290" y="52" width="96" height="44" rx="3"/><text class="ot-name" x="338" y="79" text-anchor="middle">工具调用</text></g>
@@ -32,7 +32,7 @@
   <p>本文重点介绍其中的 <b>Tracing，也就是链路追踪</b>。它回答的是：这一次请求经历了什么？各个步骤是什么关系，分别用了多久，又在哪里出了问题？放到这个工具中，就是把一条消息经过模型、工具、沙箱和发送环节的过程关联起来。</p>
   <p>Trace 由一个个 <b>Span</b> 组成。一个 Span 可以代表一次工具调用，也可以代表一次网络请求，记录它的开始、结束及相关信息。把属于同一请求的 Span 关联起来，就能看到这次请求的执行路径。<a href="https://opentelemetry.io/docs/concepts/signals/traces/">来源：官方 Traces 文档</a></p>
   <figure class="fig" id="fig-trace-waterfall">
-    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 462" role="img" aria-label="Trace 瀑布图，按 OpenTelemetry 官方原图重绘。横向是时间，每个色块是一个操作，颜色表示嵌套层级。最外层的 client 覆盖全程，/api 在它之内；/api 之下从左到右是 /authN、/payment Gateway 和 /dispatch；/authN 之下有 /authZ；/payment Gateway 之下先后是 DB 和 Ext. Merchant；/dispatch 之下的 /dispatch/search、三个 /poll 和 /pollDriver/{id} 同时开始，时间互相重叠。">
+    <div class="scroll ground"><svg viewBox="0 0 940 462" role="img" aria-label="Trace 瀑布图，按 OpenTelemetry 官方原图重绘。横向是时间，每个色块是一个操作，颜色表示嵌套层级。最外层的 client 覆盖全程，/api 在它之内；/api 之下从左到右是 /authN、/payment Gateway 和 /dispatch；/authN 之下有 /authZ；/payment Gateway 之下先后是 DB 和 Ext. Merchant；/dispatch 之下的 /dispatch/search、三个 /poll 和 /pollDriver/{id} 同时开始，时间互相重叠。">
       <defs><marker id="agent-opentelemetry-arrow-1" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="ot-head" d="M0 0L10 5L0 10z"/></marker></defs>
       <g class="ot-blue"><rect class="ot-box" x="24" y="16" width="892" height="34" rx="3"/><text class="ot-name" x="34" y="38">client</text></g>
       <g class="ot-violet"><rect class="ot-box" x="71.8" y="62" width="813.1" height="34" rx="3"/><text class="ot-name" x="81.8" y="84">/api</text></g>
