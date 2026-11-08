@@ -34,7 +34,7 @@
   <p>按 agent 排，花得最多的不是写代码的做票 agent，而是收口 agent：80 美元，比最复杂的那张票还多。收口票几乎不写代码，主要是全量验收和文档回归，它到底在干什么？</p>
   <p>把它的 539 次请求按时间线摊开，答案一目了然：<b>它在等。</b>它要等两次复核子 agent 交回结果，等两次全量门禁跑完。在这五段等待里，它一共查了 212 次进度，每一道竖线是一次查看：</p>
   <figure class="fig" id="fig-polling-timeline">
-    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 330" role="img" aria-label="收口 agent 五段等待的查进度时间线：复核第 2 轮查了 96 次、全量门禁查了 94 次，中位间隔不到 5 秒。图中四行是其中四段，每一道竖线是一次查看，横轴是从这段等待开始算起的分钟数：复核前门禁，等自己的命令，4.0 分钟，查了 10 次；复核第 1 轮，等子 agent，15.5 分钟，查了 11 次；复核第 2 轮，等子 agent，15.4 分钟，查了 96 次，中位间隔 4.8 秒，后半段竖线越来越密；全量门禁，等自己的命令，6.8 分钟，查了 94 次，中位间隔 3.7 秒，竖线几乎从头密到尾。">
+    <div class="scroll ground"><svg viewBox="0 0 940 330" role="img" aria-label="收口 agent 五段等待的查进度时间线：复核第 2 轮查了 96 次、全量门禁查了 94 次，中位间隔不到 5 秒。图中四行是其中四段，每一道竖线是一次查看，横轴是从这段等待开始算起的分钟数：复核前门禁，等自己的命令，4.0 分钟，查了 10 次；复核第 1 轮，等子 agent，15.5 分钟，查了 11 次；复核第 2 轮，等子 agent，15.4 分钟，查了 96 次，中位间隔 4.8 秒，后半段竖线越来越密；全量门禁，等自己的命令，6.8 分钟，查了 94 次，中位间隔 3.7 秒，竖线几乎从头密到尾。">
       <text class="c-name" x="20" y="37">复核前门禁</text><text class="c-sub" x="20" y="57">等自己的命令 · 4.0 分钟</text>
       <rect class="c-track" x="236" y="23" width="130" height="34" rx="3"/>
       <path class="c-tick" d="M236.49 23V57M257.88 23V57M271.37 23V57M277.87 23V57M293.31 23V57M303.65 23V57M305.33 23V57M312.81 23V57M320.99 23V57M361.88 23V57"/>
@@ -75,7 +75,7 @@
   <p>最讽刺的是，我的流程规范里早就写着：<b>复核以子 agent 的最终交回为准，不得以记录被写入作为结束信号。</b>它没有违反这条——它不是拿行数当结束信号，它只是一直盯着看。规范管住了结论，没管住「看」这个动作。</p>
   <p>你可能会问：查得这么勤，缓存一直是热的，每次不是很便宜吗？确实，整个收口过程缓存一次都没过期。但每查一次，就是一次完整的 API 请求，要把 95 万 token 的上下文读一遍，约 0.19 美元。便宜的是单价，次数照乘。同样一段 6.8 分钟的门禁，三种等法的账：</p>
   <figure class="fig" id="fig-wait-cost">
-    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 210" role="img" aria-label="同一段 6.8 分钟的门禁，三种等法的费用：高频轮询约 19 美元，结束本轮等通知约 4.8 美元，有界等待约 0.5 美元。上下文约 95 万 token，按 Opus 5.5 的 API 价折算。高频轮询约每 4 秒查一次，94 次缓存读；结束本轮、等完成通知时缓存已过期，整份重写 1 次；有界等待每次最多阻塞 3 分钟，2–3 次读。">
+    <div class="scroll ground"><svg viewBox="0 0 940 210" role="img" aria-label="同一段 6.8 分钟的门禁，三种等法的费用：高频轮询约 19 美元，结束本轮等通知约 4.8 美元，有界等待约 0.5 美元。上下文约 95 万 token，按 Opus 5.5 的 API 价折算。高频轮询约每 4 秒查一次，94 次缓存读；结束本轮、等完成通知时缓存已过期，整份重写 1 次；有界等待每次最多阻塞 3 分钟，2–3 次读。">
       <text class="c-name" x="20" y="31">高频轮询</text><text class="c-sub" x="20" y="51">约每 4 秒查一次，94 次缓存读</text>
       <path class="c-bar" d="M300 22H736a4 4 0 0 1 4 4V42a4 4 0 0 1 -4 4H300Z"/><text class="c-val" x="750" y="39">约 19 美元</text>
       <text class="c-name" x="20" y="101">结束本轮，等完成通知</text><text class="c-sub" x="20" y="121">缓存已过期，整份重写 1 次</text>
@@ -105,7 +105,7 @@
   <p>等复核的那 9 次，多数是做票 agent 在前台挂一条 10 分钟的命令，等复核记录里出现某一节——既是在盯记录，又因为阻塞超过 5 分钟，醒来要整份重写。</p>
   <p>到这里，问题的结构就清楚了。切到对抗性测试之前，test review 在主 agent 自己的上下文里做，不用等另一个 agent。切过来之后，形成了三层：主会话派出做票 agent，做票 agent 再派出复核子 agent。<b>等待被夹在了中间那一层</b>：它是子 agent，缓存只有 5 分钟；它又要等另一个子 agent，一等就是十几分钟。轮询和缓存过期，全部发生在这一层。</p>
   <figure class="fig" id="fig-waiting-layers">
-    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 460" role="img" aria-label="切换前后的结构对比：切换后，做票和收口 agent 作为子 agent 夹在主会话与复核子 agent 之间，轮询 212 次、缓存过期 18 次都发生在这一层。切换前：主会话，缓存 1 小时，派出做票 agent；做票 agent 写代码、自己审自己的测试，不用等另一个 agent。切换后：主会话，缓存 1 小时，结束本轮等通知，醒来只付一次读，派出做票或收口 agent；做票和收口 agent 是子 agent，缓存只有 5 分钟，要等复核交回、等门禁跑完，轮询 212 次查进度、缓存过期 18 次整份重写都发生在这里；它们再派出复核子 agent，做不继承对话的对抗性测试，一跑十几分钟。">
+    <div class="scroll ground"><svg viewBox="0 0 940 460" role="img" aria-label="切换前后的结构对比：切换后，做票和收口 agent 作为子 agent 夹在主会话与复核子 agent 之间，轮询 212 次、缓存过期 18 次都发生在这一层。切换前：主会话，缓存 1 小时，派出做票 agent；做票 agent 写代码、自己审自己的测试，不用等另一个 agent。切换后：主会话，缓存 1 小时，结束本轮等通知，醒来只付一次读，派出做票或收口 agent；做票和收口 agent 是子 agent，缓存只有 5 分钟，要等复核交回、等门禁跑完，轮询 212 次查进度、缓存过期 18 次整份重写都发生在这里；它们再派出复核子 agent，做不继承对话的对抗性测试，一跑十几分钟。">
       <defs><marker id="subagent-review-token-postmortem-arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path class="d-mk" d="M0 0L10 5L0 10z"/></marker></defs>
       <text class="d-col" x="170" y="24" text-anchor="middle">切换前</text>
       <text class="d-col" x="645" y="24" text-anchor="middle">切换后</text>
@@ -161,7 +161,7 @@
   <p>规则写完不能只靠感觉，得测。我把收口环节的两段等待做成了一个可重复的任务：先跑一个约 7 分钟的模拟门禁，再派一个约 8 分钟的模拟复核子 agent，边跑边往记录里追加发现。每组一个父 agent 加一个复核子 agent，先分三种条件各跑两次：没有规则、规则带具体命令、规则精简版（只讲约束，不教命令），规则都写在提示里交给 agent。</p>
   <p>测试里的上下文只有 5 万 token 左右，所以我按请求数和缓存过期次数，折算到 90 万上下文（一次读约 0.18 美元，一次重写约 4.5 美元）：</p>
   <figure class="fig" id="fig-test-results">
-    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 214" role="img" aria-label="同一个任务跑六遍，等待部分的费用：没有规则约 13.5 美元，规则带命令约 5.2 美元，规则精简版约 1.4 美元；附结果正确率、缓存过期次数和打扰主会话的通知数。没有规则：结果正确 1/2，缓存过期重写每组 3 次，打扰主会话的通知 7 条。规则带命令：结果正确 2/2，缓存过期重写每组 1 次，打扰主会话的通知 0 条。规则精简版：结果正确 2/2，缓存过期重写 0 次，打扰主会话的通知 0 条。">
+    <div class="scroll ground"><svg viewBox="0 0 940 214" role="img" aria-label="同一个任务跑六遍，等待部分的费用：没有规则约 13.5 美元，规则带命令约 5.2 美元，规则精简版约 1.4 美元；附结果正确率、缓存过期次数和打扰主会话的通知数。没有规则：结果正确 1/2，缓存过期重写每组 3 次，打扰主会话的通知 7 条。规则带命令：结果正确 2/2，缓存过期重写每组 1 次，打扰主会话的通知 0 条。规则精简版：结果正确 2/2，缓存过期重写 0 次，打扰主会话的通知 0 条。">
       <text class="c-head" x="150" y="22">等待部分的费用</text><text class="c-head" x="650" y="22" text-anchor="end">结果正确</text><text class="c-head" x="790" y="22" text-anchor="end">缓存过期重写</text><text class="c-head" x="920" y="22" text-anchor="end">打扰主会话的通知</text>
       <path class="c-rule" d="M20 36H920M20 94H920M20 150H920"/>
       <text class="c-name" x="20" y="71">没有规则</text><path class="c-bar" d="M150 54H446a4 4 0 0 1 4 4V74a4 4 0 0 1 -4 4H150Z"/><text class="c-val" x="460" y="71">约 13.5 美元</text><text class="c-val" x="650" y="71" text-anchor="end">1/2</text><text class="c-val" x="790" y="71" text-anchor="end">每组 3 次</text><text class="c-val" x="920" y="71" text-anchor="end">7 条</text>

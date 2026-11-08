@@ -1,17 +1,10 @@
-/* Figures, code blocks and reference lines for this post. The shared look is in public/article.css.
+/* Figures and reference lines for this post. The shared look is in public/article.css.
    Series colors are the first two categorical slots of the dataviz reference palette; -ink and -wash are the
    same hues for box titles and box fills in the timeline diagram. One meaning, one hue, across all three figures. */
 .post-claude-code-idle-compaction{--ic-save:#2a78d6;--ic-save-ink:#1c5cab;--ic-save-wash:#eef5fd;--ic-cost:#eb6834;--ic-cost-ink:#b3461a;--ic-cost-wash:#fdf1ec}
 
-.post-claude-code-idle-compaction .codeblock { margin:0; padding:14px 16px; overflow-x:auto; background:var(--panel); border:1px solid var(--line); border-radius:5px; font:400 13px/1.65 var(--mono); white-space:pre; }
-.post-claude-code-idle-compaction .codeblock code { font-size:inherit; }
-
 /* Long reference URLs wrap instead of widening the page on a phone. */
 .post-claude-code-idle-compaction .ic-ref{overflow-wrap:anywhere}
-
-/* Every figure is 940 units wide with 14-unit text at the smallest: 940 × 11 ÷ 14 keeps that text at 11px or more
-   when a phone scrolls the figure inside its box. */
-.post-claude-code-idle-compaction .figw{min-width:739px}
 
 /* Timeline diagram: boxes are colored by role (event, cost, save); titles and key amounts take their box's hue. */
 .post-claude-code-idle-compaction .ic-lane{font-size:19px;font-weight:600}

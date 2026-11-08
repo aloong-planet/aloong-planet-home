@@ -10,11 +10,15 @@ Readers who want more than the app showcase can read Aloong's long-form writing.
 - Follow an example event through the architecture map step by step, switch between the article's design and the public prototype, and hover over a chart for its values.
 - Move around a post with its contents: beside the article on a wide screen, where it stays in view and marks the section being read, or under the title on a narrower one.
 - Land on a section immediately when following a link to it, with the section heading clear of the top navigation.
-- Open links to other sites in a new tab, and return to the list with "全部文章" at the end of a post.
-- On a small screen, scroll wide figures and tables sideways inside their own area.
+- Read text, tables, figures and code at one width, with green headings, links and accents that only post pages use.
+- See every figure whole at the article's width on any screen, straight on the page without a box around it, and click or tap any figure to open it in a larger view for its detail; from the keyboard, its 查看大图 button appears on focus. The view shows the figure as it is at that moment, and a click or tap anywhere in it, or Esc, closes it.
+- On a small screen, scroll wide tables sideways inside their own area.
+- Open links to other sites in a new tab.
+- At the end of a post, go to the post published just before it (上一篇) or just after it (下一篇). The oldest and newest posts say there is none on that side.
 
 ## Boundaries and non-goals
 - Pages come in one light appearance and one language.
 - There are no comments, tags, search, or subscriptions.
-- Text and figures stay readable without scripting, but the top navigation, the contents marker, and interactive figures need it.
+- Text and figures stay readable without scripting, but the top navigation, the contents marker, interactive figures and the larger view need it.
+- A post has no link back to the Blog list of its own; the top navigation leads there.
 - An address that does not match a post shows the [not-found page](not-found.md).

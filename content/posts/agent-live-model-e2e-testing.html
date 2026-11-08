@@ -25,7 +25,7 @@
   <blockquote class="quote"><p>用户口令 → 生产一致的入站链路 → 真实模型自主调用工具 → 实际文件操作与工作流 → 模拟发送记录 → 结论和证据核对。</p></blockquote>
   <p>传统的单元测试、集成测试和预设模型测试仍然保留。真模型回归是在它们之上，专门补上“模型如何使用系统”的验证。</p>
   <figure class="fig" id="fig-live-run">
-    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 332" role="img" aria-label="真模型端到端回归的一次执行：用户口令从专用的模拟微信入口提交，经过与生产一致的入站链路，由真实模型自主调用工具、自己选择工具和参数，再进行实际文件操作与工作流，使用受控测试文件和权限配置；模拟发送记录本来要发送的内容；最后用结构化结论、Trace 和实际执行记录核对结论和证据。对照原来的测试：模型输出始终是预设的时，看不到真实模型可能选择的参数、探索路径和纠错过程；测试直接调用底层工具时，参数、文件引用和工具调用已由测试给好，无法覆盖消息进入系统后的一系列处理。">
+    <div class="scroll ground"><svg viewBox="0 0 940 332" role="img" aria-label="真模型端到端回归的一次执行：用户口令从专用的模拟微信入口提交，经过与生产一致的入站链路，由真实模型自主调用工具、自己选择工具和参数，再进行实际文件操作与工作流，使用受控测试文件和权限配置；模拟发送记录本来要发送的内容；最后用结构化结论、Trace 和实际执行记录核对结论和证据。对照原来的测试：模型输出始终是预设的时，看不到真实模型可能选择的参数、探索路径和纠错过程；测试直接调用底层工具时，参数、文件引用和工具调用已由测试给好，无法覆盖消息进入系统后的一系列处理。">
       <defs>
         <marker id="agent-live-model-e2e-testing-m1" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path class="lm-mk-edge" d="M0 0L10 5L0 10z"/></marker>
         <marker id="agent-live-model-e2e-testing-m1g" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path class="lm-mk-gap" d="M0 0L10 5L0 10z"/></marker>
@@ -146,7 +146,7 @@
   <p>报告让“测试过了”变成可以复核的证据，也让我能够在微信里使用相同口令确认结果。</p>
   <p>自动化阶段得到的是候选通过；真实微信阶段，再核对相同业务结论与实际文件接收效果。自然语言不要求逐字一样，但业务行为必须一致。渠道接受发送与手机实际收到，也分别记录。</p>
   <figure class="fig" id="fig-delivery-loop">
-    <div class="scroll ground"><svg class="figw" viewBox="0 0 940 516" role="img" aria-label="交付流程前后对比，竖虚线是交付。刚开始：Codex 完成修改，单元测试和 E2E 都跑通了；交付后我发一句消息，却发现它没有正确理解要求，或没有完成应有的操作；把问题反馈回去，再修改、再测试，往往要经过几轮，这个回路越过了交付线。加入真模型端到端回归后：Codex 完成修改，先执行针对性测试，再运行完整工程门禁以及相应的真模型回归；失败时判断是产品行为有问题，还是测试断言测错了对象，修复后重新运行，而不是原样重复直到碰巧通过，这个回路留在交付之前；通过后形成报告，得到候选通过；交付后真实微信验收，核对相同业务结论与实际文件接收效果，第一次验收时达到了预期。">
+    <div class="scroll ground"><svg viewBox="0 0 940 516" role="img" aria-label="交付流程前后对比，竖虚线是交付。刚开始：Codex 完成修改，单元测试和 E2E 都跑通了；交付后我发一句消息，却发现它没有正确理解要求，或没有完成应有的操作；把问题反馈回去，再修改、再测试，往往要经过几轮，这个回路越过了交付线。加入真模型端到端回归后：Codex 完成修改，先执行针对性测试，再运行完整工程门禁以及相应的真模型回归；失败时判断是产品行为有问题，还是测试断言测错了对象，修复后重新运行，而不是原样重复直到碰巧通过，这个回路留在交付之前；通过后形成报告，得到候选通过；交付后真实微信验收，核对相同业务结论与实际文件接收效果，第一次验收时达到了预期。">
       <defs>
         <marker id="agent-live-model-e2e-testing-m2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path class="lm-mk-edge" d="M0 0L10 5L0 10z"/></marker>
         <marker id="agent-live-model-e2e-testing-m2g" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path class="lm-mk-gap" d="M0 0L10 5L0 10z"/></marker>

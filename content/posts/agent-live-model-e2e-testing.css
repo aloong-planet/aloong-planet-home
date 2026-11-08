@@ -1,9 +1,6 @@
-/* Quotes and figures for this post. The shared look is in public/article.css. */
+/* Figures for this post. The shared look is in public/article.css. */
 .post-agent-live-model-e2e-testing{--lm-test-fill:#EDF4FE;--lm-test-line:#7FA8E6;--lm-test-ink:#174A97;--lm-app-fill:#E6F6F6;--lm-app-line:#57B5BD;--lm-app-ink:#005F6B;--lm-model-fill:#FEF3E2;--lm-model-line:#DFA355;--lm-model-ink:#8A4500;--lm-dev-fill:#F3EEFD;--lm-dev-line:#A78FE3;--lm-dev-ink:#5330A8;--lm-user-fill:#EAF7EE;--lm-user-line:#74BE8F;--lm-user-ink:#17653A;--lm-gap:#B3261E}
-.post-agent-live-model-e2e-testing .quote { margin:0; padding:2px 0 2px 16px; border-left:3px solid var(--line); color:var(--muted); display:grid; gap:10px; max-width:46em; }
 
-/* Figures: 940 wide with 13px as the smallest text, so 796px keeps that text at 11px or more where the figure scrolls on a phone. */
-.post-agent-live-model-e2e-testing .figw{min-width:796px}
 .post-agent-live-model-e2e-testing .lm-t{font-size:14px;font-weight:600}
 .post-agent-live-model-e2e-testing .lm-d{font-size:13px;fill:var(--muted)}
 .post-agent-live-model-e2e-testing .lm-h{font-size:14px;font-weight:600}
