@@ -4,6 +4,8 @@ Use pnpm for JavaScript dependencies and commands. Do not restart existing devel
 
 Cross-skill project facts are declared in the repository-root `capabilities.toml`.
 
+To publish or republish a post, follow `docs/ops/publishing-posts.md`.
+
 ## Agent skills
 
 ### Issue tracker

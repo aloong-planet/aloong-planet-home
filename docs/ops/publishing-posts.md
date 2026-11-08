@@ -45,3 +45,18 @@ The build refuses a stylesheet that would break the shared look. Every selector 
 - No dark appearance: no `prefers-color-scheme`, `color-scheme`, `light-dark()`, or `data-theme`.
 
 The body may not contain `style` or `script` elements or a whole page's shell. A complete page exported from elsewhere must be split into these parts first. Requirements and boundaries are in the [blog spec](../specs/blog.md).
+
+## Republishing a WeChat article
+
+Articles from the WeChat Official Account live in the Content Studio repository (`zhoulf1006/content-studio`). Each is `manuscripts/<slug>/source.md`, with its images in `assets/images/` and any data behind them elsewhere under `assets/`. Change nothing there.
+
+- **Slug**: the manuscript's folder name.
+- **Manifest entry**: `title` is the front matter's `title`, and `summary` is its `digest`. Leave out `source`: the byline would call the author's own article a reading of another.
+- **Date**: the day, in Beijing time, of `synced_at` in `publishers/wechat/productions/<slug>/receipt.yaml`, which records when the draft was last saved to WeChat; receipts so far leave `published_at` empty. Set the date once, when the post is added, and keep it if the draft is saved again later.
+- **Text**: keep every paragraph, list, table, code block, quote and link word for word, punctuation included. Leave out only the front matter, the `# title` line, and lines meant only for WeChat, such as follow prompts.
+  - The text before the first `##` goes in a `<section>` with no id, so it stays out of the contents.
+  - Each `##` becomes a section. `###` becomes `h3`, `**x**` becomes `<b>x</b>`, a bullet list `ul.plain`, a numbered list `ol`, a code block `<pre class="codeblock"><code>`, and a quote `<blockquote class="quote"><p>`.
+  - The title of another article already on the site links to its `/blog/<slug>` address.
+- **Figures**: redraw every image the manuscript references as inline SVG, with the same meaning and the same numbers, taken from the text, the image's alt text, or the data files. The build publishes no image file for a post except its cover. An article with no figures may get a few new ones where a structure, a process or numbers read more clearly as a picture. Every label in a new figure states only what the article says, and nothing is decorative.
+- **Cover**: the manuscript's `assets/cover.png`, or its `assets/images/cover.png` when that does not exist. It is the article's WeChat cover, not a figure. Reduce it as in step 3, with the settings in the [asset provenance](../assets/README.md).
+- **Text check**: before the pull request, compare the text mechanically. Strip the tags from the body and the Markdown from the manuscript, and confirm that every manuscript paragraph appears in the body, in order.
