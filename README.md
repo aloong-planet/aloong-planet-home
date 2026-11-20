@@ -1,6 +1,6 @@
 # Aloong Planet
 
-A personal homepage with Apps, a Blog, an interactive golden retriever, and an anonymous visitor ordinal. The supplied seated portrait and interactive dog sit together on the right, with the introduction beneath them and the newest posts beside them. Small screens use a centered, full-width group followed by the posts. See [publishing a post](docs/ops/publishing-posts.md).
+A personal homepage with Apps, a Blog, an interactive golden retriever, and a site-wide anonymous visitor total. The supplied seated portrait and interactive dog sit together on the right, with the introduction beneath them and the newest posts beside them. Small screens use a centered, full-width group followed by the posts. See [publishing a post](docs/ops/publishing-posts.md).
 
 ## Develop and verify
 
@@ -28,7 +28,7 @@ Project: `aloong-planet-home`. Build output: `dist`. The build compiles Pages Fu
 
 Production binding `VISITORS` points to `aloong-planet-visitors`; schema is in `migrations/0001_visitors.sql`. The production database ID is in wrangler.jsonc. Local runtime state is isolated under .wrangler; no local database is included in the upload. Preview deployments have no production binding; bind a separate database before testing their counter. A production deployment's pages.dev aliases use production data but have separate host cookies.
 
-Apex and www share the one-year anonymous cookie. The homepage declares the apex canonical URL. The number is the browser's original ordinal, not the current total or a verified person count. Clearing cookies, changing browsers/devices or opening a fresh private session creates a new identity. No IP address, fingerprint or user agent is persisted by this feature.
+Apex and www share the one-year anonymous cookie. The homepage declares the apex canonical URL. The homepage shows the shared total of anonymous browsers, refreshed every 30 seconds while visible and immediately on return. The homepage, Blog list and all published posts register visitors; missing pages do not. This is not a verified person count. Clearing cookies, changing browsers/devices or opening a fresh private session creates a new identity. No IP address, fingerprint or user agent is persisted by this feature.
 
 No paid subscription is enabled. Free-plan exhaustion causes the counter to disappear while the static homepage stays usable. This repository preserves the deployed source. Releases use the existing Direct Upload Pages project through `pnpm cf:deploy`. GitHub checks run on pull requests; main pushes deploy after checks when the repository Actions secret is configured. See [deployment setup and recovery](docs/ops/deployment.md).
 

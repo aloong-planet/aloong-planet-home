@@ -199,6 +199,7 @@ function renderPost(post, body, {stylesheet, script, earlier, later}) {
   <link rel="canonical" href="${ORIGIN}/blog/${post.slug}">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <script src="/navigation.js" defer></script>
+  <script type="module" src="/visitor.js"></script>
   <script src="/article.js" defer></script>${script ? `\n  <script src="/blog/${post.slug}.js" defer></script>` : ''}
 </head>
 <body class="ap-site">

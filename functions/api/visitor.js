@@ -30,6 +30,18 @@ export const onRequest = async ({request,env}) => {
     return json({error:'forbidden'},403);
   }
   if (!['GET','POST'].includes(request.method)) return json({error:'method_not_allowed'},405,{'Allow':'GET, POST'});
+  if (request.method === 'GET' && url.searchParams.get('total') === '1') {
+    try {
+      const results = await env.VISITORS.batch([
+        env.VISITORS.prepare('SELECT COUNT(*) AS total FROM visitors').bind()
+      ]);
+      const total = /** @type {{total?: unknown} | undefined} */ (results[0].results[0])?.total;
+      if (typeof total !== 'number' || !Number.isSafeInteger(total) || total < 0) throw new Error('Invalid total');
+      return json({total});
+    } catch {
+      return json({error:'temporarily_unavailable'},503);
+    }
+  }
   const id = identifier(request);
   if (request.method === 'GET') {
     if (id) return json({ready:true});
@@ -46,14 +58,16 @@ export const onRequest = async ({request,env}) => {
     const results = await env.VISITORS.batch([
       env.VISITORS.prepare(`INSERT INTO visitors (visitor_id)
         SELECT ? WHERE NOT EXISTS (SELECT 1 FROM visitors WHERE visitor_id = ?)`).bind(id,id),
-      env.VISITORS.prepare('SELECT ordinal FROM visitors WHERE visitor_id = ?').bind(id)
+      env.VISITORS.prepare('SELECT ordinal, (SELECT COUNT(*) FROM visitors) AS total FROM visitors WHERE visitor_id = ?').bind(id)
     ]);
-    const row = /** @type {{ordinal?: unknown} | undefined} */ (results[1].results[0]);
+    const row = /** @type {{ordinal?: unknown, total?: unknown} | undefined} */ (results[1].results[0]);
     const ordinal = row?.ordinal;
     if (typeof ordinal !== 'number' || !Number.isSafeInteger(ordinal) || ordinal < 1) {
       throw new Error('Invalid ordinal');
     }
-    return json({ordinal});
+    const total = row?.total;
+    if (typeof total !== 'number' || !Number.isSafeInteger(total) || total < 1) throw new Error('Invalid total');
+    return json({ordinal,total});
   } catch {
     // Keep the cookie stable so a retry after a partial network failure reuses identity.
     return json({error:'temporarily_unavailable'},503);

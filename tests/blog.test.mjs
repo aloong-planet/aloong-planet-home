@@ -8,6 +8,7 @@
 // which reduced motion turns off.
 // Which image each post uses as its cover is content, checked by eye. Test them here once the browser suite capability is enabled.
 import {test} from 'node:test';
+import {realSite} from './helpers/built-site.mjs';
 import assert from 'node:assert/strict';
 import {execFile} from 'node:child_process';
 import {createServer} from 'node:http';
@@ -47,14 +48,6 @@ async function site(posts, {files = {}, bodies = {}, covers = {}, home = '<main>
   return {build, read, outDir};
 }
 const repo = fileURLToPath(new URL('..', import.meta.url));
-let builtRealSite;
-/** The repository's own templates, shared files and posts, built once for tests that only read it. */
-const realSite = () => builtRealSite ??= (async () => {
-  const outDir = join(await mkdtemp(join(tmpdir(), 'blog-real-')), 'out');
-  await cp(join(repo, 'public'), outDir, {recursive: true});
-  await buildBlog({contentDir: join(repo, 'content'), outDir});
-  return outDir;
-})();
 /** The file a public path serves in a built site. */
 const servedFile = path => ({'/': 'index.html', '/blog': 'blog.html'})[path] ?? (extname(path) ? path.slice(1) : `${path.slice(1)}.html`);
 /** Runs a repository script as a process in the given folder; it never rejects, so callers read the exit code. */

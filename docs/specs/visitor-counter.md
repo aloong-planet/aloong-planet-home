@@ -1,7 +1,5 @@
 # Site-wide anonymous visitor total
 
-> Pending: site-wide registration and automatic total refresh are implemented.
-
 ## Problem Statement
 Readers enter through different pages, and the site owner needs a cumulative audience count that excludes repeat visits from the same anonymous browser.
 

@@ -10,9 +10,9 @@
 | Canonical hostname | https://aloongplanet.com | Public personal homepage |
 | Alternate hostname | https://www.aloongplanet.com | Same homepage and shared visitor cookie |
 | Pages hostname | https://aloong-planet-home.pages.dev | Production alias; own host cookie, production database |
-| D1 database | aloong-planet-visitors | Anonymous visitor ordinals |
+| D1 database | aloong-planet-visitors | Anonymous visitor records and cumulative total |
 | D1 database ID | f588c63e-74d6-4ede-abb3-efd5548d44a3 | Bound as VISITORS in production |
-| Visitor endpoint | /api/visitor | Cookie bootstrap and idempotent registration |
+| Visitor endpoint | /api/visitor | Cookie bootstrap, idempotent registration and read-only totals |
 
 These IDs are resource identifiers, not credentials. The project and binding settings are in wrangler.jsonc; the account and public verification hosts are in deployment.config.json. No paid subscription is required or enabled. Production visitor data is not part of this repository.
 
