@@ -119,7 +119,7 @@ Applies to: every blog page. Pages use the site's fixed light appearance and sin
 
 ### blog::CON-003 Static delivery (direct acceptance)
 
-Applies to: every blog page. Blog pages are static assets and invoke no function; [visitor-counter::CON-001](visitor-counter.md) still governs function routing.
+Applies to: every blog page. Page documents are static assets. Client-side visitor registration follows [visitor-counter::REQ-001/AC-01](visitor-counter.md); [visitor-counter::CON-001](visitor-counter.md) governs function routing.
 
 ## Failure modes and boundaries
 

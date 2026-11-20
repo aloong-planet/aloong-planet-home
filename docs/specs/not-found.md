@@ -1,6 +1,6 @@
 # Not-found page
 
-> Related: [features](../features/not-found.md) · [blog](blog.md) · [visitor ordinal](visitor-counter.md)
+> Related: [features](../features/not-found.md) · [blog](blog.md) · [visitor total](visitor-counter.md)
 
 ## Problem Statement
 A visitor who opens a mistyped link, or the address of a post that has been removed, sees the homepage with no sign that the page does not exist. Every address on the site answers with status 200, so nothing tells the visitor, a search engine, or a check that the page is missing.
@@ -54,7 +54,7 @@ Search engines and checks:
 
 Existing features:
 - The homepage, the Blog page, post pages, Apps, the dog interaction and the visitor API behave as before; only addresses the site does not have change.
-- The visitor ordinal is untouched: only the homepage registers visitors (not-found::CON-001).
+- Visitor registration on the not-found page follows not-found::CON-001; registration on existing pages follows [visitor-counter::REQ-001/AC-01](visitor-counter.md).
 
 ## Implementation Decisions
 

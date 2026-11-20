@@ -18,3 +18,8 @@ enabled = false
 
 [enumeration-wording-gate]
 enabled = false
+
+[docs-auto-merge]
+enabled = true
+source = "docs/ops/documentation-merges.md"
+enforced-by = []
