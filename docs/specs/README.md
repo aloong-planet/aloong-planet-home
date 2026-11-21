@@ -7,3 +7,4 @@ Each spec is the current requirement picture for one feature, for people changin
 | [Blog](blog.md) | Posts, the Blog page, and recent posts on the homepage. |
 | [Site-wide anonymous visitor total](visitor-counter.md) | Deduplicated visitors across pages and a homepage total that updates automatically. |
 | [Not-found page](not-found.md) | What an address the site does not have shows, and its status. |
+| [Homepage dog](homepage-dog.md) | Automatic tail wagging and pause/resume controls. |
