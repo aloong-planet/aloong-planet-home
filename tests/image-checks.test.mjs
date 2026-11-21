@@ -1,7 +1,8 @@
 // These have no DOM here and are checked by recorded real-browser runs, because the project has no browser test suite:
 // the portrait requested at high priority, the sitting dog at low priority, the dog's motion sheets waiting for the
-// page's load event, the dog still greeting a pointer that arrived before its motion sheets, how the reduced
-// portrait looks at its displayed size, and how the re-encoded motion sheets look as the dog plays. Test them here
+// page's load event, automatic wagging and pause/resume controls once motion sheets are ready, how the reduced
+// portrait looks at its displayed size, and how the re-encoded motion sheets look as the dog plays. Dog visibility,
+// reduced motion, pre-load pause and failed motion loading also need browser checks. Test them here
 // once the browser suite capability is enabled.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';

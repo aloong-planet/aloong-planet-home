@@ -9,7 +9,7 @@ const snapshot=document.createElement('canvas');snapshot.width=snapshot.height=g
 const snapshotCtx=snapshot.getContext('2d');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const images=[];
-let ready=false,wanted=false,mouseNear=false,touchHeld=false,keyHeld=false,lastPointer=null;
+let ready=false,wanted=true;
 let mode='idle',frame=goldenConfig.first,raf=0,lastTime=0,fadeElapsed=0,fadeDuration=0;
 function say(text){if(status.textContent!==text)status.textContent=text;}
 function stamp(){canvas.dataset.mode=mode;canvas.dataset.frame=mode==='idle'?'original':String(Math.floor(frame));canvas.dataset.active=String(wanted);}
@@ -39,7 +39,7 @@ function transition(next,nextFrame,ms=0){
 }
 function stopIdle(){
  cancelAnimationFrame(raf);raf=0;lastTime=0;mode='idle';frame=goldenConfig.first;
- fadeDuration=fadeElapsed=0;mascot.dataset.drawing='false';stamp();say('静静坐好，等你过来');
+ fadeDuration=fadeElapsed=0;mascot.dataset.drawing='false';stamp();say('静静陪着你');
 }
 function beginIdleFade(){
  frame=goldenConfig.last;render();capture();mode='idle-fade';fadeElapsed=0;fadeDuration=goldenConfig.returnToIdleMs;
@@ -81,34 +81,16 @@ function respond(next,force=false){
   else transition('return',goldenConfig.returnEntry[Math.floor(frame)]??108,goldenConfig.blendMs);
  }
 }
-function updateWanted(){respond(mouseNear||touchHeld||keyHeld);}
-function updateProximity(x,y){
- lastPointer={x,y};const rect=mascot.getBoundingClientRect();
- const radius=mouseNear?124:110;
- mouseNear=Math.hypot(x-(rect.left+rect.width/2),y-(rect.top+rect.height/2))<=radius;
- updateWanted();
-}
-function clearInput(){mouseNear=touchHeld=keyHeld=false;lastPointer=null;wanted=false;button.setAttribute('aria-pressed','false');if(ready)stopIdle();}
-window.addEventListener('pointermove',event=>{if(event.pointerType==='mouse')updateProximity(event.clientX,event.clientY);},{passive:true});
-window.addEventListener('pointerout',event=>{if(event.pointerType==='mouse'&&!event.relatedTarget){mouseNear=false;lastPointer=null;updateWanted();}});
-button.addEventListener('pointerdown',event=>{
- if(event.pointerType!=='mouse'){event.preventDefault();touchHeld=true;button.setPointerCapture(event.pointerId);updateWanted();}
- else updateProximity(event.clientX,event.clientY);
+button.addEventListener('click',()=>respond(!wanted));
+document.addEventListener('visibilitychange',()=>{
+ if(!ready)return;
+ if(document.hidden)stopIdle();else respond(wanted,true);
 });
-function releaseTouch(){touchHeld=false;updateWanted();}
-button.addEventListener('pointerup',releaseTouch);button.addEventListener('pointercancel',releaseTouch);button.addEventListener('lostpointercapture',releaseTouch);
-button.addEventListener('keydown',event=>{if(event.code==='Space'||event.code==='Enter'){event.preventDefault();keyHeld=true;updateWanted();}});
-button.addEventListener('keyup',event=>{if(event.code==='Space'||event.code==='Enter'){event.preventDefault();keyHeld=false;updateWanted();}});
-button.addEventListener('blur',()=>{keyHeld=false;updateWanted();});
-window.addEventListener('blur',clearInput);
-document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInput();});
-window.addEventListener('resize',()=>{if(lastPointer)updateProximity(lastPointer.x,lastPointer.y);});
-window.addEventListener('scroll',()=>{if(lastPointer)updateProximity(lastPointer.x,lastPointer.y);},{passive:true});
-reduced.addEventListener('change',()=>{if(ready){stopIdle();respond(wanted,true);}});
+reduced.addEventListener('change',()=>{if(ready){stopIdle();if(!document.hidden)respond(wanted,true);}});
 // The motion sheets wait for the page's load event, so the portrait and the sitting dog are fetched before them.
 function loadMotion(){
  Promise.all([idle.decode(),...goldenConfig.sheets.map(async(sheet,index)=>{const image=new Image();images[index]=image;image.src=base+sheet.file;await image.decode();})])
-  .then(()=>{ready=true;stopIdle();respond(wanted,true);})
+  .then(()=>{ready=true;stopIdle();if(!document.hidden)respond(wanted,true);})
   .catch(()=>{canvas.dataset.mode='unavailable';say('小狗先静静陪着你，刷新后再试试');});
 }
 if(document.readyState==='complete')loadMotion();else window.addEventListener('load',loadMotion,{once:true});
