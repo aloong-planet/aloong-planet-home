@@ -33,7 +33,7 @@ Create the token through the Cloudflare dashboard, selecting only the existing a
 
 Without the secret, checks still run but the production deploy job fails with a setup message. Automatic deployment also requires this workflow to be merged into main and GitHub Actions to be available under the account's current allowance. There is no paid-plan upgrade or spending-limit change in this setup.
 
-Require the `checks` job for merging where the GitHub plan supports private-repository branch protection. Deployment is not a required pull-request check. The PR merge itself requires explicit owner approval. The current private repository is on a Free organization plan: GitHub rejected ruleset creation with HTTP 403 (2026-11-02), so checks are not enforced by branch protection. Keep the repository private and review checks manually; do not upgrade or change visibility as part of deployment setup.
+Require the `checks` job for merging where the GitHub plan supports private-repository branch protection. Deployment is not a required pull-request check. Follow the [project's merge policy](documentation-merges.md) for approval requirements. The current private repository is on a Free organization plan: GitHub rejected ruleset creation with HTTP 403 (2026-11-02), so checks are not enforced by branch protection. Keep the repository private and review checks manually; do not upgrade or change visibility as part of deployment setup.
 
 The Pages configuration schema does not accept `account_id`. The deployment command reads the account from `deployment.config.json` and supplies `CLOUDFLARE_ACCOUNT_ID` to Wrangler. Public verification hosts are defined in that same deployment settings file.
 

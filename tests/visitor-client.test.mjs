@@ -1,13 +1,13 @@
 // Native cookie persistence, Web Locks and rendered placement require browser checks.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { displayVisitor, getVisitorOrdinal } from '../public/visitor.js';
+import { startVisitorCounter, getVisitorTotal, readVisitorTotal } from '../public/visitor.js';
 
-test('client uses a cookie roundtrip and returns a validated ordinal',async()=>{
+test('client uses a cookie roundtrip and returns a validated total',async()=>{
  const calls=[];
- const result=await getVisitorOrdinal(async(url,options)=>{
+ const result=await getVisitorTotal(async(url,options)=>{
   calls.push({url,...options});
-  return Response.json(options.method==='POST'?{ordinal:42}:{ready:true});
+  return Response.json(options.method==='POST'?{ordinal:7,total:42}:{ready:true});
  });
  assert.equal(result,42); assert.equal(calls.length,2);
  assert.equal(calls[0].url,'/api/visitor'); assert.equal(calls[1].method,'POST');
@@ -15,30 +15,184 @@ test('client uses a cookie roundtrip and returns a validated ordinal',async()=>{
 });
 test('client rejects unavailable storage, blocked cookies and corrupt counts',async()=>{
  for(const status of [428,503]){
-  await assert.rejects(getVisitorOrdinal(async(_url,options)=> options.method==='POST'?new Response('',{status}):Response.json({ready:true})));
+  await assert.rejects(getVisitorTotal(async(_url,options)=> options.method==='POST'?new Response('',{status}):Response.json({ready:true})));
  }
- for(const ordinal of [0,-1,1.5,'42',null,Number.MAX_SAFE_INTEGER+1]){
-  await assert.rejects(getVisitorOrdinal(async(_url,options)=> Response.json(options.method==='POST'?{ordinal}:{ready:true})),/Invalid visitor ordinal/);
+ for(const total of [0,-1,1.5,'42',null,Number.MAX_SAFE_INTEGER+1]){
+  await assert.rejects(getVisitorTotal(async(_url,options)=> Response.json(options.method==='POST'?{total}:{ready:true})),/Invalid visitor total/);
  }
 });
 test('client stops after setup failure and propagates aborted requests',async()=>{
  let calls=0;
- await assert.rejects(getVisitorOrdinal(async()=>{calls++;return new Response('',{status:503});}));
+ await assert.rejects(getVisitorTotal(async()=>{calls++;return new Response('',{status:503});}));
  assert.equal(calls,1);
  const controller=new AbortController();controller.abort();
- await assert.rejects(getVisitorOrdinal(async(_url,options)=>{options.signal.throwIfAborted();},controller.signal),{name:'AbortError'});
+ await assert.rejects(getVisitorTotal(async(_url,options)=>{options.signal.throwIfAborted();},controller.signal),{name:'AbortError'});
 });
-test('the homepage greets the visitor with their ordinal, and stays empty when counting fails',async()=>{
- const realFetch=globalThis.fetch;
- const browser=/** @type {Navigator} */({});
+const settle = () => new Promise(resolve=>setImmediate(resolve));
+function pageFixture(counter = true) {
+ const element={textContent:''};
+ const page=Object.assign(new EventTarget(),{visibilityState:'visible',querySelector:()=>counter?element:null});
+ const lifecycle=new EventTarget();
+ const visibility = state => {page.visibilityState=state;page.dispatchEvent(new Event('visibilitychange'));};
+ const history = type => lifecycle.dispatchEvent(Object.assign(new Event(type),{persisted:true}));
+ return {element,page,lifecycle,visibility,history};
+}
+test('the visible homepage refreshes its shared total without registering again',async(t)=>{
+ t.mock.timers.enable({apis:['setTimeout']});
+ const fixture=pageFixture();
+ let total=1024, registrations=0;
+ const fetcher=async(url,options)=>{
+  if(options.method==='POST'){registrations++;return Response.json({ordinal:1,total});}
+  return Response.json(url.includes('?')?{total}:{ready:true});
+ };
+ const stop=startVisitorCounter({...fixture,browser:{},fetcher});
  try{
-  globalThis.fetch=async(_url,options)=>Response.json(options.method==='POST'?{ordinal:1024}:{ready:true});
-  const shown={textContent:'old'};
-  await displayVisitor(/** @type {Element} */(shown),browser);
-  assert.equal(shown.textContent,'你好朋友，你是第 1,024 位访客');
-  globalThis.fetch=async()=>new Response('',{status:503});
-  const failed={textContent:'old'};
-  await displayVisitor(/** @type {Element} */(failed),browser);
-  assert.equal(failed.textContent,'');
- }finally{globalThis.fetch=realFetch;}
+  await settle();
+  assert.equal(fixture.element.textContent,'本站累计访客 1,024 人');
+  total=1025;
+  t.mock.timers.tick(29999);await settle();
+  assert.equal(fixture.element.textContent,'本站累计访客 1,024 人');
+  t.mock.timers.tick(1);await settle();
+  assert.equal(fixture.element.textContent,'本站累计访客 1,025 人');
+  assert.equal(registrations,1);
+ }finally{stop();}
+});
+
+test('hidden and departed pages pause reads, and visibility or history restoration refresh immediately',async(t)=>{
+ t.mock.timers.enable({apis:['setTimeout']});
+ const fixture=pageFixture();
+ let total=1,reads=0;
+ const stop=startVisitorCounter({...fixture,browser:{},fetcher:async(url,options)=>{
+  if(url.includes('?'))reads++;
+  return Response.json(options.method==='POST'||url.includes('?')?{total}:{ready:true});
+ }});
+ try{
+  await settle();fixture.visibility('hidden');total=2;
+  t.mock.timers.tick(90000);await settle();assert.equal(reads,0);
+  fixture.visibility('visible');await settle();
+  assert.equal(fixture.element.textContent,'本站累计访客 2 人');
+  fixture.history('pagehide');total=3;
+  t.mock.timers.tick(90000);await settle();assert.equal(reads,1);
+  fixture.history('pageshow');await settle();
+  assert.equal(fixture.element.textContent,'本站累计访客 3 人');
+ }finally{stop();}
+});
+
+test('a slow cancelled read cannot overlap or overwrite a restored page',async(t)=>{
+ t.mock.timers.enable({apis:['setTimeout']});
+ const fixture=pageFixture();
+ let complete,reads=0,active=0,maxActive=0;
+ const stop=startVisitorCounter({...fixture,browser:{},fetcher:async(url,options)=>{
+  if(!url.includes('?'))return Response.json(options.method==='POST'?{total:1}:{ready:true});
+  reads++;active++;maxActive=Math.max(maxActive,active);
+  const response=reads===1?await new Promise(resolve=>{complete=resolve;}):Response.json({total:3});
+  active--;return response;
+ }});
+ try{
+  await settle();t.mock.timers.tick(30000);await settle();
+  fixture.visibility('hidden');fixture.visibility('visible');
+  await settle();assert.equal(reads,1);
+  complete(Response.json({total:2}));await settle();
+  assert.equal(maxActive,1);assert.equal(reads,2);
+  assert.equal(fixture.element.textContent,'本站累计访客 3 人');
+ }finally{stop();}
+});
+
+test('failed refreshes hide the total and recover without registering again',async(t)=>{
+ t.mock.timers.enable({apis:['setTimeout']});
+ const fixture=pageFixture();
+ const responses=[new Response('',{status:503}),Response.json({total:'2'}),Response.json({total:2})];
+ let registrations=0;
+ const stop=startVisitorCounter({...fixture,browser:{},fetcher:async(url,options)=>{
+  if(url.includes('?'))return responses.shift();
+  if(options.method==='POST')registrations++;
+  return Response.json(options.method==='POST'?{total:1}:{ready:true});
+ }});
+ try{
+  await settle();
+  for(const expected of ['','','本站累计访客 2 人']){
+   t.mock.timers.tick(30000);await settle();assert.equal(fixture.element.textContent,expected);
+  }
+  assert.equal(registrations,1);
+ }finally{stop();}
+});
+
+test('pages without a display register once and do not poll',async(t)=>{
+ t.mock.timers.enable({apis:['setTimeout']});
+ const fixture=pageFixture(false);
+ let registrations=0,reads=0;
+ const stop=startVisitorCounter({...fixture,browser:{},fetcher:async(url,options)=>{
+  if(url.includes('?'))reads++;
+  if(options.method==='POST')registrations++;
+  return Response.json(options.method==='POST'?{total:1}:{ready:true});
+ }});
+ try{
+  await settle();t.mock.timers.tick(120000);fixture.visibility('hidden');fixture.visibility('visible');
+  fixture.history('pagehide');fixture.history('pageshow');await settle();
+  assert.equal(registrations,1);assert.equal(reads,0);
+ }finally{stop();}
+});
+
+test('total reads accept zero, reject corrupt numbers and never bootstrap an identity',async()=>{
+ for(const total of [0,42,-1,0.5,'42',null,Number.MAX_SAFE_INTEGER+1]){
+  const read=readVisitorTotal(async(url,options)=>{
+   assert.equal(url,'/api/visitor?total=1');assert.equal(options.method,undefined);
+   assert.equal(options.cache,'no-store');return Response.json({total});
+  });
+  if(total===0||total===42)assert.equal(await read,total);
+  else await assert.rejects(read,/Invalid visitor total/);
+ }
+});
+
+test('an interrupted blog registration retries when the reader returns',async()=>{
+ const fixture=pageFixture(false);
+ let setup=0,complete,registrations=0;
+ const stop=startVisitorCounter({...fixture,browser:{},fetcher:async(_url,options)=>{
+  if(options.method==='POST'){registrations++;return Response.json({total:1});}
+  setup++;
+  if(setup===1)await new Promise(resolve=>{complete=resolve;});
+  options.signal.throwIfAborted();return Response.json({ready:true});
+ }});
+ try{
+  fixture.visibility('hidden');fixture.visibility('visible');complete();await settle();
+  assert.equal(registrations,1);
+ }finally{stop();}
+});
+
+test('a departed page ignores a late response and stops future work',async(t)=>{
+ t.mock.timers.enable({apis:['setTimeout']});
+ const fixture=pageFixture();
+ let finish,reads=0;
+ const stop=startVisitorCounter({...fixture,browser:{},fetcher:async(url,options)=>{
+  if(!url.includes('?'))return Response.json(options.method==='POST'?{total:1}:{ready:true});
+  reads++;return new Promise(resolve=>{finish=resolve;});
+ }});
+ await settle();t.mock.timers.tick(30000);await settle();stop();
+ finish(Response.json({total:9}));await settle();
+ fixture.history('pageshow');t.mock.timers.tick(90000);await settle();
+ assert.equal(fixture.element.textContent,'本站累计访客 1 人');assert.equal(reads,1);
+});
+
+test('initial failure hides the counter and a later successful registration recovers',async(t)=>{
+ t.mock.timers.enable({apis:['setTimeout']});
+ const fixture=pageFixture();fixture.element.textContent='old';
+ let unavailable=true;
+ const stop=startVisitorCounter({...fixture,browser:{},fetcher:async(_url,options)=>unavailable
+  ?new Response('',{status:503}):Response.json(options.method==='POST'?{total:2}:{ready:true})});
+ try{
+  await settle();assert.equal(fixture.element.textContent,'');unavailable=false;
+  t.mock.timers.tick(30000);await settle();assert.equal(fixture.element.textContent,'本站累计访客 2 人');
+ }finally{stop();}
+});
+
+test('a request times out after five seconds and leaves the counter hidden',async()=>{
+ const fixture=pageFixture();fixture.element.textContent='old';
+ let timeoutReason;
+ const stop=startVisitorCounter({...fixture,browser:{},fetcher:async(_url,options)=>new Promise((resolve,reject)=>{
+  options.signal.addEventListener('abort',()=>{timeoutReason=options.signal.reason;reject(timeoutReason);},{once:true});
+ })});
+ try{
+  await new Promise(resolve=>setTimeout(resolve,5100));await settle();
+  assert.equal(timeoutReason?.name,'TimeoutError');assert.equal(fixture.element.textContent,'');
+ }finally{stop();}
 });
