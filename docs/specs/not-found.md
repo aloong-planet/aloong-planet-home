@@ -24,7 +24,7 @@ As a visitor who opened an address the site does not have, I am told plainly tha
 
 ### not-found::REQ-001 Unknown addresses answer with the not-found page (direct acceptance)
 
-On every public host, every address that is neither a page or file of the site nor the visitor API answers with status 404 and the not-found page. This includes a removed post's address, nested paths, and missing files under the asset folder. Existing pages, files and the visitor API answer as before.
+On every public host, every address that is neither a page or file of the site nor the visitor API answers with status 404 and the not-found page. This includes a removed post's address, nested paths, and missing files under the asset folder.
 
 ## Constraints
 
@@ -52,9 +52,7 @@ Search engines and checks:
 - A missing address now returns 404, so it is not indexed as a copy of the homepage. The page declares no canonical address.
 - A blog page or homepage image missing after a deployment now comes back as the not-found page with status 404, and the deployment checks still fail on it.
 
-Existing features:
-- The homepage, the Blog page, post pages, Apps, the dog interaction and the visitor API behave as before; only addresses the site does not have change.
-- Visitor registration on the not-found page follows not-found::CON-001; registration on existing pages follows [visitor-counter::REQ-001/AC-01](visitor-counter.md).
+Visitor registration follows not-found::CON-001 on the not-found page and [visitor-counter::REQ-001/AC-01](visitor-counter.md) on counted pages.
 
 ## Implementation Decisions
 

@@ -119,7 +119,7 @@ Applies to: every blog page. Pages use the site's fixed light appearance and sin
 
 ### blog::CON-003 Static delivery (direct acceptance)
 
-Applies to: every blog page. Page documents are static assets. Client-side visitor registration follows [visitor-counter::REQ-001/AC-01](visitor-counter.md); [visitor-counter::CON-001](visitor-counter.md) governs function routing.
+Every blog page follows [visitor-counter::CON-001](visitor-counter.md) for delivery and [visitor-counter::REQ-001/AC-01](visitor-counter.md) for registration.
 
 ## Failure modes and boundaries
 
@@ -178,7 +178,6 @@ Content a post brings in:
 
 Existing features:
 - The homepage list stays a text list with no covers (blog::US-001/AC-01).
-- Homepage portrait, dog interaction, visitor line, Apps cards, and the visitor API behave as before, apart from the narrow-screen spacing that makes room for the list and the [visitor line wording](visitor-counter.md).
 - The homepage footer has no Blog link: the list's "全部文章" and the top navigation lead to the Blog page.
 - The homepage's Apps and About links keep their smooth scroll; only post pages drop it.
 
@@ -195,14 +194,6 @@ Existing features:
 - The homepage list's width runs from the window edge to the dog, which sits at a fixed offset from the portrait group's center. Auto margins center the list so that it stops at the top when too tall.
 - Contents are generated once at build time and the current-section mark is a small script; the mark is `aria-current`.
 - Status marks in a post are drawn in its stylesheet. Typed symbols are not used as icons.
-
-## Testing Decisions
-
-A good test here builds a real site from fixture posts in a temporary folder and asserts on the written pages and on the build's refusals, without looking inside the build step. That covers the Blog page's order, with the newest post leading and every post carrying its cover, and the refusal of a post with no cover. The seams are the blog build module's exported build function, the build and deployment-check scripts run as processes in a temporary folder, and the visitor client's exported display function with a stubbed network. Deployment checks are tested against the real site and local servers that answer an address the site does not have with the not-found page and status 404, as the host does; the `SMOKE_DEADLINE_MS` environment variable shortens their retry window so a failing test ends in seconds, and nothing in deployment sets it. Existing precedent is `tests/deploy.test.mjs` and `tests/visitor-client.test.mjs`.
-
-The end-of-post cards are build output and are tested like the lists: their order across dates and within a date, the missing sides, escaped titles, and the absence of a link back to the Blog list.
-
-Layout, type sizes, colors, hover, scrolling, the larger view, and interactive figures are checked in a real browser against the built site at the window sizes this spec names; per the project capabilities the browser suite is not enabled, so these are recorded runs, not automated tests.
 
 ## Out of Scope
 
