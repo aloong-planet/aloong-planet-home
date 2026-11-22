@@ -5,7 +5,8 @@
 // the divider between Skills and Plugins in nav-menus::US-001/AC-04, the menus showing on every page of
 // nav-menus::US-001/AC-10 (tested here: the script and its mount), the heading's size, weight and colour in
 // nav-menus::US-002/AC-01 (tested here: the heading's class), the look and hover of nav-menus::US-002/AC-03, the
-// screenshot area of nav-menus::US-003/AC-02, and the failure modes and boundaries of the nav-menus spec.
+// screenshot area of nav-menus::US-003/AC-02, nav-menus::US-004/AC-01, nav-menus::US-004/AC-02,
+// nav-menus::US-004/AC-03, and the failure modes and boundaries of the nav-menus spec.
 // Test them here once the browser suite capability is enabled.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';

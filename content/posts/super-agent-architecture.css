@@ -163,7 +163,8 @@
 .post-super-agent-architecture .hit{fill:transparent;cursor:default}
 .post-super-agent-architecture .row:hover .hit,.post-super-agent-architecture .row:focus .hit{fill:var(--band)}
 .post-super-agent-architecture .row:focus{outline:none}
-.post-super-agent-architecture #tip{position:fixed;z-index:5;pointer-events:none;background:var(--ink);color:var(--bg);padding:7px 10px;font-size:12.5px;line-height:1.5;max-width:260px;border-radius:2px}
+/* The tip shows over the site's pinned top navigation (z-index 10) and under the larger view (z-index 50). */
+.post-super-agent-architecture #tip{position:fixed;z-index:11;pointer-events:none;background:var(--ink);color:var(--bg);padding:7px 10px;font-size:12.5px;line-height:1.5;max-width:260px;border-radius:2px}
 .post-super-agent-architecture #tip b{display:block;font:600 13.5px var(--mono)}
 @media (max-width:993px){
   .post-super-agent-architecture .charts{grid-template-columns:minmax(0,1fr)}

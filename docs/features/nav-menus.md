@@ -5,6 +5,7 @@ A visitor on any page can open one of Aloong's apps, skills or plugins straight 
 
 ## Capabilities
 - See the top navigation read Apps, Agents, Blog and About on the homepage, the Blog page, every post and the not-found page.
+- Find the top navigation at the top of the window however far down a page you have scrolled, on any screen. Moving through the page with Tab brings the focused item into view below it.
 - Rest the pointer on Apps or Agents to open a menu under it that lists each work by name with a short description. Apps lists the apps; Agents lists the skills under 「Skills」 and the plugins under 「Plugins」.
 - Choose an app to open its website in the same tab, or a skill or plugin to open its GitHub repository in a new tab.
 - Tab onto Apps or Agents to open its menu, and Tab on through its items to the next tab. Press Escape, or select the tab itself, to hide the menu until the pointer and keyboard focus have both left it.

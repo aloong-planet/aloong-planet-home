@@ -4,7 +4,7 @@
 A visitor who wants to try one of Aloong's apps, skills or plugins should be able to reach it from any page of the site, not only from the homepage section that lists it.
 
 ## Solution
-The top navigation has two tabs, Apps and Agents. Resting the pointer on either opens a menu that lists each work with a short pitch, and choosing one opens it straight away. The homepage has an Agents section that lists the skills and plugins, and its Apps section shows all three apps.
+The top navigation stays at the top of the window while the page scrolls. It has two tabs, Apps and Agents. Resting the pointer on either opens a menu that lists each work with a short pitch, and choosing one opens it straight away. The homepage has an Agents section that lists the skills and plugins, and its Apps section shows all three apps.
 
 ## User Stories
 
@@ -46,6 +46,14 @@ As a visitor on the homepage, I see each of Aloong's apps with what makes it wor
 | Transfer | Mac 和 Windows 之间传文件，像聊天一样随手一发就到，<br>同一个 Wi-Fi 下打开即连，数据只在局域网里走。 |
 | Agentshed | Claude Code、Codex 等 agent 装了什么、烧了多少 token，<br>打开 Agentshed 一眼看清，旧会话按提问一跳直达。 |
 | 随译 | 全网响应最快的截图工具，按下快捷键瞬间进入选区，<br>框住的文字或对照译文边生成边出现。 |
+
+### nav-menus::US-004 Reach the navigation from anywhere on a page
+
+As a visitor far down a long page, I find the top navigation still at the top of the window, so I can move on to another part of the site without scrolling back up.
+
+- nav-menus::US-004/AC-01: On every page and at every window width, the top navigation stays at the top edge of the window while the page scrolls, and the page's content passes beneath it. Its tabs and menus work as they do at the top of the page.
+- nav-menus::US-004/AC-02: At the top of a page, the top navigation covers none of the page's content, which starts below it.
+- nav-menus::US-004/AC-03: Moving keyboard focus to an element on the page scrolls the page so that the element shows below the top navigation, not under it, as far as it fits in the window below the navigation.
 
 ## Functional Requirements
 
