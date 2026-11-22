@@ -86,7 +86,7 @@ test('the top navigation reads Apps, Agents, Blog, About, with Apps and Agents l
   assert.deepEqual(tabs(navigationMarkup()), [['Apps', '/#apps'], ['Agents', '/#agents'], ['Blog', '/blog'], ['About', '/#about']]);
 });
 
-test('assistive technology names the top navigation 「主要」 (nav-menus::REQ-003)', () => {
+test('assistive technology knows the top navigation by its name (nav-menus::REQ-003)', () => {
   const nav = navigationMarkup().match(/<nav\b[^>]*>/)[0];
   assert.equal(nav.match(/\saria-label="([^"]*)"/)?.[1], '主要');
 });
