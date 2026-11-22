@@ -179,7 +179,7 @@ Content a post brings in:
 Existing features:
 - The homepage list stays a text list with no covers (blog::US-001/AC-01).
 - The homepage footer has no Blog link: the list's "全部文章" and the top navigation lead to the Blog page.
-- The homepage's Apps and About links keep their smooth scroll; only post pages drop it.
+- The homepage's Apps, Agents and About links keep their smooth scroll; only post pages drop it.
 
 ## Implementation Decisions
 

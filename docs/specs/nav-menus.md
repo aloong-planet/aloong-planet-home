@@ -1,10 +1,10 @@
 # Apps and Agents menus
 
 ## Problem Statement
-A visitor who wants to try one of Aloong's apps, skills or plugins has to find it on the homepage first. From the Blog or a post there is no direct way to an app, and the site does not list the skills and plugins at all.
+A visitor who wants to try one of Aloong's apps, skills or plugins should be able to reach it from any page of the site, not only from the homepage section that lists it.
 
 ## Solution
-The top navigation gains two tabs, Apps and Agents. Resting the pointer on either opens a menu that lists each work with a short pitch, and choosing one opens it straight away. The homepage gains an Agents section that lists the skills and plugins, and its Apps section shows all three apps.
+The top navigation has two tabs, Apps and Agents. Resting the pointer on either opens a menu that lists each work with a short pitch, and choosing one opens it straight away. The homepage has an Agents section that lists the skills and plugins, and its Apps section shows all three apps.
 
 ## User Stories
 
@@ -74,13 +74,13 @@ Applies to: the homepage's Apps and Agents sections. Their cards and lists are p
 
 ## Failure modes and boundaries
 - One menu open by keyboard focus while the pointer rests on the other tab: only the menu under the pointer shows. The focused one returns when the pointer leaves, if focus is still on it.
-- A window exactly 701px wide: menus open (nav-menus::US-001/AC-01), and the Agents card, the rightmost, ends inside the window.
+- A window 701px wide: the Agents card, the rightmost, ends inside the window.
 - A window narrowed to 700px or below while a menu is open: the menu disappears (nav-menus::US-001/AC-09).
-- Scripting unavailable: the top navigation, and with it both menus, does not appear, as on every page; the homepage sections still show (nav-menus::CON-001).
+- Scripting unavailable: the top navigation, and with it both menus, does not appear, as on every page.
 
 ## Out of Scope
 - Menus on touch screens and narrow windows: there is no hover to open them, and the tab already leads to the section that lists the same works.
 - Icons or screenshots in the menus: each item is a name and a description only.
-- A copy of these menus on the app websites. Each app website links back to the homepage from its own header; that link is specified in the website's own landing-page spec, in its repository.
+- A copy of these menus on the app websites: each app website's header, including any link back to the homepage, belongs to that website's own landing-page spec, in its repository.
 - openclaw-memory-core-plus and xnote-extension: they are not listed.
 - An English homepage: the site has one language, so the English name JustSnap has no place on it.
