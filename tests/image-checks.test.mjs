@@ -17,6 +17,7 @@ test('the deployment check finds every image the real homepage shows, in page or
     '/assets/golden-wag/idle.png',
     '/assets/apps/transfer-main-light.jpg',
     '/assets/apps/agentshed-main-90days.png',
+    '/assets/apps/justsnap-translate-zh.webp',
   ]);
   assert.equal(pageImages(html).length, html.match(/<img\b/g).length, 'an image the check cannot read would go unchecked');
 });

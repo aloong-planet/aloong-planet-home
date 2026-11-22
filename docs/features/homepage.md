@@ -1,7 +1,7 @@
 # Homepage
 
 ## Overview
-The homepage introduces Aloong, shows recent writing, and showcases personal apps in a light layout.
+The homepage introduces Aloong, shows recent writing, and showcases personal apps, skills and plugins in a light layout.
 
 ## Capabilities
 - See the seated blue-shirt portrait and golden retriever together on the right of a wide screen, with the introduction and visitor number beneath them.
@@ -9,8 +9,9 @@ The homepage introduces Aloong, shows recent writing, and showcases personal app
 - Open a post by selecting anywhere on its entry, or open the Blog page with "全部文章".
 - The dog starts wagging automatically when its animation loads. Click it, or focus it and press Space or Enter, to pause or resume.
 - On a small screen, see a centered portrait and dog group followed by the post list.
-- Open the Transfer and Agentshed websites from their screenshots or text links.
-- Navigate to Apps, Blog, and About from the top menu.
+- Open the Transfer, Agentshed and 随译 websites from their screenshots or text links.
+- Browse the skills and plugins in the Agents section after Apps, each with what it does, and open its GitHub repository.
+- Navigate to Apps, Agents, Blog, and About from the top navigation, and open any app, skill or plugin from the [Apps and Agents menus](nav-menus.md).
 
 ## Boundaries and non-goals
 - Long titles and summaries are cut to two lines each; the Blog page shows them in full.

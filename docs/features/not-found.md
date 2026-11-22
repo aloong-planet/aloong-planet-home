@@ -6,7 +6,7 @@ A visitor who follows a broken link or mistypes an address needs to know the pag
 ## Capabilities
 - See the not-found page at any address the site does not have, including the address of a removed post: the top navigation, a puzzled golden retriever with a tilted head, "404", "这一页走丢了", and "小狗找了一圈，没找到这个地址。可能是链接打错了，或者页面已经搬走。".
 - Go back with "回首页" to the homepage or "看看博客" to the Blog page.
-- Reach Apps, Blog, About, or GitHub from the top navigation; no section is marked as the current one.
+- Reach Apps, Agents, Blog, About, or GitHub from the top navigation, including the [Apps and Agents menus](nav-menus.md); no section is marked as the current one.
 - See the whole page in the first screen of a phone or a desktop window.
 
 ## Boundaries and non-goals
