@@ -1,7 +1,7 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { margin: 0; }
-.ap-site { --paper:#fafaf9; --ink:#20211f; --muted:#777971; --line:#e6e7e1; --accent:#335bc7; --tag:#efefeb; background:var(--paper); color:var(--ink); font-family:Arial,"PingFang SC",sans-serif; min-height:100svh; -webkit-font-smoothing:antialiased; }
+.ap-site { --paper:#fafaf9; --ink:#20211f; --muted:#777971; --line:#e6e7e1; --accent:#335bc7; --tag:#efefeb; --card:#fff; --shadow:#20211f1a; background:var(--paper); color:var(--ink); font-family:Arial,"PingFang SC",sans-serif; min-height:100svh; -webkit-font-smoothing:antialiased; }
 a { color:inherit; text-decoration:none; }
 button { font:inherit; }
 a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
@@ -12,6 +12,29 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 .ap-nav a { color:var(--muted); transition:color .15s; }
 .ap-nav a:hover, .ap-nav a[aria-current] { color:var(--ink); }
 .ap-nav a[aria-current] { text-decoration:underline; text-underline-offset:6px; }
+/* A menu hangs from its tab. The panel's top padding bridges the gap down to the card, so the pointer can move from the tab into the card without leaving the menu. */
+.ap-menu { position:relative; display:flex; }
+.ap-menu-panel { display:none; position:absolute; top:100%; left:-20px; padding-top:20px; z-index:20; }
+.ap-menu-card { width:400px; padding:8px; display:grid; gap:2px; background:var(--card); border:1px solid var(--line); border-radius:8px; box-shadow:0 12px 32px var(--shadow); }
+.ap-nav .ap-menu-item { display:block; padding:10px 12px; border-radius:6px; color:var(--ink); transition:background-color .15s; }
+.ap-nav .ap-menu-item:hover { background:var(--tag); }
+/* Items sit 2px apart, so each focus ring is drawn inside its own item. */
+.ap-nav .ap-menu-item:focus-visible { outline-offset:-2px; }
+.ap-menu-item strong { display:block; font-size:14px; font-weight:500; letter-spacing:-.2px; }
+.ap-menu-item span { display:block; margin-top:3px; font-size:12px; line-height:1.6; color:var(--muted); text-wrap:pretty; }
+.ap-menu-group { margin:0; padding:10px 12px 4px; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); }
+.ap-menu-group:not(:first-child) { margin-top:6px; border-top:1px solid var(--line); padding-top:14px; }
+/* Menus open only where the pointer can hover and the window is wider than the phone layout; elsewhere the tab is just the link to its section. Keyboard focus is :focus-visible, which a mouse click does not give, so a clicked item does not hold its menu open. While the pointer rests on one menu, another that only holds keyboard focus stays shut. Each :has() selector has a rule of its own, so a browser without :has() still opens menus on hover. */
+@media(hover:hover) and (pointer:fine) and (min-width:701px) {
+ .ap-menu:hover .ap-menu-panel { display:block; }
+ .ap-menu:has(:focus-visible) .ap-menu-panel { display:block; }
+ .ap-menu:hover > a { color:var(--ink); }
+ .ap-menu:has(:focus-visible) > a { color:var(--ink); }
+ .ap-nav:has(.ap-menu:hover) .ap-menu:not(:hover) .ap-menu-panel { display:none; }
+ .ap-nav:has(.ap-menu:hover) .ap-menu:not(:hover) > a { color:var(--muted); }
+}
+/* Set by navigation.js after Escape or a click on the tab, until the pointer and keyboard focus have both left the menu. */
+.ap-menu[data-dismissed] .ap-menu-panel { display:none; }
 .ap-social { justify-self:end; font-size:12px; border-bottom:1px solid var(--ink); padding:7px 0; }
 .ap-hero { height:calc(100svh - 76px); min-height:720px; max-height:950px; position:relative; margin:0 32px; }
 .ap-hero-profile { position:absolute; inset:0 0 0 40%; }
@@ -44,12 +67,24 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 .ap-grid { display:grid; grid-template-columns:1fr 1fr; gap:70px 18px; }
 .ap-art { display:block; aspect-ratio:55/36; border-radius:5px; overflow:hidden; transition:transform .3s; }
 .ap-art img { display:block; width:100%; height:100%; object-fit:cover; }
+/* The 随译 screenshot is wider than the frame, so it is shown whole on the grey of its own edges. */
+.ap-art-justsnap { background:#868892; }
+.ap-art-justsnap img { object-fit:contain; }
 .ap-project:hover .ap-art { transform:translateY(-4px); }
 .ap-project-info { margin-top:16px; }
 .ap-project-info h3 { margin:0 0 8px; font-size:23px; letter-spacing:-.7px; font-weight:500; }
 .ap-project-info p { margin:0; line-height:1.8; font-size:12px; color:var(--muted); }
 .ap-link { font-size:12px; border-bottom:1px solid var(--ink); padding-bottom:5px; }
 .ap-project-visit { display:inline-block; margin-top:16px; }
+/* The Skills and Plugins lists sit on the Apps grid's two columns; each entry is set like a homepage post entry. */
+.ap-agents { padding:15px 32px 110px; scroll-margin-top:76px; }
+.ap-agent-groups { display:grid; grid-template-columns:1fr 1fr; gap:40px 18px; }
+.ap-agent-group h3 { margin:0 0 12px; font-size:12px; font-weight:600; letter-spacing:2px; text-transform:uppercase; line-height:1.8; }
+.ap-agent-list { list-style:none; margin:0; padding:0; }
+.ap-agent { display:block; padding:16px 0; border-top:1px solid var(--line); }
+.ap-agent strong { display:block; margin:0 0 6px; font-size:18px; font-weight:500; letter-spacing:-.4px; line-height:1.35; }
+.ap-agent span { display:block; font-size:12px; line-height:1.7; color:var(--muted); text-wrap:pretty; }
+.ap-agent:hover strong { text-decoration:underline; text-underline-offset:5px; }
 .ap-footer { padding:80px 32px 28px; border-top:1px solid var(--line); scroll-margin-top:76px; }
 .ap-footer h2 { font-size:clamp(30px,4vw,54px); font-weight:500; letter-spacing:-1.7px; margin:0 0 24px; }
 .ap-footer p { color:var(--muted); font-size:14px; line-height:1.9; }
@@ -106,6 +141,7 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
  .ap-intro { bottom:65px; } .ap-intro h1 { letter-spacing:-2px; font-size:clamp(34px,10vw,45px); }
  .ap-work { padding:60px 20px; } .ap-section-title { margin-bottom:28px; font-size:34px; }
  .ap-grid { grid-template-columns:1fr; gap:48px; }
+ .ap-agents { padding:0 20px 60px; scroll-margin-top:96px; } .ap-agent-groups { grid-template-columns:1fr; }
  .ap-footer { padding:60px 20px 25px; } .ap-bottom { margin-top:60px; }
  .ap-blog { padding:32px 20px 70px; }
  .ap-post-list { grid-template-columns:1fr; gap:44px; } .ap-post-lead { margin-bottom:0; }
@@ -115,4 +151,4 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 @media(max-width:380px) {
  .ap-scene { transform:translate(-50%,-50%) scale(.64); }
 }
-@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .ap-art,.ap-nav a,.ap-button,.ap-post-cover { transition:none; } .ap-post-card:hover .ap-post-cover { transform:none; } }
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .ap-art,.ap-nav a,.ap-nav .ap-menu-item,.ap-button,.ap-post-cover { transition:none; } .ap-post-card:hover .ap-post-cover { transform:none; } }

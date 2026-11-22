@@ -1,15 +1,17 @@
 import { spawnSync } from 'node:child_process';
 import { cp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { buildBlog } from './blog.mjs';
+import { buildHomepage } from './homepage.mjs';
 await rm('dist',{recursive:true,force:true});
 await mkdir('dist',{recursive:true});
 await cp('public','dist',{recursive:true});
 await mkdir('dist/assets/apps',{recursive:true});
 await mkdir('dist/assets/not-found',{recursive:true});
-for (const asset of ['aloong-cartoon.webp','golden-interaction.js','golden-wag','apps/transfer-main-light.jpg','apps/agentshed-main-90days.png','not-found/puzzled-dog.webp']) {
+for (const asset of ['aloong-cartoon.webp','golden-interaction.js','golden-wag','apps/transfer-main-light.jpg','apps/agentshed-main-90days.png','apps/justsnap-translate-zh.webp','not-found/puzzled-dog.webp']) {
   await cp(`assets/${asset}`,`dist/assets/${asset}`,{recursive:true});
 }
 await buildBlog({contentDir:'content',outDir:'dist'});
+await buildHomepage({outDir:'dist'});
 console.log('Built homepage, blog, visitor client and approved assets.');
 
 const worker = spawnSync('pnpm',['exec','wrangler','pages','functions','build','--outdir','.wrangler/pages-worker'],{stdio:'inherit',env:{...process.env,WRANGLER_LOG_PATH:'.wrangler/logs'}});

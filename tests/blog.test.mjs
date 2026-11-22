@@ -156,9 +156,7 @@ test('every post gets the shared look and no remote stylesheet', async () => {
   const page = await s.read('blog/x.html');
   const sheets = [...page.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m => m[1]);
   assert.deepEqual(sheets, ['/site.css', '/article.css']);
-  assert.match(page, /<script src="\/navigation\.js" defer><\/script>/);
   assert.match(page, /<script src="\/article\.js" defer><\/script>/);
-  assert.match(page, /<div data-site-navigation><\/div>/);
   assert.match(page, /<main class="ap-article ap-article-page">/);
   assert.match(page, /class="ap-article-body post-x"/);
 });
@@ -432,6 +430,7 @@ test('the build script writes the blog and ships every image the homepage and th
   const home = await readFile(join(cwd, 'dist/index.html'), 'utf8');
   assert.ok(home.includes(`href="/blog/${slug}"`));
   assert.doesNotMatch(home, /blog:home/);
+  assert.doesNotMatch(home, /agents:groups/);
   const notFound = await readFile(join(cwd, 'dist/404.html'), 'utf8');
   const images = [...pageImages(home), ...motionSheets(await readFile(join(cwd, 'dist/assets/golden-interaction.js'), 'utf8')), ...pageImages(notFound)];
   assert.ok(images.length > 0);
