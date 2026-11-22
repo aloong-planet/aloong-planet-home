@@ -50,8 +50,8 @@ html { scroll-behavior:auto; }
   .ap-article-col { grid-column:2; grid-row:2; }
 }
 
-/* Text. Paragraphs sit 12px apart; figures, tables, code and quotes get 8px more on each side. */
-.ap-article section { display:grid; gap:12px; scroll-margin-top:96px; }
+/* Text. Paragraphs sit 12px apart; figures, tables, code and quotes get 8px more on each side. A jump to a section lands 20px below the pinned navigation, whose height site.css already keeps clear with the page's scroll padding. */
+.ap-article section { display:grid; gap:12px; scroll-margin-top:20px; }
 .ap-article section > * { min-width:0; }
 .ap-article section > .fig, .ap-article section > .scroll, .ap-article section > table, .ap-article section > .codeblock, .ap-article section > .quote { margin-block:8px; }
 /* A long heading fills its first line before it wraps: "balance" would even the lines out, which puts the break near the middle of the heading. */
@@ -104,7 +104,7 @@ html { scroll-behavior:auto; }
 .ap-article .mid { min-width:560px; }
 
 /* Sources */
-.ap-article .foot { font-size:13.5px; line-height:1.8; color:var(--muted); display:grid; gap:8px; border-top:1px solid var(--line); padding-top:18px; scroll-margin-top:96px; }
+.ap-article .foot { font-size:13.5px; line-height:1.8; color:var(--muted); display:grid; gap:8px; border-top:1px solid var(--line); padding-top:18px; scroll-margin-top:20px; }
 .ap-article .foot ul { margin:0; padding-left:1.15em; }
 
 /* The end of every post: the post published just before this one and the one just after.
