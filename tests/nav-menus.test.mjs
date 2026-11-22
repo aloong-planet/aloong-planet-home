@@ -86,6 +86,11 @@ test('the top navigation reads Apps, Agents, Blog, About, with Apps and Agents l
   assert.deepEqual(tabs(navigationMarkup()), [['Apps', '/#apps'], ['Agents', '/#agents'], ['Blog', '/blog'], ['About', '/#about']]);
 });
 
+test('assistive technology knows the top navigation by its name (nav-menus::REQ-003)', () => {
+  const nav = navigationMarkup().match(/<nav\b[^>]*>/)[0];
+  assert.equal(nav.match(/\saria-label="([^"]*)"/)?.[1], '主要');
+});
+
 test('the menus and the delivered homepage Agents section list the works with their descriptions, in order (nav-menus::REQ-002, nav-menus::CON-001)', async () => {
   const [apps, agents] = [WORKS.filter(work => work[0] === 'Apps'), WORKS.filter(work => work[0] !== 'Apps')];
   assert.deepEqual(menuItems(navigationMarkup()), [
