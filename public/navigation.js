@@ -46,26 +46,33 @@ export const navigationMarkup = () => `<header class="ap-header">
   </header>`;
 
 /**
- * The stylesheet opens a menu while the pointer rests on it or keyboard focus is in it. Escape, or following the tab's
- * own link, hides it until the pointer and keyboard focus have both left (nav-menus::US-001/AC-07, nav-menus::US-001/AC-08).
- * Keyboard focus is :focus-visible: a mouse click leaves focus on the link it followed, and that focus alone must not
- * hold a menu open or hidden (nav-menus::US-001/AC-02).
+ * The stylesheet opens a menu while the pointer rests on it or it holds keyboard focus, which this marks with
+ * data-keyboard-focus. Escape, or following the tab's own link, hides it until the pointer and keyboard focus have both
+ * left (nav-menus::US-001/AC-07, nav-menus::US-001/AC-08).
+ * Keyboard focus is focus the browser shows as :focus-visible: a mouse click leaves focus on the link it followed, and
+ * that focus alone must not hold a menu open or hidden (nav-menus::US-001/AC-02). The mark is kept while focus moves from
+ * the tab to an item: during that move no element in the menu matches :focus-visible, so a stylesheet rule on it would
+ * hide the panel and the item could not take focus (nav-menus::US-001/AC-06).
  * @param {ParentNode} root
  */
 function wireMenus(root) {
   const menus = [...root.querySelectorAll('.ap-menu')].map(menu => ({
-    menu,
+    menu: /** @type {HTMLElement} */ (menu),
     tab: /** @type {HTMLElement} */ (menu.querySelector(':scope > a')),
     panel: /** @type {HTMLElement} */ (menu.querySelector('.ap-menu-panel')),
   }));
   for (const {menu, tab} of menus) {
-    const restore = () => {
-      if (!menu.matches(':hover') && !menu.querySelector(':focus-visible')) menu.removeAttribute('data-dismissed');
-    };
     tab.addEventListener('click', () => menu.setAttribute('data-dismissed', ''));
-    // When these fire, :hover and focus have not yet moved on, so the check waits a turn.
-    menu.addEventListener('mouseleave', () => setTimeout(restore));
-    menu.addEventListener('focusout', () => setTimeout(restore));
+    menu.addEventListener('focusin', () => menu.toggleAttribute('data-keyboard-focus', !!menu.querySelector(':focus-visible')));
+    // focusout fires before focus reaches its next element, which relatedTarget names.
+    menu.addEventListener('focusout', event => {
+      if (event.relatedTarget instanceof Node && menu.contains(event.relatedTarget)) return;
+      menu.removeAttribute('data-keyboard-focus');
+      if (!menu.matches(':hover')) menu.removeAttribute('data-dismissed');
+    });
+    menu.addEventListener('mouseleave', () => {
+      if (!menu.hasAttribute('data-keyboard-focus')) menu.removeAttribute('data-dismissed');
+    });
   }
   // Listened on the document: a menu the pointer opened holds no focus, so its own keydown never fires.
   document.addEventListener('keydown', event => {

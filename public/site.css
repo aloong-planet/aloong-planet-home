@@ -24,12 +24,10 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 .ap-menu-item span { display:block; margin-top:3px; font-size:12px; line-height:1.6; color:var(--muted); text-wrap:pretty; }
 .ap-menu-group { margin:0; padding:10px 12px 4px; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); }
 .ap-menu-group:not(:first-child) { margin-top:6px; border-top:1px solid var(--line); padding-top:14px; }
-/* Menus open only where the pointer can hover and the window is wider than the phone layout; elsewhere the tab is just the link to its section. Keyboard focus is :focus-visible, which a mouse click does not give, so a clicked item does not hold its menu open. While the pointer rests on one menu, another that only holds keyboard focus stays shut. Each :has() selector has a rule of its own, so a browser without :has() still opens menus on hover. */
-@media(hover:hover) and (pointer:fine) and (min-width:701px) {
- .ap-menu:hover .ap-menu-panel { display:block; }
- .ap-menu:has(:focus-visible) .ap-menu-panel { display:block; }
- .ap-menu:hover > a { color:var(--ink); }
- .ap-menu:has(:focus-visible) > a { color:var(--ink); }
+/* Menus open only where the pointer can hover and the window is wider than the phone layout; elsewhere the tab is just the link to its section. navigation.js sets data-keyboard-focus while a menu holds keyboard focus, which a mouse click does not give, so a clicked item does not hold its menu open. While the pointer rests on one menu, another that only holds keyboard focus stays shut. */
+@media(hover:hover) and (min-width:701px) {
+ .ap-menu:hover .ap-menu-panel, .ap-menu[data-keyboard-focus] .ap-menu-panel { display:block; }
+ .ap-menu:hover > a, .ap-menu[data-keyboard-focus] > a { color:var(--ink); }
  .ap-nav:has(.ap-menu:hover) .ap-menu:not(:hover) .ap-menu-panel { display:none; }
  .ap-nav:has(.ap-menu:hover) .ap-menu:not(:hover) > a { color:var(--muted); }
 }

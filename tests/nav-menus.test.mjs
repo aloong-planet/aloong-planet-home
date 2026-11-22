@@ -1,8 +1,11 @@
 // These need a real browser and are checked by recorded browser runs, because the project has no browser test suite:
 // nav-menus::US-001/AC-01, nav-menus::US-001/AC-02, nav-menus::US-001/AC-05, nav-menus::US-001/AC-06,
 // nav-menus::US-001/AC-07, nav-menus::US-001/AC-08, nav-menus::US-001/AC-09, nav-menus::US-002/AC-02,
-// nav-menus::US-002/AC-04, nav-menus::US-002/AC-05, the look and hover of nav-menus::US-002/AC-03, the screenshot area
-// of nav-menus::US-003/AC-02, and the failure modes and boundaries of the nav-menus spec.
+// nav-menus::US-002/AC-04, nav-menus::US-002/AC-05, the name shown over its description in nav-menus::US-001/AC-03,
+// the divider between Skills and Plugins in nav-menus::US-001/AC-04, the menus showing on every page of
+// nav-menus::US-001/AC-10 (tested here: the script and its mount), the heading's size, weight and colour in
+// nav-menus::US-002/AC-01 (tested here: the heading's class), the look and hover of nav-menus::US-002/AC-03, the
+// screenshot area of nav-menus::US-003/AC-02, and the failure modes and boundaries of the nav-menus spec.
 // Test them here once the browser suite capability is enabled.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
@@ -112,7 +115,7 @@ test('the homepage, the Blog page, every post page and the not-found page load t
   }
 });
 
-test('the homepage Agents section sits after Apps and before the footer, headed 「Agents.」 in the Apps heading\'s style (nav-menus::US-002/AC-01)', async () => {
+test('the homepage Agents section sits after Apps and before the footer, headed 「Agents.」 with the Apps heading\'s class (nav-menus::US-002/AC-01)', async () => {
   const html = await homepage();
   assert.deepEqual([...html.matchAll(/<(?:section|footer)\b[^>]*\sid="(apps|agents|about)"/g)].map(match => match[1]), ['apps', 'agents', 'about']);
   const heading = id => html.match(new RegExp(`<section\\b[^>]*\\sid="${id}"[^>]*>\\s*<h2\\b[^>]*\\sclass="([^"]+)"[^>]*>([^<]*)</h2>`)).slice(1);
