@@ -66,6 +66,10 @@ The menus and the Agents section list these works, in this order. On the site's 
 | Skills | media-studio | `https://github.com/aloong-planet/media-studio` | 把一篇文章变成一支讲解视频，配音用的是你自己的声音，在本机生成，字幕和各平台封面也一并做好。 |
 | Plugins | cc-session-pool | `https://github.com/aloong-planet/claudecode-session-dispatcher` | 让 Claude Code 连轴转。会话自己压缩上下文、醒来接着干，不用你守着；一个调度会话还能指挥一池 worker 同时开工。 |
 
+### nav-menus::REQ-003 Navigation name (direct acceptance)
+
+The top navigation's accessible name is 「主要」.
+
 ## Constraints
 
 ### nav-menus::CON-001 Sections without scripting (direct acceptance)

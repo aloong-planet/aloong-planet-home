@@ -41,7 +41,7 @@ const agentsMenu = () => menu('agents', 'Agents', SITE_WORKS.agents.map(({group,
 /** The site header with its navigation, as markup. */
 export const navigationMarkup = () => `<header class="ap-header">
     <a class="ap-brand" href="/">aloong planet <small>Build &amp; Share</small></a>
-    <nav class="ap-nav" aria-label="主导航">${appsMenu()}${agentsMenu()}<a href="/blog">Blog</a><a href="/#about">About</a></nav>
+    <nav class="ap-nav" aria-label="主要">${appsMenu()}${agentsMenu()}<a href="/blog">Blog</a><a href="/#about">About</a></nav>
     <a class="ap-social" href="https://github.com/aloong-planet" target="_blank" rel="noreferrer">GitHub</a>
   </header>`;
 
