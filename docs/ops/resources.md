@@ -22,7 +22,7 @@ The initial production table was created through the dashboard using migrations/
 
 - public/: shipping HTML, styles, navigation, the shared article look, and visitor client.
 - content/: the blog's post list, post bodies and covers, with any post's own stylesheet and script. See [publishing a post](publishing-posts.md).
-- assets/: one copy of each shipping portrait, dog animation, not-found dog and app screenshot, plus the supplied portrait illustration and the generated not-found dog image, each kept as the source of its reduced copy and not deployed.
+- assets/: one copy of each shipping portrait, dog animation, not-found dog and app screenshot, plus the supplied portrait illustration, the generated not-found dog image and JustSnap's full-size translation screenshot, each kept as the source of its reduced copy and not deployed.
 - functions/: Pages Functions request handler.
 - migrations/: versioned D1 schema migrations.
 - scripts/: build, verification and release automation.
@@ -34,7 +34,7 @@ The initial production table was created through the dashboard using migrations/
 
 ## Related projects
 
-Transfer (https://transfer.aloongplanet.com) and Agentshed (https://agentshed.aloongplanet.com) are links/cards only. Their repositories, Pages deployments and Transfer download statistics are outside this site's deployment.
+Transfer (https://transfer.aloongplanet.com), Agentshed (https://agentshed.aloongplanet.com) and JustSnap, named 随译 on this site (https://justsnap.aloongplanet.com), are links/cards only. The skills and plugins in the Agents menu and section are links to their GitHub repositories. Their repositories, deployments and Transfer download statistics are outside this site's deployment.
 
 ## Retained local material
 

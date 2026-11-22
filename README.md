@@ -1,6 +1,6 @@
 # Aloong Planet
 
-A personal homepage with Apps, a Blog, an interactive golden retriever, and a site-wide anonymous visitor total. The supplied seated portrait and interactive dog sit together on the right, with the introduction beneath them and the newest posts beside them. Small screens use a centered, full-width group followed by the posts. See [publishing a post](docs/ops/publishing-posts.md).
+A personal homepage with Apps, Agents, a Blog, an interactive golden retriever, and a site-wide anonymous visitor total. The supplied seated portrait and interactive dog sit together on the right, with the introduction beneath them and the newest posts beside them. Small screens use a centered, full-width group followed by the posts. See [publishing a post](docs/ops/publishing-posts.md).
 
 ## Develop and verify
 
@@ -40,7 +40,7 @@ No paid subscription is enabled. Free-plan exhaustion causes the counter to disa
 |---|---|
 | public/ | Production pages and browser code |
 | content/ | Blog post list, post bodies and covers |
-| assets/ | Shipping portrait, dog animation, not-found dog and app screenshots, plus the supplied illustration and the generated dog image they are reduced from |
+| assets/ | Shipping portrait, dog animation, not-found dog and app screenshots, plus the supplied illustration, the generated dog image and the full-size JustSnap screenshot they are reduced from |
 | functions/, migrations/ | Visitor API and D1 schema |
 | scripts/, tests/ | Build, validation, deployment and regression tests |
 | docs/ | Accepted prototypes, specs, feature descriptions, resource inventory and operations |
