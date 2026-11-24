@@ -1,6 +1,6 @@
 # Blog
 
-> Related: [features](../features/blog.md) · [visitor line](visitor-counter.md)
+> Related: [visitor line](visitor-counter.md)
 
 ## Problem Statement
 Aloong wants to publish long, figure-heavy explainers, starting with an analysis of DeepSeek's Super-agent article, show recent writing on the homepage, list every post on a Blog page that reads differently from the homepage's text list, and have every later post look the same without restyling each one. Within a post, text, tables and figures should read at one width, and a wide figure's detail should be readable without scrolling it sideways in the page.
@@ -197,4 +197,4 @@ Existing features:
 
 ## Out of Scope
 
-Markdown or any other post format; drafts and scheduled publishing (a listed post is published); tags, search, pagination, comments; RSS, sitemap, and social preview tags; post-owned image files other than the cover; dark appearance and other languages; redirects for removed posts; a link from a post back to the Blog list (the top navigation leads there); a larger view for tables; figures drawn or sized specially for one post; keeping keyboard focus inside an open larger view (Tab can leave it; Esc and a click still close it).
+Markdown or any other post format; drafts and scheduled publishing (a listed post is published); tags, search, pagination, comments, subscriptions; RSS, sitemap, and social preview tags; post-owned image files other than the cover; dark appearance and other languages; redirects for removed posts; a link from a post back to the Blog list (the top navigation leads there); a larger view for tables; figures drawn or sized specially for one post; keeping keyboard focus inside an open larger view (Tab can leave it; Esc and a click still close it).

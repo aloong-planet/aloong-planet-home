@@ -32,7 +32,7 @@ Apex and www share the one-year anonymous cookie. The homepage declares the apex
 
 No paid subscription is enabled. Free-plan exhaustion causes the counter to disappear while the static homepage stays usable. This repository preserves the deployed source. Releases use the existing Direct Upload Pages project through `pnpm cf:deploy`. GitHub checks run on pull requests; main pushes deploy after checks when the repository Actions secret is configured. See [deployment setup and recovery](docs/ops/deployment.md).
 
-[Visitor behavior](docs/features/visitor-counter.md) · [Specification](docs/specs/visitor-counter.md) · [Blog behavior](docs/features/blog.md) · [Specification](docs/specs/blog.md)
+[Visitor total specification](docs/specs/visitor-counter.md) · [Blog specification](docs/specs/blog.md)
 
 ## Repository map
 
@@ -43,7 +43,7 @@ No paid subscription is enabled. Free-plan exhaustion causes the counter to disa
 | assets/ | Shipping portrait, dog animation, not-found dog and app screenshots, plus the supplied illustration, the generated dog image and the full-size JustSnap screenshot they are reduced from |
 | functions/, migrations/ | Visitor API and D1 schema |
 | scripts/, tests/ | Build, validation, deployment and regression tests |
-| docs/ | Accepted prototypes, specs, feature descriptions, resource inventory and operations |
+| docs/ | Accepted prototypes, specs, resource inventory and operations |
 | tools/screenshots/ | Synthetic Transfer screenshot fixture |
 | .github/workflows/, .github/ci/ | Pull-request checks, the rules that choose which checks a change runs, and main deployment |
 

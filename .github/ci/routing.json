@@ -17,7 +17,6 @@
         "docs/agents/*.md",
         "docs/adr/*.md",
         "docs/specs/*.md",
-        "docs/features/*.md",
         "docs/ops/*.md",
         "docs/assets/**",
         "docs/prototypes/**"

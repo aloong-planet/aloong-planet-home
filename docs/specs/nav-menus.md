@@ -37,7 +37,7 @@ As a visitor following Agents, I land on a homepage section listing the skills a
 
 As a visitor on the homepage, I see each of Aloong's apps with what makes it worth trying, so I can open its website.
 
-- nav-menus::US-003/AC-01: The Apps section shows three cards in this order: Transfer, Agentshed, 随译. The 随译 card has the same form as the others: a screenshot area, the name, two lines of text and the link 「访问随译官网」. Every part that links opens the app's website in a new tab.
+- nav-menus::US-003/AC-01: The Apps section shows three cards in this order: Transfer, Agentshed, 随译. The 随译 card has the same form as the others: a screenshot area, the name, two lines of text and the link 「访问随译官网」. The screenshot and the link each open the app's website in a new tab.
 - nav-menus::US-003/AC-02: The 随译 screenshot is JustSnap's translation view: a selected passage of English with its Chinese translation in the result box beside it. It is shown whole within the screenshot area, on the grey `#868892`, and its alternative text is 「随译截图翻译：框选一段英文，右侧结果框显示中文译文」.
 - nav-menus::US-003/AC-03: The cards' text reads as follows, each line break as shown:
 
@@ -59,7 +59,7 @@ As a visitor far down a long page, I find the top navigation still at the top of
 
 ### nav-menus::REQ-001 Navigation tabs (direct acceptance)
 
-The top navigation reads Apps · Agents · Blog · About. Apps leads to the homepage's Apps section (`/#apps`) and Agents to its Agents section (`/#agents`).
+The top navigation reads Apps · Agents · Blog · About. Apps leads to the homepage's Apps section (`/#apps`), Agents to its Agents section (`/#agents`), Blog to the Blog page (`/blog`) and About to the homepage's footer (`/#about`).
 
 ### nav-menus::REQ-002 The works and their descriptions (direct acceptance)
 
@@ -77,6 +77,10 @@ The menus and the Agents section list these works, in this order. On the site's 
 ### nav-menus::REQ-003 Navigation name (direct acceptance)
 
 The top navigation's accessible name is 「主要」.
+
+### nav-menus::REQ-004 GitHub link (direct acceptance)
+
+Every page that shows the top navigation also shows a link 「GitHub」 at the right end of its header. It opens `https://github.com/aloong-planet` in a new tab.
 
 ## Constraints
 
