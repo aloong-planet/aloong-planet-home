@@ -126,7 +126,7 @@ test('the homepage Agents section sits after Apps and before the footer, headed 
   assert.deepEqual([...html.matchAll(/<(?:section|footer)\b[^>]*\sid="(apps|agents|about)"/g)].map(match => match[1]), ['apps', 'agents', 'about']);
   const heading = id => html.match(new RegExp(`<section\\b[^>]*\\sid="${id}"[^>]*>\\s*<h2\\b[^>]*\\sclass="([^"]+)"[^>]*>([^<]*)</h2>`)).slice(1);
   const [[appsClass], [agentsClass, agentsText]] = [heading('apps'), heading('agents')];
-  assert.equal(agentsText, 'Agents!');
+  assert.equal(agentsText, 'Agents.');
   assert.equal(agentsClass, appsClass);
 });
 
