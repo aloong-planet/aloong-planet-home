@@ -12,7 +12,7 @@ The homepage opens with Aloong's portrait and a golden retriever, with an introd
 
 ### homepage::REQ-001 First screen
 
-The first screen of the homepage shows the seated blue-shirt portrait of Aloong together with the golden retriever, an introduction, and the visitor line of visitor-counter::REQ-001/AC-02.
+The first screen of the homepage holds the seated blue-shirt portrait of Aloong together with the golden retriever, an introduction, and the visitor line of visitor-counter::REQ-001/AC-02.
 
 - homepage::REQ-001/AC-01: On a window wider than 700px, the portrait and the dog stand together on the right of the first screen, with the introduction and the visitor line beneath them.
 - homepage::REQ-001/AC-02: On a window 700px wide or narrower, the portrait and the dog stand together, centered in the window, with the introduction and the visitor line beneath them. The list of recent posts (blog::US-001/AC-07) follows.
