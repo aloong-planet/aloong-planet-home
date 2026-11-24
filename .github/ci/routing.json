@@ -1,0 +1,45 @@
+{
+  "scopes": {
+    "home": ["home-checks"]
+  },
+  "rules": [
+    {
+      "reason": "Shared input",
+      "select": "all",
+      "paths": ["package.json", "pnpm-lock.yaml"]
+    },
+    {
+      "reason": "Documentation",
+      "select": [],
+      "paths": [
+        "README.md",
+        "AGENTS.md",
+        "docs/agents/*.md",
+        "docs/adr/*.md",
+        "docs/specs/*.md",
+        "docs/features/*.md",
+        "docs/ops/*.md",
+        "docs/assets/**",
+        "docs/prototypes/**"
+      ]
+    },
+    {
+      "reason": "Homepage",
+      "select": ["home"],
+      "paths": [
+        "assets/**",
+        "content/**",
+        "public/**",
+        "scripts/**",
+        "tests/**",
+        "functions/**",
+        "migrations/**",
+        "tools/**",
+        "wrangler.jsonc",
+        "deployment.config.json",
+        "tsconfig.json",
+        "tsconfig.client.json"
+      ]
+    }
+  ]
+}

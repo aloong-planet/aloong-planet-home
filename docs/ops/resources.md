@@ -4,7 +4,7 @@
 
 | Resource | Identifier / destination | Purpose |
 |---|---|---|
-| GitHub repository | aloong-planet/aloong-planet-home | Private source and automation repository |
+| GitHub repository | aloong-planet/aloong-planet-home | Public source and automation repository |
 | Cloudflare account | 7f1ceca4bab4b98d5d778e1231d7abaa | Existing account; Free Workers/Pages and D1 |
 | Pages project | aloong-planet-home | Existing Direct Upload project, production branch main |
 | Canonical hostname | https://aloongplanet.com | Public personal homepage |

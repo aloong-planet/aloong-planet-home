@@ -45,6 +45,6 @@ No paid subscription is enabled. Free-plan exhaustion causes the counter to disa
 | scripts/, tests/ | Build, validation, deployment and regression tests |
 | docs/ | Accepted prototypes, specs, feature descriptions, resource inventory and operations |
 | tools/screenshots/ | Synthetic Transfer screenshot fixture |
-| .github/workflows/ | Pull-request checks and main deployment |
+| .github/workflows/, .github/ci/ | Pull-request checks, the rules that choose which checks a change runs, and main deployment |
 
 Generated output and local state are ignored. The original prototype workspace remains separate and unchanged.
