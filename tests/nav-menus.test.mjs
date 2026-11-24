@@ -6,7 +6,8 @@
 // nav-menus::US-001/AC-10 (tested here: the script and its mount), the heading's size, weight and colour in
 // nav-menus::US-002/AC-01 (tested here: the heading's class), the look and hover of nav-menus::US-002/AC-03, the
 // screenshot area of nav-menus::US-003/AC-02, nav-menus::US-004/AC-01, nav-menus::US-004/AC-02,
-// nav-menus::US-004/AC-03, and the failure modes and boundaries of the nav-menus spec.
+// nav-menus::US-004/AC-03, the right end of the header in nav-menus::REQ-004 (tested here: the link after the
+// navigation, its address and its target), and the failure modes and boundaries of the nav-menus spec.
 // Test them here once the browser suite capability is enabled.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
@@ -90,6 +91,15 @@ test('the top navigation reads Apps, Agents, Blog, About, with Apps and Agents l
 test('assistive technology knows the top navigation by its name (nav-menus::REQ-003)', () => {
   const nav = navigationMarkup().match(/<nav\b[^>]*>/)[0];
   assert.equal(nav.match(/\saria-label="([^"]*)"/)?.[1], '主要');
+});
+
+test('the header ends with a GitHub link that opens the profile in a new tab (nav-menus::REQ-004)', () => {
+  // The link is not one of the navigation's tabs, so tabs() does not see it: it is the last element of the header.
+  const link = navigationMarkup().match(/<\/nav>\s*(<a\b[^>]*>)([^<]*)<\/a>\s*<\/header>/);
+  assert.ok(link, 'a link follows the navigation at the end of the header');
+  assert.equal(link[2], 'GitHub');
+  assert.equal(link[1].match(/\shref="([^"]*)"/)?.[1], 'https://github.com/aloong-planet');
+  assert.equal(linkTarget(link[1])[0], '_blank');
 });
 
 test('the menus and the delivered homepage Agents section list the works with their descriptions, in order (nav-menus::REQ-002, nav-menus::CON-001)', async () => {
