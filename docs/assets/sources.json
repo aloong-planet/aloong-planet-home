@@ -8,7 +8,7 @@
     "sha256": "17a1def5fea148878beba7c1a500336aee3e9d4e7589831caed7b8d7d01bc890"
   },
   "apps/transfer-main-light.jpg": {
-    "source": "White-theme Transfer renderer with tools/screenshots/transfer-fixture.js synthetic data",
+    "source": "White-theme Transfer renderer with apps/home/tools/screenshots/transfer-fixture.js synthetic data",
     "sha256": "7275dafe7e5133836b59d7471bdab57c375aa6e6b4c7764ce9b7213937178a8b"
   },
   "apps/agentshed-main-90days.png": {

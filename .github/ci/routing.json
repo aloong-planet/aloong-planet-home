@@ -6,7 +6,7 @@
     {
       "reason": "Shared input",
       "select": "all",
-      "paths": ["package.json", "pnpm-lock.yaml"]
+      "paths": ["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "packages/**"]
     },
     {
       "reason": "Documentation",
@@ -25,20 +25,7 @@
     {
       "reason": "Homepage",
       "select": ["home"],
-      "paths": [
-        "assets/**",
-        "content/**",
-        "public/**",
-        "scripts/**",
-        "tests/**",
-        "functions/**",
-        "migrations/**",
-        "tools/**",
-        "wrangler.jsonc",
-        "deployment.config.json",
-        "tsconfig.json",
-        "tsconfig.client.json"
-      ]
+      "paths": ["apps/home/**"]
     }
   ]
 }

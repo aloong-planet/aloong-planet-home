@@ -1,13 +1,15 @@
 // The links between this repository's workflow files that no run reports when they break: a job the gate does
-// not wait on, and a Deploy trigger that names no workflow. Run: node --test .github/ci/*.test.mjs
+// not wait on, a Deploy trigger that names no workflow, and a pnpm --filter command that names no package or
+// script (pnpm answers a filter that matches nothing with success). Run: node --test .github/ci/*.test.mjs
 // Gap: Deploy's job condition and steps run only on the hosted runner, from the default branch's copy of
 // deploy.yml; they are checked in the Deploy run of the first push to main after a change to deploy.yml.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 
 const read = (name) => readFileSync(new URL(`../workflows/${name}`, import.meta.url), 'utf8')
 const ci = read('ci.yml')
+const deploy = read('deploy.yml')
 
 // The ids of the jobs under the top-level `jobs:` key, and each job's own lines
 function jobs(text) {
@@ -34,7 +36,40 @@ test('the CI gate waits on every other job of the CI workflow', () => {
 
 test('Deploy is triggered by the CI workflow, by its name', () => {
   const name = ci.match(/^name: (.+)$/m)[1].trim()
-  const triggers = read('deploy.yml').match(/^ {4}workflows: \[(.*)\]\s*$/m)
+  const triggers = deploy.match(/^ {4}workflows: \[(.*)\]\s*$/m)
   assert.ok(triggers, 'deploy.yml has a one-line workflow_run workflows list')
   assert.deepEqual(triggers[1].split(',').map((n) => n.trim()), [name])
+})
+
+// The workspace packages under apps/ and packages/, by the name pnpm --filter takes, with their scripts
+function workspacePackages() {
+  const found = new Map()
+  for (const group of ['apps', 'packages']) {
+    const dir = new URL(`../../${group}/`, import.meta.url)
+    for (const entry of existsSync(dir) ? readdirSync(dir) : []) {
+      const manifest = new URL(`${entry}/package.json`, dir)
+      if (!existsSync(manifest)) continue
+      const { name, scripts = {} } = JSON.parse(readFileSync(manifest, 'utf8'))
+      found.set(name, Object.keys(scripts))
+    }
+  }
+  return found
+}
+
+// Each `pnpm --filter <package> run <script>` of a text, as [package, script]
+const filterCommands = (text) => [...text.matchAll(/pnpm --filter (\S+) run (\S+)/g)].map(([, name, script]) => [name, script])
+
+test('the pnpm --filter commands of the workflows name a workspace package and a script it has', () => {
+  const packages = workspacePackages()
+  const checks = filterCommands(jobs(ci).get('home-checks').join('\n'))
+  const release = filterCommands(deploy)
+  // The commands must exist at all: a workflow that stopped running them would otherwise pass this test
+  for (const script of ['typecheck', 'test', 'build']) {
+    assert.ok(checks.some(([name, s]) => name === '@aloong-planet/home' && s === script), `home-checks runs ${script} of @aloong-planet/home`)
+  }
+  assert.ok(release.some(([name, script]) => name === '@aloong-planet/home' && script === 'cf:deploy'), 'Deploy runs cf:deploy of @aloong-planet/home')
+  for (const [name, script] of [...filterCommands(ci), ...release]) {
+    assert.ok(packages.has(name), `${name} is no package of apps/ or packages/`)
+    assert.ok(packages.get(name).includes(script), `${name} has no script ${script}`)
+  }
 })

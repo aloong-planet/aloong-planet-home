@@ -42,8 +42,9 @@ jobs:
           node-version: 26.7.0
       - run: node --test .github/ci/*.test.mjs
 
-  # The homepage: listed under the `home` scope in routing.json. Deployment is the Deploy workflow, which runs
-  # after this workflow succeeds on a push to main.
+  # The homepage, apps/home: listed under the `home` scope in routing.json. The commands name the package: a
+  # pnpm --filter that matches nothing succeeds, which workflows.test.mjs guards against. Deployment is the
+  # Deploy workflow, which runs after this workflow succeeds on a push to main.
   home-checks:
     name: Homepage checks
     needs: changes
@@ -59,9 +60,9 @@ jobs:
           node-version: 26.7.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm build
+      - run: pnpm --filter @aloong-planet/home run typecheck
+      - run: pnpm --filter @aloong-planet/home run test
+      - run: pnpm --filter @aloong-planet/home run build
 
   # The one required check. `needs` must list every other job of this workflow. `always()` makes it run after a
   # failure or a skip upstream, which the default `success()` would not: a skipped required check counts as passing.

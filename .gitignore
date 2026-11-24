@@ -4,6 +4,6 @@ dist/
 .dev.vars*
 .env*
 !.env.example
-docs/.workings/
+**/docs/.workings/
 artifacts/
 .DS_Store
