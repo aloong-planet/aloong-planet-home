@@ -1,7 +1,7 @@
 name: Deploy
 
-# Deploys the homepage after CI succeeds on a push to main. A separate workflow so that CI's jobs stay the ones
-# its gate requires, and deployment is never a check a pull request waits on.
+# Deploys the homepage (apps/home) after CI succeeds on a push to main. A separate workflow so that CI's jobs stay
+# the ones its gate requires, and deployment is never a check a pull request waits on.
 # To redeploy a revision, re-run its Deploy run; it deploys only while that revision is still the tip of main.
 on:
   workflow_run:
@@ -54,4 +54,4 @@ jobs:
       - name: Deploy existing Pages project
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: pnpm cf:deploy
+        run: pnpm --filter @aloong-planet/home run cf:deploy

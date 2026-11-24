@@ -6,7 +6,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  apps/home:
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^5.20261102.1
