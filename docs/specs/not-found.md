@@ -1,6 +1,6 @@
 # Not-found page
 
-> Related: [features](../features/not-found.md) · [blog](blog.md) · [visitor total](visitor-counter.md)
+> Related: [blog](blog.md) · [visitor total](visitor-counter.md)
 
 ## Problem Statement
 A visitor who opens a mistyped link, or the address of a post that has been removed, sees the homepage with no sign that the page does not exist. Every address on the site answers with status 200, so nothing tells the visitor, a search engine, or a check that the page is missing.
