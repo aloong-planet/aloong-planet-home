@@ -21,7 +21,9 @@ Migrations run before upload. Keep them additive and compatible with the previou
 
 ## GitHub automation
 
-`.github/workflows/checks.yml` runs checks for pull requests and main pushes. Only main can deploy, after successful checks. Deployments are serialized and reject superseded commits. Pull requests receive no Cloudflare token and perform no remote deployment. A fresh deployment runner repeats the same local validation command before publishing.
+The CI workflow (`.github/workflows/ci.yml`) runs on pull requests to main and on pushes to main. Its `CI gate` job passes only when every job the run selected succeeded. A push to main runs every check. A pull request runs the homepage checks (install, type checking, tests and build) only when it changes a path that `.github/ci/routing.json` routes to the homepage, or a path the file does not list. Documentation-only changes skip those checks; the repository policy job, which tests the routing in `.github/ci/`, always runs.
+
+The Deploy workflow (`.github/workflows/deploy.yml`) runs after the CI workflow succeeds on a push to main. It deploys only that revision, and only while it is still the tip of main. Deployments are serialized. Pull requests receive no Cloudflare token and perform no remote deployment. A fresh deployment runner repeats the same local validation command before publishing. To redeploy, re-run the Deploy run in GitHub Actions; there is no manually triggered workflow.
 
 One repository Actions secret is required:
 
@@ -29,11 +31,11 @@ One repository Actions secret is required:
 |---|---|
 | `CLOUDFLARE_API_TOKEN` | Cloudflare token scoped to account `7f1ceca4bab4b98d5d778e1231d7abaa`, with Cloudflare Pages Edit and D1 Edit |
 
-Create the token through the Cloudflare dashboard, selecting only the existing account. Set it through GitHub Settings → Secrets and variables → Actions → New repository secret, or `gh secret set CLOUDFLARE_API_TOKEN --repo aloong-planet/aloong-planet-home` (interactive hidden input). Do not pass the token as a command-line argument or commit it. Account/project/database identifiers are already configured and are not secrets. No DNS-edit permission or paid Cloudflare plan is required by this workflow.
+Create the token through the Cloudflare dashboard, selecting only the existing account. Set it through GitHub Settings → Secrets and variables → Actions → New repository secret, or `gh secret set CLOUDFLARE_API_TOKEN --repo aloong-planet/aloong-planet-home` (interactive hidden input). Do not pass the token as a command-line argument or commit it. Account/project/database identifiers are already configured and are not secrets. No DNS-edit permission or paid Cloudflare plan is required by the Deploy workflow.
 
-Without the secret, checks still run but the production deploy job fails with a setup message. Automatic deployment also requires this workflow to be merged into main and GitHub Actions to be available under the account's current allowance. There is no paid-plan upgrade or spending-limit change in this setup.
+Without the secret, checks still run but the Deploy workflow fails with a setup message. Automatic deployment also requires GitHub Actions to be available under the account's current allowance. There is no paid-plan upgrade or spending-limit change in this setup.
 
-Require the `checks` job for merging where the GitHub plan supports private-repository branch protection. Deployment is not a required pull-request check. Follow the [project's merge policy](documentation-merges.md) for approval requirements. The current private repository is on a Free organization plan: GitHub rejected ruleset creation with HTTP 403 (2026-11-02), so checks are not enforced by branch protection. Keep the repository private and review checks manually; do not upgrade or change visibility as part of deployment setup.
+The repository is public. The ruleset on main requires the `CI gate` check, and it is the only required check. Do not require the homepage checks or any other job by name: whether those jobs run depends on what a pull request changes, and `CI gate` already accounts for them. Deployment is never a required check. Follow the [project's merge policy](documentation-merges.md) for approval requirements.
 
 The Pages configuration schema does not accept `account_id`. The deployment command reads the account from `deployment.config.json` and supplies `CLOUDFLARE_ACCOUNT_ID` to Wrangler. Public verification hosts are defined in that same deployment settings file.
 
