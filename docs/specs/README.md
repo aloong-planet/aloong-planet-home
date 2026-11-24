@@ -4,6 +4,7 @@ Each spec is the current requirement picture for one feature, for people changin
 
 | Spec | Feature |
 |---|---|
+| [Homepage](homepage.md) | Where the portrait, the dog and the introduction sit on the first screen, in a wide and a narrow window. |
 | [Blog](blog.md) | Posts, the Blog page, and recent posts on the homepage. |
 | [Site-wide anonymous visitor total](visitor-counter.md) | Deduplicated visitors across pages and a homepage total that updates automatically. |
 | [Not-found page](not-found.md) | What an address the site does not have shows, and its status. |

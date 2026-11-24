@@ -197,4 +197,4 @@ Existing features:
 
 ## Out of Scope
 
-Markdown or any other post format; drafts and scheduled publishing (a listed post is published); tags, search, pagination, comments; RSS, sitemap, and social preview tags; post-owned image files other than the cover; dark appearance and other languages; redirects for removed posts; a link from a post back to the Blog list (the top navigation leads there); a larger view for tables; figures drawn or sized specially for one post; keeping keyboard focus inside an open larger view (Tab can leave it; Esc and a click still close it).
+Markdown or any other post format; drafts and scheduled publishing (a listed post is published); tags, search, pagination, comments, subscriptions; RSS, sitemap, and social preview tags; post-owned image files other than the cover; dark appearance and other languages; redirects for removed posts; a link from a post back to the Blog list (the top navigation leads there); a larger view for tables; figures drawn or sized specially for one post; keeping keyboard focus inside an open larger view (Tab can leave it; Esc and a click still close it).
