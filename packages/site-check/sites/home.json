@@ -1,0 +1,6 @@
+{
+  "origin": "https://aloongplanet.com",
+  "fixtures": [
+    { "path": "/api/visitor", "json": { "total": 9007199254740991 } }
+  ]
+}
