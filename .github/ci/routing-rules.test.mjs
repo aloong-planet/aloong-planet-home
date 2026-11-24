@@ -17,7 +17,6 @@ test('each pattern of routing.json routes a real path to the scopes written here
     ['docs/agents/docs-layout.md', []],
     ['docs/adr/0001-app-websites-in-this-repository.md', []],
     ['docs/specs/blog.md', []],
-    ['docs/features/blog.md', []],
     ['docs/ops/deployment.md', []],
     ['docs/assets/sources.json', []],
     ['docs/prototypes/homepage/prototype-home.html', []],
