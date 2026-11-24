@@ -56,8 +56,18 @@ function workspacePackages() {
   return found
 }
 
-// Each `pnpm --filter <package> run <script>` of a text, as [package, script]
-const filterCommands = (text) => [...text.matchAll(/pnpm --filter (\S+) run (\S+)/g)].map(([, name, script]) => [name, script])
+// A YAML comment runs from a # at the start of a line or after whitespace to the end of the line; a step that is
+// commented out does not run, so it must not count as present
+const withoutComments = (text) => text.replace(/(^|\s)#.*$/gm, '$1')
+
+// Each `pnpm --filter <package> run <script>` of a text that is not in a comment, as [package, script]
+const filterCommands = (text) => [...withoutComments(text).matchAll(/pnpm --filter (\S+) run (\S+)/g)].map(([, name, script]) => [name, script])
+
+test('a commented-out pnpm --filter command is not a command of the workflow', () => {
+  assert.deepEqual(filterCommands('      - run: pnpm --filter a run b'), [['a', 'b']])
+  assert.deepEqual(filterCommands('      # - run: pnpm --filter a run b'), [])
+  assert.deepEqual(filterCommands('      - run: pnpm --filter a run b # pnpm --filter c run d'), [['a', 'b']])
+})
 
 test('the pnpm --filter commands of the workflows name a workspace package and a script it has', () => {
   const packages = workspacePackages()

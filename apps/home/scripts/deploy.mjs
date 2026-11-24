@@ -37,7 +37,7 @@ export function deploy({config, execute, dryRun = false}) {
 
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
   try {
-    if (process.argv.slice(2).some(arg => arg !== '--dry-run')) throw new Error('Usage: pnpm cf:deploy [--dry-run]');
+    if (process.argv.slice(2).some(arg => arg !== '--dry-run')) throw new Error('Usage: pnpm --filter @aloong-planet/home run cf:deploy [--dry-run]');
     const settings = JSON.parse(readFileSync('deployment.config.json', 'utf8'));
     const config = {...JSON.parse(readFileSync('wrangler.jsonc', 'utf8')), account_id: settings.accountId};
     if (process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_ACCOUNT_ID !== config.account_id) {
@@ -50,7 +50,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
       if (result.error || result.status !== 0) {
         // Captured output contains resource metadata only; never print authentication env values.
         if (capture && result.stderr) process.stderr.write(result.stderr);
-        throw new Error(`${command} ${args.join(' ')} failed (exit ${result.status ?? 'unavailable'}). For Cloudflare authentication, run pnpm cf:login or configure CLOUDFLARE_API_TOKEN.`);
+        throw new Error(`${command} ${args.join(' ')} failed (exit ${result.status ?? 'unavailable'}). For Cloudflare authentication, run pnpm --filter @aloong-planet/home run cf:login or configure CLOUDFLARE_API_TOKEN.`);
       }
       return result.stdout || '';
     }});

@@ -21,7 +21,7 @@ pnpm check
 node scripts/verify-local-api.mjs
 ```
 
-Run from `apps/home/`. The root `pnpm typecheck`, `pnpm test` and `pnpm build` run the script of that name in every package.
+Run from `apps/home/`.
 
 The HTTP check is hardcoded to the local server and creates local disposable test visitors. It never targets production. Lint, automated browser E2E and mutation testing are explicitly disabled in capabilities.toml. Native browser checks supplement request-level tests.
 

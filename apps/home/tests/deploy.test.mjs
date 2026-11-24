@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
 import {deploy} from '../scripts/deploy.mjs';
 
 const config = {name: 'personal-site', account_id: 'test-account',
@@ -69,4 +71,12 @@ test('edits made during verification abort before changing production', () => {
   };
   assert.throws(() => deploy({config, execute}), /Source changed during verification/);
   assert.ok(boundary.calls.every(line => !line.includes('migrations') && !line.includes('pages deploy')));
+});
+
+// Gap: the authentication hint printed when a Wrangler command fails (the main block of deploy.mjs) needs a real
+// failing process to run, so only the usage line below is tested.
+test('the usage line of the deploy script names a command that works from the repository root', () => {
+  const run = spawnSync(process.execPath, [fileURLToPath(new URL('../scripts/deploy.mjs', import.meta.url)), '--no-such-flag'], {encoding: 'utf8'});
+  assert.equal(run.status, 1);
+  assert.equal(run.stderr.trim(), 'Usage: pnpm --filter @aloong-planet/home run cf:deploy [--dry-run]');
 });
