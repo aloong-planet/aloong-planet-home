@@ -6,6 +6,8 @@ Cross-skill project facts are declared in the repository-root `capabilities.toml
 
 To publish or republish a post, follow `docs/ops/publishing-posts.md`.
 
+A workflow job that needs more than read access to the repository declares its own `permissions` (`docs/ops/deployment.md`).
+
 ## Agent skills
 
 ### Issue tracker

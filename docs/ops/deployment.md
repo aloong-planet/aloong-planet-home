@@ -25,6 +25,8 @@ The CI workflow (`.github/workflows/ci.yml`) runs on pull requests to main and o
 
 The Deploy workflow (`.github/workflows/deploy.yml`) runs after the CI workflow succeeds on a push to main. It deploys only that revision, and only while it is still the tip of main. Deployments are serialized. Pull requests receive no Cloudflare token and perform no remote deployment. A fresh deployment runner repeats the same local validation command before publishing. To redeploy, re-run the Deploy run in GitHub Actions; there is no manually triggered workflow.
 
+Both workflows give their token read access to the repository only. A job that needs more declares its own `permissions`, so the extra access stays with that job and is reviewed with it.
+
 One repository Actions secret is required:
 
 | Name | Value |
