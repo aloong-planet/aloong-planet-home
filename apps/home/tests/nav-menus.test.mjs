@@ -1,4 +1,4 @@
-// These need a real browser and are checked by recorded browser runs, because the project has no browser test suite:
+// These need a real browser and are checked by recorded browser runs, because the project's browser suite, packages/site-check, only measures page widths:
 // nav-menus::US-001/AC-01, nav-menus::US-001/AC-02, nav-menus::US-001/AC-05, nav-menus::US-001/AC-06,
 // nav-menus::US-001/AC-07, nav-menus::US-001/AC-08, nav-menus::US-001/AC-09, nav-menus::US-002/AC-02,
 // nav-menus::US-002/AC-04, nav-menus::US-002/AC-05, the name shown over its description in nav-menus::US-001/AC-03,
@@ -8,7 +8,7 @@
 // screenshot area of nav-menus::US-003/AC-02, nav-menus::US-004/AC-01, nav-menus::US-004/AC-02,
 // nav-menus::US-004/AC-03, the right end of the header in nav-menus::REQ-004 (tested here: the link after the
 // navigation, its address and its target), and the failure modes and boundaries of the nav-menus spec.
-// Test them here once the browser suite capability is enabled.
+// Test them in the browser suite once it covers them.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';

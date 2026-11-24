@@ -11,7 +11,9 @@ enabled = false
 enabled = false
 
 [e2e-suite]
-enabled = false
+enabled = true
+source = "packages/site-check/src/check-sites.mjs"
+enforced-by = ["pnpm --filter @aloong-planet/site-check run check"]
 
 [mutation-testing]
 enabled = false

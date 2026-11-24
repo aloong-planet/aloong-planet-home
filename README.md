@@ -23,7 +23,16 @@ node scripts/verify-local-api.mjs
 
 Run from `apps/home/`.
 
-The HTTP check is hardcoded to the local server and creates local disposable test visitors. It never targets production. Lint, automated browser E2E and mutation testing are explicitly disabled in capabilities.toml. Native browser checks supplement request-level tests.
+The HTTP check is hardcoded to the local server and creates local disposable test visitors. It never targets production. Lint and mutation testing are explicitly disabled in capabilities.toml, and the only automated browser suite is the width check below. Native browser checks supplement request-level tests.
+
+The width check opens every page of every site under `apps/` in a browser, at every whole window width from 320px to 1440px, and fails when a page is wider than the window. It builds each site, finds the pages in the build output, and never leaves the local machine. Run it from the repository root; the browser is installed once:
+
+```sh
+pnpm --filter @aloong-planet/site-check exec playwright install --only-shell chromium
+pnpm --filter @aloong-planet/site-check run check
+```
+
+A site needs `packages/site-check/sites/<its folder under apps/>.json`, which names its origin, the answers for requests to its own backend, and any link that only a rewrite answers; without it the check fails. What the check does not cover is listed at the top of `packages/site-check/src/check-sites.mjs`. In CI it is the job `Site width check`, one of the jobs `CI gate` waits on.
 
 ## Cloudflare Pages
 
@@ -49,7 +58,8 @@ No paid subscription is enabled. Free-plan exhaustion causes the counter to disa
 | apps/home/scripts/, apps/home/tests/ | Build, validation, deployment and regression tests |
 | docs/ | Accepted prototypes, specs, resource inventory and operations |
 | apps/home/tools/screenshots/ | Synthetic Transfer screenshot fixture |
-| packages/ | Parts shared between apps; empty for now |
+| packages/site-check/ | The width check of every site, with its tests and each site's check settings |
+| packages/ | Other parts shared between apps; none yet |
 | .github/workflows/, .github/ci/ | Pull-request checks, the rules that choose which checks a change runs, and main deployment |
 
 Generated output and local state are ignored. The original prototype workspace remains separate and unchanged.

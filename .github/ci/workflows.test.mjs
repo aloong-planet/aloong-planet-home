@@ -83,3 +83,19 @@ test('the pnpm --filter commands of the workflows name a workspace package and a
     assert.ok(packages.get(name).includes(script), `${name} has no script ${script}`)
   }
 })
+
+// Its commands, in order. The browser is installed with `exec`, which the test above does not see, and pnpm answers a
+// filter that matches nothing with success for exec as well; the check itself fails on a missing browser, but a
+// workflow that lost the install step would then fail late and obscurely, so the steps are pinned here.
+test('width-check installs the browser, then runs the tests and the check of @aloong-planet/site-check', () => {
+  const commands = withoutComments(jobs(ci).get('width-check').join('\n'))
+    .split('\n')
+    .map((line) => line.match(/^\s+- run: (.+?)\s*$/)?.[1])
+    .filter(Boolean)
+  assert.deepEqual(commands, [
+    'pnpm install --frozen-lockfile',
+    'pnpm --filter @aloong-planet/site-check exec playwright install --with-deps --only-shell chromium',
+    'pnpm --filter @aloong-planet/site-check run test',
+    'pnpm --filter @aloong-planet/site-check run check'
+  ])
+})
