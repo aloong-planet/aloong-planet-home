@@ -358,6 +358,9 @@ describe('site-appearance on the built homepage site', { timeout: 600_000 }, () 
             for (const scheme of ['light', 'dark', 'light']) {
               await page.emulateMedia({ colorScheme: scheme })
               await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))))
+              // The change starts the transitions some elements have (the navigation links' colour, the buttons' fill); they end before
+              // the page is read and shot, so a screenshot shows the appearance and not a colour halfway between the two.
+              await page.evaluate(() => Promise.all(document.getAnimations().filter((animation) => animation instanceof CSSTransition).map((animation) => animation.finished.catch(() => {}))))
               seen.push({ scheme, ...(await page.evaluate(readAppearance, entry.line)) })
               if (shoot && seen.length < 3) await page.screenshot({ path: join(SHOTS, `${entry.kind.replace(/\W+/g, '-')}-${entry.lang}-${width}-${scheme}.png`) })
             }
