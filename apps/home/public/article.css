@@ -86,6 +86,7 @@ html { scroll-behavior:auto; }
 .ap-article .fig { margin:0; display:grid; gap:10px; position:relative; }
 .ap-article figcaption { font-size:13px; line-height:1.65; color:var(--muted); }
 .ap-article figcaption b { color:var(--ink-soft); }
+.ap-article .ground > img,
 .ap-article svg { display:block; width:100%; height:auto; }
 .ap-article .fig svg, .ap-article .lb-figure svg { min-width:0 !important; }
 .ap-article svg text { font-family:var(--sans); fill:var(--ink); }
