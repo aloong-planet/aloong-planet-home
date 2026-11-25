@@ -1,11 +1,12 @@
-// These have no DOM here and are checked by recorded real-browser runs, because the project's browser suite, packages/site-check, covers only page widths and where focus lands under the pinned header:
+// These have no DOM here and are checked by recorded real-browser runs, because the project's browser suite, packages/site-check, covers only page widths, where focus lands under the pinned header, and the colours of the menus, the not-found buttons and a failed cover in each appearance:
 // layout, type sizes, centering, shared table and figure styles, hover states, the keyboard focus ring,
 // jumps and scrolling including figure and contents-column scrolling, the homepage's kept smooth scroll,
 // the contents mark, interactive figures, scripting unavailable, a throwing post script, long text in full
 // on the Blog page, and fonts requested; on the Blog page, the one-line header, the lead's text and cover side by side
 // and centered on each other, two cards to a row with a leftover card alone on the left, one column on a phone, cover
-// frames at 2.35:1 that crop another shape and keep their size when an image fails, and the cover lift on hover,
+// frames at 2.35:1 that crop another shape, and the cover lift on hover,
 // which reduced motion turns off.
+// A cover that fails to load keeping its frame's size and the page's ground is read in both appearances by packages/site-check/tests/blog.test.mjs.
 // Which image each post uses as its cover is content, checked by eye. Test them in the browser suite once it covers them.
 import {test} from 'node:test';
 import {realSite} from './helpers/built-site.mjs';

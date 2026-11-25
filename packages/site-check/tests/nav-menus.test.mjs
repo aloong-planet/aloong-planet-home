@@ -1,7 +1,8 @@
-// nav-menus::US-004/AC-03 in a real browser. This tests the homepage's behaviour, not the checker: it builds apps/home, serves the
-// build the way the width check does (src/server.mjs, with the answers sites/home.json gives for the homepage's backend) and moves
-// keyboard focus in Chromium. It lives in this package because this package is the project's browser suite. It rebuilds
-// apps/home/dist, as the check does, so run it when no dev server is serving that folder.
+// nav-menus::US-004/AC-03, nav-menus::US-001/AC-05 and nav-menus::US-003/AC-02 in a real browser. This tests the homepage's
+// behaviour, not the checker: it builds apps/home, serves the build the way the width check does (src/server.mjs, with the answers
+// sites/home.json gives for the homepage's backend), moves keyboard focus in Chromium, and opens the menus in each appearance the
+// system can ask for. It lives in this package because this package is the project's browser suite. It builds apps/home/dist (once
+// per run of the package's tests, tests/global-setup.mjs), so run it when no dev server is serving that folder.
 //
 // Each test opens a page, takes the first focusable element of its content that the page can scroll wholly above the window,
 // puts that element in one place, focuses it, waits for the smooth scroll to settle, and reads where the element's top edge is
@@ -28,16 +29,9 @@
 //      instant scroll, which this does not exercise.
 import { describe, test, before, after } from 'node:test'
 import assert from 'node:assert/strict'
-import { execFile } from 'node:child_process'
-import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { promisify } from 'node:util'
-import { chromium } from 'playwright'
-import { startServer } from '../src/server.mjs'
-import { loadSiteConfig } from '../src/site-config.mjs'
+import { contrast, luminance, readTokens } from './helpers/colour.mjs'
+import { openPage, startHome } from './helpers/built-home.mjs'
 
-const root = fileURLToPath(new URL('../../..', import.meta.url))
-const home = join(root, 'apps/home')
 const WIDTHS = [1280, 390]
 const PAGES = ['/', '/blog']
 const WINDOW_HEIGHT = 900
@@ -110,16 +104,13 @@ const PLACES = [
   },
 ]
 
-describe('nav-menus::US-004/AC-03 on the built homepage', { timeout: 300_000 }, () => {
+describe('nav-menus on the built homepage', { timeout: 300_000 }, () => {
   let browser
   let server
 
   before(
     async () => {
-      await promisify(execFile)('pnpm', ['run', 'build'], { cwd: home, timeout: 120_000 })
-      const config = await loadSiteConfig(join(root, 'packages/site-check/sites'), 'home')
-      server = await startServer({ dist: join(home, 'dist'), fixtures: config.fixtures })
-      browser = await chromium.launch()
+      ;({ server, browser } = await startHome())
     },
     { timeout: 180_000 },
   )
@@ -162,4 +153,38 @@ describe('nav-menus::US-004/AC-03 on the built homepage', { timeout: 300_000 }, 
       }
     }
   }
+
+  test('nav-menus::US-001/AC-05 and US-003/AC-02: the menu and the JustSnap screenshot use each appearance\'s colours', { timeout: TEST_LIMIT * 2 }, async () => {
+    const homepage = '/'
+    const seen = {}
+    for (const scheme of ['light', 'dark']) {
+      const context = await browser.newContext({ colorScheme: scheme, viewport: { width: WIDTHS[0], height: WINDOW_HEIGHT } })
+      try {
+        // US-001/AC-05: the card, its border, its items' ink and muted grey, and the tag colour under a hovered item.
+        const page = await openPage(server, context, homepage)
+        const want = await page.evaluate(readTokens, ['--card', '--line', '--ink', '--muted', '--tag', '--paper'])
+        await page.hover('.ap-menu > a')
+        await page.waitForSelector('.ap-menu-card', { state: 'visible' })
+        const menu = await page.evaluate(() => {
+          const card = document.querySelector('.ap-menu:hover .ap-menu-card')
+          const item = card.querySelector('.ap-menu-item')
+          return { card: getComputedStyle(card).backgroundColor, border: getComputedStyle(card).borderTopColor, name: getComputedStyle(item.querySelector('strong')).color, description: getComputedStyle(item.querySelector('span')).color }
+        })
+        await page.hover('.ap-menu:hover .ap-menu-item')
+        // The ground comes in over a short transition; it is read when it has arrived.
+        await page.waitForFunction((tag) => getComputedStyle(document.querySelector('.ap-menu:hover .ap-menu-item:hover')).backgroundColor === tag, want['--tag'], { timeout: 5000 })
+        const hovered = await page.evaluate(() => getComputedStyle(document.querySelector('.ap-menu:hover .ap-menu-item:hover')).backgroundColor)
+        assert.deepEqual([menu.card, menu.border, menu.name, menu.description, hovered], [want['--card'], want['--line'], want['--ink'], want['--muted'], want['--tag']], `${scheme}: the menu card, border, name, description and hovered item`)
+        assert.ok(contrast(menu.name, menu.card) >= 4.5 && contrast(menu.description, menu.card) >= 4.5 && contrast(menu.description, hovered) >= 4.5, `${scheme}: the menu's text keeps its contrast`)
+        // US-003/AC-02: the screenshot's own grey, whatever the appearance.
+        const ground = await page.evaluate(() => getComputedStyle(document.querySelector('.ap-art-justsnap')).backgroundColor)
+        assert.equal(ground, 'rgb(134, 136, 146)', `${scheme}: the JustSnap screenshot's ground`)
+        seen[scheme] = menu.card
+        await page.close()
+      } finally {
+        await context.close()
+      }
+    }
+    assert.ok(luminance(seen.light) > 0.85 && luminance(seen.dark) < 0.05, 'the card is the card colour of its appearance')
+  })
 })

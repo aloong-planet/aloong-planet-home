@@ -51,6 +51,24 @@ export function tokensOf(css, selector) {
   return {light: read(rulesOf(css)), dark: read(darkRules(css))};
 }
 
+// The 148 colour names CSS Color 4 gives, and its system colours: a colour written by name is as much a literal as one written in hex,
+// and a system colour does not come from a token. `transparent` and `currentcolor` are not colours of their own and are left out.
+const NAMED = new Set(
+  'aliceblue antiquewhite aqua aquamarine azure beige bisque black blanchedalmond blue blueviolet brown burlywood cadetblue chartreuse chocolate coral cornflowerblue cornsilk crimson cyan darkblue darkcyan darkgoldenrod darkgray darkgreen darkgrey darkkhaki darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon darkseagreen darkslateblue darkslategray darkslategrey darkturquoise darkviolet deeppink deepskyblue dimgray dimgrey dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite gold goldenrod gray green greenyellow grey honeydew hotpink indianred indigo ivory khaki lavender lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan lightgoldenrodyellow lightgray lightgreen lightgrey lightpink lightsalmon lightseagreen lightskyblue lightslategray lightslategrey lightsteelblue lightyellow lime limegreen linen magenta maroon mediumaquamarine mediumblue mediumorchid mediumpurple mediumseagreen mediumslateblue mediumspringgreen mediumturquoise mediumvioletred midnightblue mintcream mistyrose moccasin navajowhite navy oldlace olive olivedrab orange orangered orchid palegoldenrod palegreen paleturquoise palevioletred papayawhip peachpuff peru pink plum powderblue purple rebeccapurple red rosybrown royalblue saddlebrown salmon sandybrown seagreen seashell sienna silver skyblue slateblue slategray slategrey snow springgreen steelblue tan teal thistle tomato turquoise violet wheat white whitesmoke yellow yellowgreen'.split(' '),
+);
+const SYSTEM = new Set('accentcolor accentcolortext activetext buttonborder buttonface buttontext canvas canvastext field fieldtext graytext highlight highlighttext linktext mark marktext selecteditem selecteditemtext visitedtext'.split(' '));
+const COLOUR_FUNCTION = /\b(?:hsla?|hwb|lab|lch|oklab|oklch|color|color-mix|light-dark)\(/i;
+
+/**
+ * The colours a declaration value writes other than as #hex or rgb(): a colour name, a system colour, or a colour function (hsl(),
+ * color-mix(), ...). Strings, url() and var() are left out first, so a font called "Gold" or a token called --mark is not a colour.
+ */
+export function writtenColours(value) {
+  const bare = value.replace(/"[^"]*"|'[^']*'|url\([^)]*\)|var\(--[\w-]+\)/gi, ' ');
+  const words = [...bare.matchAll(/[a-z][a-z-]*(?!\w)(\()?/gi)].filter(match => !match[1]).map(match => match[0].toLowerCase());
+  return [...words.filter(word => NAMED.has(word) || SYSTEM.has(word)), ...(bare.match(new RegExp(COLOUR_FUNCTION, 'gi')) ?? [])];
+}
+
 const COLOUR = /^(?:#[0-9a-f]{3,8}|rgba?\([^)]*\)|var\(--[\w-]+\))$/i;
 /** Whether a custom property's value is a colour (or an alias of one), as opposed to a font stack or a length. */
 export const isColour = value => COLOUR.test(value);

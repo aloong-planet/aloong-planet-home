@@ -1,9 +1,11 @@
 // site-appearance::REQ-001 and site-appearance::QR-001/AC-01 in a real browser. This tests the homepage site's behaviour, not the
 // checker: it builds apps/home, serves the build the way the width check does (src/server.mjs, with the answers sites/home.json
 // gives for the homepage's backend) and switches Chromium between the appearances the system can ask for. It lives in this
-// package because this package is the project's browser suite. It rebuilds apps/home/dist, as the check does, so run it when no
-// dev server is serving that folder. nav-menus.test.mjs rebuilds the same folder, so this package's test script runs its test files
-// one at a time (--test-concurrency=1); two files building and serving one dist at once cancel each other. The palette the stylesheets declare is checked without a browser by apps/home/tests/palette.test.mjs.
+// package because this package is the project's browser suite. It builds apps/home/dist (once per run of the package's tests,
+// tests/global-setup.mjs, and the other browser files read that one build), so run it when no dev server is serving that folder.
+// The palette the stylesheets declare is checked without a browser by apps/home/tests/palette.test.mjs. What the menus, the not-found
+// buttons and the covers that fail to load look like in each appearance is read by the browser file of each of those features
+// (nav-menus.test.mjs, not-found.test.mjs, blog.test.mjs), because it is that feature's rule they assert.
 //
 // Every page of the build is opened: the pages are the .html files of dist, found on disk, and each is classified into a page kind by
 // what it contains. A page that fits no kind fails a case of its own, so a new kind of page cannot go unmeasured. The languages are
@@ -22,21 +24,18 @@
 //   5. A figure that shows other texts after a click (the article and prototype views of the super-agent post, a playback's later steps)
 //      is read in the state it loads in. Those texts are drawn in the figure's own colours, which are the same in both appearances
 //      on the sheet; add the figure's controls to the case if a figure ever draws a state in a colour that is not.
+//   6. A switch is recognised by what it says: a control (a button, a link, a summary, anything with a role, tabindex or click handler)
+//      whose label, text, title, value, class, id or data attribute names an appearance (theme, mode, dark, light, night, contrast and
+//      the Chinese words for them). A switch that calls itself something else slips through, and so does one that keeps its choice
+//      only in memory; what shows that the page needs none is the next case, where every page follows the system with nothing clicked.
 import { describe, test, before, after } from 'node:test'
 import assert from 'node:assert/strict'
-import { execFile } from 'node:child_process'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { promisify } from 'node:util'
-import { chromium } from 'playwright'
 import { readDist } from '../src/pages.mjs'
-import { startServer } from '../src/server.mjs'
-import { loadSiteConfig } from '../src/site-config.mjs'
-import { measureTexts } from './helpers/measure-text.mjs'
+import { contrast, luminance, rgbaOf } from './helpers/colour.mjs'
+import { home, openPage, startHome } from './helpers/built-home.mjs'
 
-const root = fileURLToPath(new URL('../../..', import.meta.url))
-const home = join(root, 'apps/home')
 const WIDTHS = [1280, 390]
 const WINDOW_HEIGHT = 900
 const TEST_LIMIT = 120_000
@@ -51,7 +50,8 @@ const KINDS = [
   { name: 'not-found page', marker: '.ap-notfound', line: '.ap-notfound h1' },
 ]
 
-// Runs in the page: the colours the page is painted in now, and a mark that only a page that has not been reloaded still carries.
+// Runs in the page: the colours the page is painted in now, what the browser draws by itself in this appearance, what the page has
+// kept, and a mark that only a page that has not been reloaded still carries.
 function readAppearance(line) {
   const colourOf = (value) => {
     const probe = document.createElement('i')
@@ -61,14 +61,42 @@ function readAppearance(line) {
     probe.remove()
     return colour
   }
+  // A form control that no stylesheet of the site styles: the colour the browser gives it follows the page's color-scheme.
+  const field = document.createElement('input')
+  document.body.append(field)
+  const fieldGround = getComputedStyle(field).backgroundColor
+  field.remove()
+  // Every control that says it is an appearance switch (a button, a link, a summary, or anything with a role, a
+  // tabindex or a click handler), by what the control says: its label, text, title, value, class, id or a data attribute names an
+  // appearance (theme, mode, dark, light, night, contrast, and the Chinese words for them).
+  function findSwitches() {
+    const NAMES = /\b(theme|themes|appearance|mode|dark|light|night|day|moon|sun|contrast|scheme)\b|主题|外观|深色|浅色|暗色|亮色|夜间|日间|黑夜|白天|模式|配色/i
+    return [...document.querySelectorAll('button, summary, a, input, select, textarea, [role], [tabindex], [onclick]')]
+      .map((control) => {
+        const said = [
+          control.getAttribute('aria-label'),
+          control.getAttribute('title'),
+          control.getAttribute('value'),
+          control.id,
+          typeof control.className === 'string' ? control.className : '',
+          ...[...control.attributes].filter((attribute) => attribute.name.startsWith('data-')).map((attribute) => `${attribute.name}=${attribute.value}`),
+          // A link's words count only when they are as short as a switch's name; a post's title may well say "dark".
+          control.tagName === 'A' && (control.textContent ?? '').trim().length > 12 ? null : (control.textContent ?? '').trim().slice(0, 40),
+        ].filter(Boolean)
+        return NAMES.test(said.join(' | ')) ? `${control.tagName.toLowerCase()} ${said.join(' | ')}` : null
+      })
+      .filter(Boolean)
+  }
   const text = document.querySelector(line)
   return {
     ground: getComputedStyle(document.body).backgroundColor,
     paper: colourOf('var(--paper)'),
     text: text ? getComputedStyle(text).color : null,
     kept: window.keptAcrossChange === true,
-    stored: localStorage.length + sessionStorage.length,
-    switches: document.querySelectorAll('[data-theme], [class*="theme" i], [id*="theme" i], [aria-label*="theme" i], [aria-label*="appearance" i], [aria-label*="主题"], [aria-label*="深色"], [aria-label*="暗"]').length,
+    stored: localStorage.length + sessionStorage.length + document.cookie.split(';').filter((cookie) => cookie.trim()).length,
+    colorScheme: getComputedStyle(document.documentElement).colorScheme,
+    fieldGround,
+    switches: findSwitches(),
   }
 }
 
@@ -147,15 +175,132 @@ function readImages(backed) {
   return { count: document.querySelectorAll('img').length, staining, backing, found: backed.map((selector) => document.querySelectorAll(selector).length) }
 }
 
-const channels = (css) => (css.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number)
-const lin = (c) => ((c /= 255) <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
-const luminance = (css) => {
-  const [r, g, b] = channels(css)
-  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
-}
-const contrast = (a, b) => {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x)
-  return (hi + 0.05) / (lo + 0.05)
+// Runs in the page (Playwright serialises it, so it uses nothing outside itself): the colour of every line of visible text and the
+// ground it is drawn on, read from what the browser painted in the current appearance. This is how the contrast of text is
+// measured, since a stylesheet read alone cannot say what a text sits on when a drawing, a card or a sheet is between it and the page.
+//
+// The ground of an HTML text is the backgrounds from its element up to the first opaque one, laid over each other. The ground of
+// a text inside a drawing is the first filled shape painted under the text's centre (the browser says which, by hit testing), and
+// beneath that the HTML ground of the drawing. A text with an outline painted first (a halo, as a drawing's labels have where a line
+// crosses them) is drawn on the halo, so the halo's colour laid over that ground is the ground it is measured on. Text in an image
+// file is not text to the page and is not read.
+//
+// `accents` are the colours (as the browser writes them) of the post accent: text in one of them is held to 5:1, all other text to 4.5:1.
+// Returns one row per text node: its first words, the element, the ratio it reached and the lowest it may reach, and the colours.
+function measureTexts(accents) {
+  const parse = (value) => {
+    const found = /^rgba?\(([^)]+)\)$/.exec(value.trim()) ?? /^color\(srgb ([^)]+)\)$/.exec(value.trim())
+    if (!found) return null
+    const scale = value.trim().startsWith('color(') ? 255 : 1
+    const [r, g, b, a] = found[1].split(/[\s,/]+/).filter(Boolean).map(Number)
+    return { r: r * scale, g: g * scale, b: b * scale, a: a ?? 1 }
+  }
+  const over = (top, under) => {
+    const a = top.a + under.a * (1 - top.a)
+    if (a === 0) return { r: 0, g: 0, b: 0, a: 0 }
+    const mix = (c) => (top[c] * top.a + under[c] * under.a * (1 - top.a)) / a
+    return { r: mix('r'), g: mix('g'), b: mix('b'), a }
+  }
+  const lin = (c) => ((c /= 255) <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+  const lum = (c) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b)
+  const ratio = (a, b) => {
+    const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x)
+    return (hi + 0.05) / (lo + 0.05)
+  }
+  const ancestorHidden = (el) => {
+    for (let n = el; n; n = n.parentElement) if (getComputedStyle(n).display === 'none') return true
+    return false
+  }
+  const opacityOf = (el) => {
+    let o = 1
+    for (let n = el; n; n = n.parentElement) o *= Number(getComputedStyle(n).opacity)
+    return o
+  }
+  const lay = (layers) => layers.reverse().reduce((under, layer) => over(layer, under), { r: 255, g: 255, b: 255, a: 1 })
+  const htmlGround = (start) => {
+    const layers = []
+    for (let n = start; n; n = n.parentElement) {
+      const bg = parse(getComputedStyle(n).backgroundColor)
+      if (bg && bg.a > 0) {
+        layers.push(bg)
+        if (bg.a >= 1) break
+      }
+    }
+    return lay(layers)
+  }
+  const rgb = (c) => `rgb(${Math.round(c.r)} ${Math.round(c.g)} ${Math.round(c.b)})`
+  // Hit testing skips what takes no pointer, so while the page is read every element takes one.
+  const takeAll = document.createElement('style')
+  takeAll.textContent = '* { pointer-events: auto !important; }'
+  document.head.append(takeAll)
+  const rows = []
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const words = node.textContent.replace(/\s+/g, ' ').trim()
+    const el = node.parentElement
+    if (!words || !el || /^(SCRIPT|STYLE|NOSCRIPT|TITLE)$/.test(el.tagName)) continue
+    const range = document.createRange()
+    range.selectNodeContents(node)
+    let box = range.getBoundingClientRect()
+    if (box.width === 0 || box.height === 0) continue
+    const style = getComputedStyle(el)
+    if (style.visibility !== 'visible' || style.display === 'none') continue
+    const drawn = el instanceof SVGElement
+    const fg = parse(drawn ? style.fill : style.color)
+    if (!fg) continue
+    let ground
+    let known = true
+    if (!drawn) ground = htmlGround(el)
+    else {
+      // Hit testing sees only what is inside the window, so the drawing is brought into it first.
+      if (box.top < 0 || box.bottom > innerHeight) {
+        scrollTo({ top: scrollY + box.top - innerHeight / 2, behavior: 'instant' })
+        box = range.getBoundingClientRect()
+      }
+      // A drawing that a script plays back shows and hides its groups while this runs; a text that has gone is not on the page now.
+      // (Chromium still lays out a text that sets its own display inside a group that is hidden, so each ancestor is asked as well.)
+      if (!el.checkVisibility({ checkVisibilityCSS: true }) || ancestorHidden(el)) continue
+      const hits = document.elementsFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+      const own = hits.indexOf(el)
+      const layers = []
+      known = own >= 0
+      for (const hit of hits.slice(own + 1)) {
+        if (hit instanceof SVGElement && !(hit instanceof SVGSVGElement)) {
+          const shape = getComputedStyle(hit)
+          const fill = shape.fill === 'none' ? null : parse(shape.fill)
+          if (!fill) continue
+          fill.a *= Number(shape.fillOpacity) * opacityOf(hit)
+          if (fill.a > 0) {
+            layers.push(fill)
+            if (fill.a >= 1) break
+          }
+        } else {
+          layers.push(htmlGround(hit))
+          break
+        }
+      }
+      ground = lay(layers)
+      const halo = style.stroke === 'none' || !/^stroke/.test(style.paintOrder) || !(parseFloat(style.strokeWidth) > 0) ? null : parse(style.stroke)
+      if (halo) ground = over({ ...halo, a: halo.a * Number(style.strokeOpacity) }, ground)
+    }
+    const shown = over({ ...fg, a: fg.a * opacityOf(el) * (drawn ? Number(style.fillOpacity) : 1) }, ground)
+    const colour = rgb(drawn ? parse(style.fill) : parse(style.color))
+    const minimum = accents.includes(colour) ? 5 : 4.5
+    const classes = typeof el.className === 'string' ? el.className.trim().split(/\s+/).filter(Boolean) : []
+    rows.push({
+      words: words.slice(0, 40),
+      element: [el.tagName.toLowerCase(), ...classes].join('.'),
+      drawing: drawn,
+      known,
+      ratio: Number(ratio(shown, ground).toFixed(2)),
+      minimum,
+      text: rgb(shown),
+      ground: rgb(ground),
+    })
+  }
+  takeAll.remove()
+  scrollTo({ top: 0, behavior: 'instant' })
+  return rows
 }
 
 describe('site-appearance on the built homepage site', { timeout: 600_000 }, () => {
@@ -164,24 +309,14 @@ describe('site-appearance on the built homepage site', { timeout: 600_000 }, () 
   let pages = []
   let unclassified = []
 
-  /** Opens a page the way the width check does: only the local server answers, so the page is measured without the network. */
-  async function open(context, url) {
-    const page = await context.newPage()
-    await page.route('**/*', (route) => (new URL(route.request().url()).origin === server.origin ? route.continue() : route.abort()))
-    await page.goto(server.origin + url, { waitUntil: 'networkidle' })
-    await page.evaluate(() => document.fonts.ready)
-    return page
-  }
+  const open = (context, url) => openPage(server, context, url)
 
   /** The first page of each kind and language: where one page stands for its kind. */
   const representatives = () => pages.filter((entry, at) => pages.findIndex((other) => other.kind === entry.kind && other.lang === entry.lang) === at)
 
   before(
     async () => {
-      await promisify(execFile)('pnpm', ['run', 'build'], { cwd: home, timeout: 120_000 })
-      const config = await loadSiteConfig(join(root, 'packages/site-check/sites'), 'home')
-      server = await startServer({ dist: join(home, 'dist'), fixtures: config.fixtures })
-      browser = await chromium.launch()
+      ;({ server, browser } = await startHome())
       const context = await browser.newContext({ viewport: { width: WIDTHS[0], height: WINDOW_HEIGHT } })
       const { pages: built } = await readDist(join(home, 'dist'))
       for (const { url } of built) {
@@ -236,8 +371,13 @@ describe('site-appearance on the built homepage site', { timeout: 600_000 }, () 
             for (const state of seen) {
               assert.ok(state.kept, `${at}: the page was reloaded when the system changed to ${state.scheme}`)
               assert.ok(contrast(state.text, state.ground) >= 4.5, `${at}: ${state.scheme}: the line of text reads ${contrast(state.text, state.ground).toFixed(2)}:1`)
-              assert.equal(state.stored, 0, 'the page stores no choice')
-              assert.equal(state.switches, 0, 'the page offers no switch')
+              assert.equal(state.stored, 0, 'the page keeps nothing in the browser (no storage, no cookie)')
+              assert.deepEqual(state.switches, [], 'the page offers no switch')
+              // The page tells the browser it has both appearances, so what the browser draws itself (a form control, the scroll bar,
+              // the canvas before the first paint) is drawn in the appearance the system asks for.
+              assert.equal(state.colorScheme, 'light dark', `${at}: the page's color-scheme`)
+              if (state.scheme === 'dark') assert.ok(luminance(state.fieldGround) < 0.15, `${at}: a form control the browser draws is ${state.fieldGround} in dark`)
+              else assert.ok(luminance(state.fieldGround) > 0.85, `${at}: a form control the browser draws is ${state.fieldGround} in light`)
             }
           }
         } finally {
@@ -358,10 +498,6 @@ describe('site-appearance on the built homepage site', { timeout: 600_000 }, () 
     })
   }
 
-  const rgbaOf = (css) => {
-    const [r, g, b, a = 1] = (css.match(/[\d.]+/g) ?? []).map(Number)
-    return { r, g, b, a }
-  }
   const same = (before, after) => before.map((line, at) => (line === after[at] ? null : `${line.split('\t')[0]}: ${line.split('\t')[1]} became ${after[at]?.split('\t')[1]}`)).filter(Boolean)
 
   test('in dark a diagram sits on a light sheet and keeps its light colours, in the page and in the larger view', { timeout: TEST_LIMIT * 10 }, async (t) => {
@@ -461,111 +597,5 @@ describe('site-appearance on the built homepage site', { timeout: 600_000 }, () 
     assert.ok(found.every((count) => count > 0), `the portrait, the dog and the not-found dog were each found, counts ${found}`)
     const icon = await (await fetch(`${server.origin}/favicon.svg`)).text()
     assert.doesNotMatch(icon, /prefers-color-scheme/, 'the site icon is one image in both appearances')
-  })
-
-  test('a cover that fails to load leaves its frame at the same size on the page ground, in both appearances', { timeout: TEST_LIMIT * 2 }, async () => {
-    const listing = pages.filter((entry) => entry.kind === 'Blog page')
-    assert.ok(listing.length >= 1)
-    for (const scheme of ['light', 'dark']) {
-      for (const entry of listing) {
-        const read = async (failing) => {
-          const context = await browser.newContext({ colorScheme: scheme, viewport: { width: WIDTHS[0], height: WINDOW_HEIGHT } })
-          try {
-            const page = await context.newPage()
-            await page.route('**/*', (route) => {
-              const url = new URL(route.request().url())
-              if (url.origin !== server.origin || (failing && url.pathname.endsWith('.webp'))) return route.abort()
-              return route.continue()
-            })
-            await page.goto(server.origin + entry.url, { waitUntil: 'networkidle' })
-            // The covers below the lead load when they come near the window, so the page is scrolled through.
-            await page.evaluate(async () => {
-              for (let y = 0; y <= document.documentElement.scrollHeight; y += 600) {
-                scrollTo({ top: y, behavior: 'instant' })
-                await new Promise((done) => setTimeout(done, 50))
-              }
-              scrollTo({ top: 0, behavior: 'instant' })
-            })
-            await page.waitForLoadState('networkidle')
-            return await page.evaluate(() => ({
-              ground: getComputedStyle(document.body).backgroundColor,
-              broken: [...document.querySelectorAll('.ap-post-cover img')].filter((img) => img.complete && img.naturalWidth === 0).length,
-              frames: [...document.querySelectorAll('.ap-post-cover')].map((frame) => ({ box: [frame.offsetWidth, frame.offsetHeight], background: getComputedStyle(frame).backgroundColor })),
-            }))
-          } finally {
-            await context.close()
-          }
-        }
-        const [loaded, failed] = [await read(false), await read(true)]
-        assert.ok(failed.frames.length >= 2, 'the Blog page lists posts')
-        assert.equal(failed.broken, failed.frames.length, `in ${scheme} every cover request failed`)
-        assert.deepEqual(failed.frames.map((frame) => frame.box), loaded.frames.map((frame) => frame.box), `in ${scheme} a failed cover keeps its frame's size`)
-        for (const frame of failed.frames) assert.ok(contrast(frame.background, failed.ground) <= 1.3, `in ${scheme} the frame without its cover is ${frame.background} on ${failed.ground}`)
-      }
-    }
-  })
-
-  test('the menus, the JustSnap screenshot ground and the not-found buttons use each appearance\'s colours', { timeout: TEST_LIMIT * 2 }, async () => {
-    const tokens = (names) => {
-      const colourOf = (value) => {
-        const probe = document.createElement('i')
-        probe.style.color = value
-        document.body.append(probe)
-        const colour = getComputedStyle(probe).color
-        probe.remove()
-        return colour
-      }
-      return Object.fromEntries(names.map((name) => [name, colourOf(`var(${name})`)]))
-    }
-    const homepage = pages.find((entry) => entry.kind === 'homepage')
-    const missing = pages.find((entry) => entry.kind === 'not-found page')
-    const seen = {}
-    for (const scheme of ['light', 'dark']) {
-      const context = await browser.newContext({ colorScheme: scheme, viewport: { width: WIDTHS[0], height: WINDOW_HEIGHT } })
-      try {
-        // nav-menus::US-001/AC-05: the card, its border, its items' ink and muted grey, and the tag colour under a hovered item.
-        let page = await open(context, homepage.url)
-        const want = await page.evaluate(tokens, ['--card', '--line', '--ink', '--muted', '--tag', '--paper'])
-        await page.hover('.ap-menu > a')
-        await page.waitForSelector('.ap-menu-card', { state: 'visible' })
-        const menu = await page.evaluate(() => {
-          const card = document.querySelector('.ap-menu:hover .ap-menu-card')
-          const item = card.querySelector('.ap-menu-item')
-          return { card: getComputedStyle(card).backgroundColor, border: getComputedStyle(card).borderTopColor, name: getComputedStyle(item.querySelector('strong')).color, description: getComputedStyle(item.querySelector('span')).color }
-        })
-        await page.hover('.ap-menu:hover .ap-menu-item')
-        // The ground comes in over a short transition; it is read when it has arrived.
-        await page.waitForFunction((tag) => getComputedStyle(document.querySelector('.ap-menu:hover .ap-menu-item:hover')).backgroundColor === tag, want['--tag'], { timeout: 5000 })
-        const hovered = await page.evaluate(() => getComputedStyle(document.querySelector('.ap-menu:hover .ap-menu-item:hover')).backgroundColor)
-        assert.deepEqual([menu.card, menu.border, menu.name, menu.description, hovered], [want['--card'], want['--line'], want['--ink'], want['--muted'], want['--tag']], `${scheme}: the menu card, border, name, description and hovered item`)
-        assert.ok(contrast(menu.name, menu.card) >= 4.5 && contrast(menu.description, menu.card) >= 4.5 && contrast(menu.description, hovered) >= 4.5, `${scheme}: the menu's text keeps its contrast`)
-        // nav-menus::US-003/AC-02: the screenshot's own grey, whatever the appearance.
-        const ground = await page.evaluate(() => getComputedStyle(document.querySelector('.ap-art-justsnap')).backgroundColor)
-        assert.equal(ground, 'rgb(134, 136, 146)', `${scheme}: the JustSnap screenshot's ground`)
-        await page.close()
-        // not-found::US-001/AC-03: the solid button in ink with the page colour's text, the outlined one in ink, filled with the tag colour on hover.
-        page = await open(context, missing.url)
-        const paint = await page.evaluate(tokens, ['--ink', '--paper', '--tag'])
-        const buttons = await page.evaluate(() => {
-          const read = (selector) => {
-            const style = getComputedStyle(document.querySelector(selector))
-            return { background: style.backgroundColor, color: style.color, border: style.borderTopColor }
-          }
-          return { primary: read('.ap-button-primary'), secondary: read('.ap-button-secondary') }
-        })
-        await page.hover('.ap-button-secondary')
-        await page.waitForFunction((tag) => getComputedStyle(document.querySelector('.ap-button-secondary')).backgroundColor === tag, paint['--tag'], { timeout: 5000 })
-        const filled = await page.evaluate(() => getComputedStyle(document.querySelector('.ap-button-secondary')).backgroundColor)
-        assert.deepEqual(buttons.primary, { background: paint['--ink'], color: paint['--paper'], border: paint['--ink'] }, `${scheme}: the solid button`)
-        assert.deepEqual([buttons.secondary.color, buttons.secondary.border, filled], [paint['--ink'], paint['--ink'], paint['--tag']], `${scheme}: the outlined button and its hover`)
-        assert.equal(rgbaOf(buttons.secondary.background).a, 0, `${scheme}: the outlined button has no fill until hovered`)
-        seen[scheme] = { card: menu.card, solid: buttons.primary.background }
-        await page.close()
-      } finally {
-        await context.close()
-      }
-    }
-    assert.ok(luminance(seen.light.card) > 0.85 && luminance(seen.dark.card) < 0.05, 'the card is the card colour of its appearance')
-    assert.ok(luminance(seen.light.solid) < 0.05 && luminance(seen.dark.solid) > 0.5, 'the solid button is the ink of its appearance')
   })
 })

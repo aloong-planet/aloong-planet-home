@@ -10,7 +10,7 @@
 //     they keep their light values in both appearances, on a light sheet.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {contrast, darkRules, declarations, flatRules, isColour, parseColour, readSheet, resolve, tokensOf} from './helpers/palette.mjs';
+import {contrast, darkRules, declarations, flatRules, isColour, parseColour, readSheet, resolve, tokensOf, writtenColours} from './helpers/palette.mjs';
 
 const siteCss = await readSheet('site.css');
 const articleCss = await readSheet('article.css');
@@ -95,11 +95,15 @@ test('the contrast pairs name every token a shared stylesheet uses for text or f
   assert.deepEqual([...used.ground].filter(token => !groundTokens.has(token) && !unlettered.has(token)), [], 'a token is used as a ground but no text is checked on it');
 });
 
-test('no colour is written in a shared stylesheet outside a token declaration', () => {
+test('no colour is written in a shared stylesheet outside a token declaration, and a token holds its colour as #hex or rgb()', () => {
   const literal = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/i;
   for (const [name, css] of [['site.css', siteCss], ['article.css', articleCss]]) {
     const outside = css.replace(/(?:^|[;{\s])--[\w-]+\s*:[^;}]*/g, '');
     assert.doesNotMatch(outside, literal, `${name} writes a colour outside a token: ${literal.exec(outside)?.[0]}`);
+    // A colour written by name (white, black, Canvas) is as much a literal as one in hex, and a token written that way is a colour
+    // the contrast cases above cannot read; both are caught here by reading every declaration of every rule.
+    const byName = flatRules(css).flatMap(({head, body}) => [...declarations(body)].flatMap(([property, value]) => writtenColours(value).map(colour => `${head} { ${property}: ${colour} }`)));
+    assert.deepEqual(byName, [], `${name} writes a colour by name or by a function other than rgb(), outside a token or inside one`);
   }
 });
 
