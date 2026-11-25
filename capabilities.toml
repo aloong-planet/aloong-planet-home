@@ -21,7 +21,7 @@ enforced-by = ["pnpm --filter @aloong-planet/agentshed run lint", "pnpm --filter
 
 [e2e-suite]
 enabled = true
-source = ["packages/site-check/src/check-sites.mjs", "apps/agentshed/vitest.config.ts", "apps/justsnap/vitest.config.ts"]
+source = ["packages/site-check/src/check-sites.mjs", "packages/site-kit/src/testing/vitest.ts", "apps/agentshed/vitest.config.ts", "apps/justsnap/vitest.config.ts"]
 enforced-by = ["pnpm --filter @aloong-planet/site-check run check", "pnpm --filter @aloong-planet/site-check run test", "pnpm --filter @aloong-planet/agentshed run test", "pnpm --filter @aloong-planet/justsnap run test"]
 
 [mutation-testing]

@@ -2,7 +2,7 @@
 // appearances. The site owns its colours, so nothing here compares them with the app's theme file (ADR-0001 of this
 // repository, option 8).
 import { expect, test } from 'vitest'
-import { palette } from '../../test/support/palette'
+import { palette } from '@aloong-planet/site-kit/testing/palette'
 
 const site = palette(new URL('./global.css', import.meta.url))
 

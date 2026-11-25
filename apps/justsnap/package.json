@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@aloong-planet/site-kit": "workspace:*",
     "astro": "7.4.0"
   },
   "devDependencies": {
