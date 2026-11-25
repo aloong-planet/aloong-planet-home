@@ -4,7 +4,7 @@ A personal homepage with Apps, Agents, a Blog, an interactive golden retriever, 
 
 ## Develop and verify
 
-Use pnpm 9.12.3 and Node 26.7.0 or later. This repository is a pnpm workspace: the homepage is the package `@aloong-planet/home` in `apps/home/`, and shared parts go in `packages/`. Install once at the repository root, then run the homepage's scripts from `apps/home/` (from the root, `pnpm --filter @aloong-planet/home run <script>` runs the same script).
+Use pnpm 9.12.3 and Node 26.7.0 or later. This repository is a pnpm workspace: the homepage is the package `@aloong-planet/home` in `apps/home/`, Agentshed's website is `@aloong-planet/agentshed` in `apps/agentshed/` (see its [README](apps/agentshed/README.md)), and shared parts go in `packages/`. Install once at the repository root, then run the homepage's scripts from `apps/home/` (from the root, `pnpm --filter @aloong-planet/home run <script>` runs the same script).
 
 ```sh
 pnpm install --frozen-lockfile
@@ -23,7 +23,7 @@ node scripts/verify-local-api.mjs
 
 Run from `apps/home/`.
 
-The HTTP check is hardcoded to the local server and creates local disposable test visitors. It never targets production. Lint and mutation testing are explicitly disabled in capabilities.toml, and the only automated browser suite is the one in `packages/site-check`, described below: the width check and a test of where keyboard focus lands under the pinned header. Native browser checks supplement request-level tests.
+The HTTP check is hardcoded to the local server and creates local disposable test visitors. It never targets production. Mutation testing is explicitly disabled in capabilities.toml, and the homepage has no linter; lint covers Agentshed's site only. The automated browser suites are the one in `packages/site-check`, described below (the width check of every site and a test of where keyboard focus lands under the pinned header), and the browser cases of Agentshed's site. Native browser checks supplement request-level tests.
 
 The width check opens every page of every site under `apps/` in a browser, at every whole window width from 320px to 1440px, and fails when a page is wider than the window, or when its style sheets hold a width condition that changes above 1440px, such as a `min-width` of 1500px (raise `WIDEST` in `packages/site-check/src/widths.mjs` when a site needs a breakpoint wider than that). It builds each site, finds the pages in the build output, and never leaves the local machine. Run it from the repository root; the browser is installed once:
 
@@ -60,6 +60,7 @@ No paid subscription is enabled. Free-plan exhaustion causes the counter to disa
 | apps/home/scripts/, apps/home/tests/ | Build, validation, deployment and regression tests |
 | docs/ | Accepted prototypes, specs, resource inventory and operations |
 | apps/home/tools/screenshots/ | Synthetic Transfer screenshot fixture |
+| apps/agentshed/ | Agentshed's website, the package `@aloong-planet/agentshed`: an Astro site in Chinese and English with its own unit tests, built-site check and browser cases. It is built and checked here; nothing is deployed from here yet |
 | packages/site-check/ | The project's browser suite: the width check of every site and the homepage's focus test, with the tests of the check and each site's check settings |
 | packages/ | Other parts shared between apps; none yet |
 | .github/workflows/, .github/ci/ | Pull-request checks, the rules that choose which checks a change runs, and main deployment |

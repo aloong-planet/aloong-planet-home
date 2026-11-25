@@ -1,0 +1,3 @@
+# Astro's generated types, rewritten on every build or check. Kept in this file because the lint reads the
+# .gitignore files only: whatever git ignores is not linted.
+.astro/

@@ -6,6 +6,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { readConfig } from './ci-scope.mjs'
 
 const read = (name) => readFileSync(new URL(`../workflows/${name}`, import.meta.url), 'utf8')
 const ci = read('ci.yml')
@@ -93,15 +94,58 @@ test('width-check ends at a time limit of 15 minutes', () => {
   assert.match(jobs(ci).get('width-check').join('\n'), /^ {4}timeout-minutes: 15\s*$/m)
 })
 
+// The `run:` commands of a job, in order, with the commented-out ones left out
+const runCommands = (id) => withoutComments(jobs(ci).get(id).join('\n'))
+  .split('\n')
+  .map((line) => line.match(/^\s+- run: (.+?)\s*$/)?.[1])
+  .filter(Boolean)
+
 test('width-check installs the browser, then runs the tests and the check of @aloong-planet/site-check', () => {
-  const commands = withoutComments(jobs(ci).get('width-check').join('\n'))
-    .split('\n')
-    .map((line) => line.match(/^\s+- run: (.+?)\s*$/)?.[1])
-    .filter(Boolean)
-  assert.deepEqual(commands, [
+  assert.deepEqual(runCommands('width-check'), [
     'pnpm install --frozen-lockfile',
     'pnpm --filter @aloong-planet/site-check exec playwright install --with-deps --only-shell chromium',
     'pnpm --filter @aloong-planet/site-check run test',
     'pnpm --filter @aloong-planet/site-check run check'
   ])
+})
+
+// agentshed-checks runs a browser through the package's own tests, so a page that never answers must end the job at its
+// own limit too
+test('agentshed-checks ends at a time limit of 15 minutes', () => {
+  assert.match(jobs(ci).get('agentshed-checks').join('\n'), /^ {4}timeout-minutes: 15\s*$/m)
+})
+
+// The package's tests build the site themselves (test/build-site.ts), so no build step comes before them
+test('agentshed-checks installs the browser, then runs the type check, the lint, the lint rule test and the tests of @aloong-planet/agentshed', () => {
+  assert.deepEqual(runCommands('agentshed-checks'), [
+    'pnpm install --frozen-lockfile',
+    'pnpm --filter @aloong-planet/agentshed exec playwright install --with-deps --only-shell chromium',
+    'pnpm --filter @aloong-planet/agentshed run check',
+    'pnpm --filter @aloong-planet/agentshed run lint',
+    'pnpm --filter @aloong-planet/agentshed run test:lint-rule',
+    'pnpm --filter @aloong-planet/agentshed run test'
+  ])
+})
+
+// The gate fails a selected job that was skipped, so a job whose condition leaves out a scope that lists it fails every
+// run that selects only that scope; and the gate reads a scope's output that the `changes` job does not export as invalid.
+// Both fail loudly, but only after a pull request has been opened, so they are pinned here.
+test('the changes job exports every scope of routing.json', () => {
+  const changes = jobs(ci).get('changes').join('\n')
+  const scopes = [...readConfig().scopes.keys()]
+  assert.ok(scopes.length > 1)
+  for (const scope of scopes) {
+    assert.match(changes, new RegExp(`^ {6}${scope}: \\$\\{\\{ steps\\.scope\\.outputs\\.${scope} \\}\\}\\s*$`, 'm'), scope)
+  }
+})
+
+test('every job that routing.json lists under a scope runs when that scope is selected', () => {
+  for (const [scope, ids] of readConfig().scopes) {
+    for (const id of ids) {
+      assert.ok(jobs(ci).has(id), `${id} is no job of the CI workflow`)
+      const condition = jobs(ci).get(id).map((line) => line.match(/^ {4}if: (.+?)\s*$/)).find(Boolean)
+      assert.ok(condition, `${id} has a one-line if`)
+      assert.ok(condition[1].includes(`needs.changes.outputs.${scope} == 'true'`), `${id} does not run when ${scope} is selected: ${condition[1]}`)
+    }
+  }
 })

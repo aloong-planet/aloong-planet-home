@@ -1,6 +1,8 @@
 client-framework = "none"
 working-language = "en"
 
+# i18n and theming stay off: they are repository-wide claims about the product interface, and apps/home has no dictionary
+# and one appearance. AGENTS.md holds apps/agentshed to its dictionary and its light and dark tokens, and its tests check both.
 [i18n]
 enabled = false
 
@@ -8,12 +10,14 @@ enabled = false
 enabled = false
 
 [lint]
-enabled = false
+enabled = true
+source = "apps/agentshed/eslint.config.js"
+enforced-by = ["pnpm --filter @aloong-planet/agentshed run lint", "pnpm --filter @aloong-planet/agentshed run test:lint-rule"]
 
 [e2e-suite]
 enabled = true
-source = "packages/site-check/src/check-sites.mjs"
-enforced-by = ["pnpm --filter @aloong-planet/site-check run check", "pnpm --filter @aloong-planet/site-check run test"]
+source = ["packages/site-check/src/check-sites.mjs", "apps/agentshed/vitest.config.ts"]
+enforced-by = ["pnpm --filter @aloong-planet/site-check run check", "pnpm --filter @aloong-planet/site-check run test", "pnpm --filter @aloong-planet/agentshed run test"]
 
 [mutation-testing]
 enabled = false

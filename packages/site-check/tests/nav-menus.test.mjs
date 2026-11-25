@@ -6,7 +6,7 @@
 // Each test opens a page, takes the first focusable element of its content that the page can scroll wholly above the window,
 // puts that element in one place, focuses it, waits for the smooth scroll to settle, and reads where the element's top edge is
 // against the header's bottom edge. There are two places, because they exercise different things. What is said of Chromium was
-// measured at 1280px and 390px on this package's Playwright (1.62.0, Chrome Headless Shell 151):
+// measured at 1280px and 390px on Playwright 1.62.0 (Chrome Headless Shell 151), before this package moved to 1.65.0:
 //   - Wholly above the window. Chromium scrolls an element that is outside the window to about the middle of the window, whatever
 //     the scroll padding is: a padding of 40px put the element within 30px of where the right padding puts it. So this case does
 //     not read the padding; it fails only when focus stops bringing the element into view below the header at all.
