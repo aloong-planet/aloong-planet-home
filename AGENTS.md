@@ -8,6 +8,13 @@ To publish or republish a post, follow `docs/ops/publishing-posts.md`.
 
 A workflow job that needs more than read access to the repository declares its own `permissions` (`docs/ops/deployment.md`).
 
+## The homepage site (`apps/home`)
+
+Constraints on anyone changing the homepage site's stylesheets, one line each; the reason lives where the line points.
+
+- Every colour token of `apps/home/public/site.css` and `apps/home/public/article.css` is declared in both the light and the dark block, and a colour reaches a rule only through a token (`apps/home/tests/palette.test.mjs`).
+- A token added to either stylesheet is also pinned to its light value on the diagram sheet in `apps/home/public/article.css`, so a diagram keeps its light colours (`apps/home/tests/palette.test.mjs`, site-appearance::REQ-002/AC-01).
+
 ## Agentshed's site (`apps/agentshed`)
 
 Constraints on anyone changing `apps/agentshed`, one line each; the reason lives where the line points.

@@ -8,8 +8,6 @@ A visitor whose system is set to a dark appearance gets the site in bright colou
 ## Solution
 Every page of the site follows the system's light or dark appearance. Diagrams and pictures keep their own light colours in both.
 
-> Pending: every page of the site has a dark appearance.
-
 ## Functional Requirements
 
 ### site-appearance::REQ-001 The system decides the appearance (direct acceptance)

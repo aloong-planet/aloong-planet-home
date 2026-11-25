@@ -1,14 +1,17 @@
 client-framework = "none"
 working-language = "en"
 
-# i18n and theming stay off: they are repository-wide claims about the product interface, and apps/home has no dictionary
-# and one appearance. AGENTS.md holds apps/agentshed and apps/justsnap each to its own dictionary and its light and dark
-# tokens, and their tests check both.
+# i18n stays off: it is a repository-wide claim about the product interface, and apps/home has no dictionary. AGENTS.md
+# holds apps/agentshed and apps/justsnap each to its own dictionary, and their tests check it.
 [i18n]
 enabled = false
 
+# Every site this repository builds follows the system's light and dark appearance; source names each site's theme
+# stylesheets, and AGENTS.md holds each to its light and dark tokens.
 [theming]
-enabled = false
+enabled = true
+source = ["apps/home/public/site.css", "apps/home/public/article.css", "apps/agentshed/src/styles/global.css", "apps/justsnap/src/styles/global.css"]
+enforced-by = ["pnpm --filter @aloong-planet/home run test", "pnpm --filter @aloong-planet/site-check run test", "pnpm --filter @aloong-planet/agentshed run test", "pnpm --filter @aloong-planet/justsnap run test"]
 
 [lint]
 enabled = true
