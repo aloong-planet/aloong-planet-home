@@ -18,8 +18,6 @@ the first screen and carries the download button, a scroll-linked features secti
 with the download and the install steps, and a footer. The visitor's browser decides what to offer from the release
 data it reads. A release therefore never needs a site change.
 
-> Pending: Cloudflare Pages deploys the site from this repository's `apps/justsnap`.
-
 ## User Stories
 
 ### justsnap-site::US-001 Understand what JustSnap does and download it
