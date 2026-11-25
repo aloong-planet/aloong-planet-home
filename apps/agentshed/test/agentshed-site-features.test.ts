@@ -121,9 +121,7 @@ const scrollToY = (page: Page, y: number): Promise<number> =>
     return scrollY
   }, Math.ceil(y))
 
-// The step at each distance past the pin point, in turns, by hand from the spec: the first at the pin, the next each
-// turn on, switching half-way (agentshed-site Implementation Decisions, "The features section": rounded), the last
-// once past
+// The step at each distance past the pin point, in turns, worked out by hand from agentshed-site::REQ-004/AC-08
 const POSITIONS: [turns: number, step: number][] = [
   [0, 1],
   [0.4, 1],
@@ -269,8 +267,8 @@ describe('a jump away and back, and a fast scroll, show the step of where the pa
 
 /**
  * The step at `turns` past the pin point, for a position a case cannot choose (after a resize, which lays the page out
- * anew): the spec's rule (agentshed-site Implementation Decisions, "The features section": in turns, rounded and kept
- * within the steps). A position within 2px of a half turn is refused, so that rounding the measurement cannot decide it.
+ * anew): the rule of agentshed-site::REQ-004/AC-08. A position within 2px of a half turn is refused, so that rounding
+ * the measurement cannot decide it.
  */
 function stepAt(turns: number, turn: number): number {
   if (Math.abs(turns - Math.floor(turns) - 0.5) * turn < 2) {

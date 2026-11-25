@@ -134,10 +134,11 @@ Releases and the copyright line.
 - agentshed-site::REQ-004/AC-06: Below 760px nothing is pinned. Each step's own screenshot sits under its
   text, with a clear gap before the next step's title.
 - agentshed-site::REQ-004/AC-07: Switching language keeps the current step and the scroll position.
-- agentshed-site::REQ-004/AC-08: The page scrolls as usual and nothing captures the wheel. The first step
-  shows when the showcase pins, and each further 60% of the window's height scrolled turns to the next
-  step; scrolling back turns back. Before the showcase pins the first step shows, and once it has
-  scrolled past, the last.
+- agentshed-site::REQ-004/AC-08: The page scrolls as usual and nothing captures the wheel. A unit is 60% of
+  the window's height. The showcase stays pinned for one unit of scrolling for each step after the first.
+  The first step shows when the showcase pins, the second from half a unit of scrolling on, and each
+  further step from a unit of scrolling after the one before it; scrolling back turns back. Before the
+  showcase pins the first step shows, and once it has scrolled past, the last.
 
 ### agentshed-site::REQ-005 The screenshots
 
@@ -149,11 +150,13 @@ Releases and the copyright line.
   is retaken from the built app over an English example conversation, including English questions,
   replies and tool details.
 - agentshed-site::REQ-005/AC-02: Each feature screenshot is cut to the part of the window its step is about. All six are the
-  same size (16:9) at the same zoom, so the text stays one size as the steps turn. Each cut ends between
-  list rows. The token cut leaves out the recent-sessions list. The memory cut shows a memory file open
-  in the drawer as rendered Markdown, over the Agents page's Memory section with that file's project
-  expanded, and ends between the drawer's lines too. The search cut starts at the search box and keeps
-  each row's hit count and time.
+  same size (920×517pt at 2×, 16:9) at the same zoom, so the text stays one size as the steps turn. Each
+  cut ends between list rows. The token cut holds the trend chart and the per-model figures whole and
+  leaves out the recent-sessions list. The memory cut shows a memory file open in the drawer as rendered
+  Markdown, over the Agents page's Memory section with that file's project (one with only a few memory
+  files) expanded and other projects still in view, and ends between the drawer's lines too. The search
+  cut starts at the search box and keeps each row's hit count and time. The memory, search and English
+  session cuts hold their pane whole, its right edge included.
 - agentshed-site::REQ-005/AC-03: Every screenshot's space is held before it loads, so nothing jumps.
 
 ### agentshed-site::REQ-006 Copy (direct acceptance)
@@ -271,8 +274,9 @@ visitor activates its poster (REQ-009). Pre-releases are never looked for on R2,
 - A6 GitHub rate-limits the visitor (unauthenticated requests are limited per IP) or answers with an
   error → treated as unreadable (agentshed-site::REQ-001/AC-03).
 - A7 A read resolves after the page is shown → the state updates in place. Until then the list state
-  is a valid way to download. If the visitor has already moved past the hero's download block (scrolled,
-  or put back there by a language switch), what they are looking at does not move.
+  is a valid way to download. If the visitor has already moved past the hero's download block, so that it
+  is above the view, which starts below the sticky header (scrolled, or put back there by a language
+  switch), what they are looking at does not move.
 - A8 GitHub's answer includes drafts or releases without the expected DMG → drafts are ignored. A
   release without the DMG is not offered as a direct download; the page offers its release page
   instead.
@@ -315,9 +319,7 @@ visitor activates its poster (REQ-009). Pre-releases are never looked for on R2,
   targets. Release notes and other release text are never inserted into the page.
 - E2 The overview, project, token and Chinese session screenshots show real project names, paths,
   usage and session text by the owner's decision; the English session, memory and search screenshots show none of the
-  owner's data (agentshed-site::REQ-005/AC-01). Retaking them is the only way to change what they show, so the
-  overview and project screenshots keep showing the Instructions section's former name and place until they are
-  next retaken.
+  owner's data (agentshed-site::REQ-005/AC-01). Retaking them is the only way to change what they show.
 - E3 The statistics file is external data too. Only its validated total (agentshed-site::REQ-011/AC-05)
   reaches the page, as the number in the count's text; nothing else it holds is inserted into the page.
 
@@ -358,11 +360,6 @@ visitor activates its poster (REQ-009). Pre-releases are never looked for on R2,
 - **Every read** (the pointer, GitHub and the statistics file) gives up after five seconds (Failure A5) and
   sends no header that needs a CORS preflight.
   Every link is built from the validated version, never taken from an answer (Failure E1).
-- **Applying a state** replaces, in place and as text, the hero's download block (the button, the pill on
-  the platform line, the note or the link beneath it) and the download section's line and row; the list
-  state rebuilds the markup as served. When a state lands while the hero's download block is above the
-  visitor's view (the view starts below the sticky header), the page scrolls by the block's change, so
-  what the visitor sees does not move; while the block is in view it changes in view (Failure A7).
 - **The palette** is the app's purple palette, with light and dark both declared and switched by the
   system appearance. The pre-release version's pill and note use the app's warning pair. The GitHub
   button beside Download is a secondary button: the card ground with the strong line, and the accent
@@ -378,18 +375,6 @@ visitor activates its poster (REQ-009). Pre-releases are never looked for on R2,
 - **The header's trail** (agentshed-site::REQ-012) is a navigation landmark named "Breadcrumb" in English and
   its Chinese counterpart in Chinese. It holds "aloong planet" and the brand as an ordered list of two links,
   and the brand is marked as the current page.
-- **The features section**: the showcase is pinned inside a block one window tall plus 60% of a
-  window for each further step, so the number of steps sets the block's height. The current step is
-  the distance scrolled past the point where it pins, in turns, rounded and kept within the steps,
-  both measured from the page; it is computed on scroll and on resize. The steps' texts share one
-  place, and so do their screenshots; the others are hidden with visibility as well as opacity, and
-  take no pointer.
-- **The screenshots** ship as static assets with their width and height declared. They are taken at 2×
-  pixels from a window 1280pt wide and 800pt tall. Each feature cut is 920×517pt (16:9) and holds the
-  token page's trend chart and per-model figures whole. The search and memory screenshots are taken from a
-  window narrowed to 984pt, in which the pane reflows into the 920pt cut; the memory cut expands a project
-  with only a few memory files, with other projects still in view. The English session retake uses a 1240pt
-  window, in which the session pane fits the 920pt cut with its right edge whole.
 - **The statistics file** is JSON at `stats/downloads.json` on the download host. The page reads these fields of it
   and no other:
 

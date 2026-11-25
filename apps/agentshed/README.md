@@ -58,8 +58,10 @@ anything under `apps/agentshed/` (see [deployment and CI](../../docs/ops/deploym
   and the app icon. They are not edited here: they change only through the pull request that `pnpm site:assets` of
   Agentshed's repository opens into this one (app-sites::REQ-004/AC-01). Every cut is 1840×1035. The overview,
   project, token and Chinese session cuts show the owner's own data, approved for publication (2026-10-13), and are
-  retaken by hand from the app; the memory, search and English session cuts show made-up data. The icons are scaled
-  from the app's `build/icon.png`.
+  retaken by hand from the app; the memory, search and English session cuts show made-up data. The cuts are taken at
+  2× from a window 1280pt wide and 800pt tall; the search and memory cuts from one narrowed to 984pt, in which the pane
+  reflows into the cut, and the English session cut from one 1240pt wide, in which the session pane fits the cut with
+  its right edge whole. The icons are scaled from the app's `build/icon.png`.
 - `public/media/agentshed-intro-poster.jpg`: the shared 1600×900 poster. Both walkthroughs use the English narration.
   The [English captions](https://youtu.be/lQ-Bg8nXJKM) and [Chinese captions](https://youtu.be/TpCgkGiVqlk)
   are part of their respective YouTube videos. `src/scripts/hero-video.ts`
