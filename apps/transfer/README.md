@@ -34,15 +34,17 @@ command fails (`src/check-script.test.ts` has the details).
   brand; navigation; language switch) and the footer.
 - `src/components/`: one component per section of the landing page (`Hero`, `Features`, `HowItWorks`, `Download`,
   `Security`).
-- `src/i18n/ui.ts`: every string of the page, in both languages. This dictionary is the site's own, separate from the
-  app's. New copy goes here, in both languages.
+- `src/i18n/ui.ts`: the strings of the header, the footer and the landing page, in both languages. This dictionary is the
+  site's own, separate from the app's. New copy for these goes here, in both languages; the privacy pages
+  (`src/pages/privacy.astro`, `src/pages/en/privacy.astro`) keep their text in their own markup.
 - `src/styles/global.css`: the palette (light and dark, by the visitor's system appearance; the site owns its colours)
   and the rules shared by the components; each component also holds the styles of its own markup.
 - `src/download-config.ts`, `src/releases.ts`, `src/download-section.ts`, `src/download-statistics.ts`: the download
   section. It reads, in the visitor's browser, the latest-release pointer on the download host and GitHub's releases for
-  the Transfer repository, validates each answer before anything of it is used, and shows the state they decide. The page
-  is served in the list state, which leads to GitHub's release list, so a release needs no change here
-  (transfer-site::REQ-002).
+  the Transfer repository, validates each answer before anything of it is used, and shows the state they decide. It also
+  reads the download totals from the download host's statistics file and shows them on a line of their own, which stays
+  hidden unless that answer is usable. The page is served in the list state, which leads to GitHub's release list, so a
+  release needs no change here (transfer-site::REQ-002).
 - `src/beian.ts`: the mainland China filing number the footer shows when the build is given one (`PUBLIC_ICP_BEIAN`).
   This repository does not set it: the mainland copy is not built here.
 - `src/fixtures/`: answers of the two places the download section reads, in the shape they have: the pointer as the
