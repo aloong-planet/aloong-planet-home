@@ -12,7 +12,7 @@ export const DOWNLOAD_HOST = 'https://dl.agentshed.aloongplanet.com'
 export const POINTER_URL = `${DOWNLOAD_HOST}/latest.json`
 export const RELEASES_API = 'https://api.github.com/repos/aloong-planet/agentshed/releases?per_page=100'
 
-/** How long a read may take before the page stops waiting for it (Implementation Decisions "Every read") */
+/** How long a read may take before the page stops waiting for it (agentshed-site::CON-004/AC-01) */
 export const TIMEOUT_MS = 5000
 
 export type PointerRead = { kind: 'formal'; version: string; url: string } | { kind: 'absent' } | { kind: 'unreadable' }
@@ -36,7 +36,7 @@ export const r2Dmg = (version: string): string => `${DOWNLOAD_HOST}/releases/v${
 
 /**
  * The answer's status and, for a 2xx, its parsed body; or null when there is none to read: failed, aborted, timed
- * out, not JSON. Its one header is CORS-safelisted, so no read needs a preflight (Implementation Decisions "Every read").
+ * out, not JSON. Its one header is CORS-safelisted (agentshed-site::CON-004/AC-02).
  */
 export async function get(fetch: Fetch, url: string, timeoutMs: number): Promise<{ status: number; body: unknown } | null> {
   const abort = new AbortController()
