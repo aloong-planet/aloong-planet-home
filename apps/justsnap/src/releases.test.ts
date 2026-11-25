@@ -1,13 +1,14 @@
 // The two reads (justsnap-site::REQ-001, CON-003, CON-005, failures A1–A7, E1), through an injected fetch: no case reaches
-// the network. The fixtures are real shapes: the pointer as agentshed's mirror script writes it (JustSnap's own writer is not built
-// yet; when it is, its output replaces this fixture), the 404 the download
+// the network. The fixtures are real shapes: the pointer with the keys that `pointerText` of JustSnap's `Scripts/mirror-release.mjs`
+// writes (version, and files of name, arch, size and url; a hand-kept copy for version 0.2.0, since that repository's script is not
+// run from here), the 404 the download
 // host answers before the first release (an HTML body), and a public GitHub releases answer (drafts, pre-releases,
 // assets with their upload state) renamed to this repository.
 //
 // Not covered here: what a browser does with CORS and with the time limit. A rejected fetch stands for both;
 // the browser behaviour is measured with the page.
 import { readFileSync } from 'node:fs'
-import { describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 import { readGitHub, readPointer, type Fetch } from './releases'
 
 const POINTER = readFileSync(new URL('../test/fixtures/pointer.json', import.meta.url), 'utf8')
@@ -211,5 +212,34 @@ describe('GitHub’s releases', () => {
     const hanging: Fetch = (_, init) =>
       new Promise((_, reject) => init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError'))))
     expect(await readGitHub(hanging, { timeoutMs: 30 })).toEqual({ kind: 'unreadable' })
+  })
+})
+
+describe('every read', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  // justsnap-site::CON-005/AC-01, each read called without a limit of its own
+  const timed: [string, (fetch: Fetch) => Promise<unknown>][] = [
+    ['the pointer', (fetch) => readPointer(fetch)],
+    ['GitHub', (fetch) => readGitHub(fetch)]
+  ]
+  test.each(timed)('%s is given up after five seconds', async (_, read) => {
+    vi.useFakeTimers()
+    const hanging: Fetch = (_, init) =>
+      new Promise((_, reject) => init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError'))))
+    let settled = false
+    let result: unknown
+    const reading = read(hanging).then((answer) => {
+      settled = true
+      result = answer
+    })
+    await vi.advanceTimersByTimeAsync(4999)
+    expect(settled).toBe(false)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(settled).toBe(true)
+    await reading
+    expect(result).toEqual({ kind: 'unreadable' })
   })
 })
