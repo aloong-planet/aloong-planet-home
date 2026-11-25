@@ -1,6 +1,6 @@
 # Not-found page
 
-> Related: [blog](blog.md) · [visitor total](visitor-counter.md)
+> Related: [blog](blog.md) · [visitor total](visitor-counter.md) · [site languages](site-languages.md) · [site appearance](site-appearance.md)
 
 ## Problem Statement
 A visitor who opens a mistyped link, or the address of a post that has been removed, sees the homepage with no sign that the page does not exist. Every address on the site answers with status 200, so nothing tells the visitor, a search engine, or a check that the page is missing.
@@ -14,10 +14,10 @@ Any address the site does not have shows a not-found page with status 404. The p
 
 As a visitor who opened an address the site does not have, I am told plainly that the page is not here and can go back to the homepage or the Blog in one step, so a broken link does not leave me confused.
 
-- not-found::US-001/AC-01: The page shows the site's top navigation, then, in one centered column, the puzzled dog at 160px, "404", the heading "这一页走丢了", and the text "小狗找了一圈，没找到这个地址。" and "可能是链接打错了，或者页面已经搬走。" on two lines. There is no footer.
-- not-found::US-001/AC-02: "回首页" opens the homepage and "看看博客" opens the Blog page.
-- not-found::US-001/AC-03: The two buttons sit side by side, 36px high with 6px rounded corners. "回首页" is solid dark with light text and lightens on hover; "看看博客" is outlined and fills with the light tag color on hover. Each shows the site's focus ring when focused by keyboard.
-- not-found::US-001/AC-04: The browser tab reads "这一页走丢了 · Aloong Planet".
+- not-found::US-001/AC-01: The page shows the site's top navigation, then, in one centered column, the puzzled dog at 160px, "404", the heading "这一页走丢了", and the text "小狗找了一圈，没找到这个地址。" and "可能是链接打错了，或者页面已经搬走。" on two lines. On the English page the heading is "This page got lost" and the two lines are "The dog looked everywhere and couldn't find this address." and "The link may be mistyped, or the page may have moved." There is no footer.
+- not-found::US-001/AC-02: "回首页" opens the homepage and "看看博客" opens the Blog page; on the English page they read "Back to home" and "Read the blog".
+- not-found::US-001/AC-03: The two buttons sit side by side, 36px high with 6px rounded corners. The homepage button is solid in the site's ink colour with its text in the page colour, and lightens on hover; the Blog button is outlined in ink and fills with the site's tag colour on hover. Each shows the site's focus ring when focused by keyboard.
+- not-found::US-001/AC-04: The browser tab reads "这一页走丢了 · Aloong Planet", or "This page got lost · Aloong Planet" on the English page.
 - not-found::US-001/AC-05: At 1440×900 and at 390×844 the whole page fits in the first screen with nothing cut off and no sideways scrolling.
 
 ## Functional Requirements
@@ -41,27 +41,25 @@ Visitor paths:
 - An unknown address under `/blog/`: the navigation marks no section as current, as at any other unknown address.
 - An unknown address with a query string or a hash: the not-found page; an existing page with a query string or a hash is unchanged.
 - An existing address written with a trailing slash or `.html`, such as `/blog/` or `/blog.html`, still redirects to its plain address instead of showing the not-found page.
-- Opening the page's own address `/404` shows the page with status 200, and `/404.html` redirects there; the host does this, and nothing on the site links to it.
+- Opening the page's own address `/404`, or `/en/404` for the English page, shows the page with status 200, and the address with `.html` redirects there; the host does this, and nothing on the site links to it.
 - Browser back from the not-found page returns to the previous page; the buttons are plain links.
-- Keyboard: the brand, navigation links and both buttons are reachable in order with a visible focus ring; the page has one heading.
+- Keyboard: the brand, navigation links, language switch and both buttons are reachable in order with a visible focus ring; the page has one heading.
 - Scripting unavailable: the dog, text and both buttons work; the top navigation does not appear, as on the other pages.
-- The dog image fails to load, or the browser cannot show WebP (Safari and iOS before 14): its alt text "歪着头找东西的金毛小狗" shows in the same 160px space and the layout does not move.
+- The dog image fails to load, or the browser cannot show WebP (Safari and iOS before 14): its alt text "歪着头找东西的金毛小狗", or "A golden retriever tilting its head, looking for something" on the English page, shows in the same 160px space and the layout does not move.
 - A window shorter than the content, such as a phone in landscape: the page scrolls and nothing overlaps the navigation.
 
 Search engines and checks:
-- A missing address now returns 404, so it is not indexed as a copy of the homepage. The page declares no canonical address.
-- A blog page or homepage image missing after a deployment now comes back as the not-found page with status 404, and the deployment checks still fail on it.
+- A missing address returns 404, so it is not indexed as a copy of the homepage. The page declares no canonical address.
+- A blog page or homepage image missing after a deployment comes back as the not-found page with status 404, and the deployment checks fail on it.
 
 Visitor registration follows not-found::CON-001 on the not-found page and [visitor-counter::REQ-001/AC-01](visitor-counter.md) on counted pages.
 
 ## Implementation Decisions
 
-- The page is a static page at the root of the built site. Cloudflare Pages serves the closest such page with status 404 for any path that is neither a static asset nor routed to a function; without one it treats the site as a single-page app and serves the homepage with status 200 (Cloudflare Pages documentation, "Not Found behavior" and "Single-page application (SPA) rendering"). Function routing is unchanged.
-- Every style, script, image and link on the page is addressed from the site root, because the page is served at whatever address was requested.
-- The page loads the site stylesheet and the shared navigation. It does not load the visitor script or the dog interaction, and it declares no canonical address.
-- The page's styles live in the site stylesheet with the other pages' styles. The buttons are the site's first button style.
-- The dog is a puzzled version of the homepage's sitting dog, generated with an image model from the homepage dog. It ships at 480px, three times its displayed size, and its origin is recorded with the other assets.
-- Deployment checks request an address the site does not have on every public host and require status 404 with the page's heading. The existing checks for blog pages, images and the dog's motion sheets keep reading text and content types, so they still tell a missing file from the not-found page.
+- Each language's page is a static page: the Chinese one at the root of the built site, the English one in its `/en/` folder. Cloudflare Pages serves the closest such page with status 404 for any path that is neither a static asset nor routed to a function; without one it treats the site as a single-page app and serves the homepage with status 200 (Cloudflare Pages documentation, "Not Found behavior" and "Single-page application (SPA) rendering").
+- Every style, script, image and link on the page is addressed from the site root.
+- The dog is a puzzled version of the homepage's sitting dog, shipped at 480px, three times its displayed size.
+- Deployment checks request an address the site does not have, and one under `/en/`, on every public host, and require status 404 with the heading of the page in that language. The checks for blog pages, images and the dog's motion sheets read text and content types, so they tell a missing file from the not-found page.
 
 ## Testing Decisions
 
@@ -71,4 +69,4 @@ Layout, hover, focus and the two buttons are checked in a real browser at 1440×
 
 ## Out of Scope
 
-Showing the requested address on the page; search or suggested posts; redirects for moved or removed posts; a separate not-found page for the Blog; a dark appearance and other languages; a dog that wags on this page.
+Showing the requested address on the page; search or suggested posts; redirects for moved or removed posts; a separate not-found page for the Blog; a dog that wags on this page.
