@@ -1,7 +1,8 @@
-// nav-menus::US-004/AC-03, nav-menus::US-001/AC-05 and nav-menus::US-003/AC-02 in a real browser. This tests the homepage's
-// behaviour, not the checker: it builds apps/home, serves the build the way the width check does (src/server.mjs, with the answers
-// sites/home.json gives for the homepage's backend), moves keyboard focus in Chromium, and opens the menus in each appearance the
-// system can ask for. It lives in this package because this package is the project's browser suite. It builds apps/home/dist (once
+// nav-menus::US-004/AC-03, nav-menus::US-001/AC-05 (the menu's colours in each appearance, and the two-line limit of a description)
+// and nav-menus::US-003/AC-02 in a real browser. This tests the homepage's behaviour, not the checker: it builds apps/home, serves
+// the build the way the width check does (src/server.mjs, with the answers sites/home.json gives for the homepage's backend), moves
+// keyboard focus in Chromium, opens the menus in each appearance the system can ask for and reads the lines their descriptions take
+// on both homepages. It lives in this package because this package is the project's browser suite. It builds apps/home/dist (once
 // per run of the package's tests, tests/global-setup.mjs), so run it when no dev server is serving that folder.
 //
 // Each test opens a page, takes the first focusable element of its content that the page can scroll wholly above the window,
@@ -104,7 +105,7 @@ const PLACES = [
   },
 ]
 
-describe('nav-menus on the built homepage', { timeout: 300_000 }, () => {
+describe('nav-menus in a real browser on the built homepage', { timeout: 300_000 }, () => {
   let browser
   let server
 
@@ -122,7 +123,7 @@ describe('nav-menus on the built homepage', { timeout: 300_000 }, () => {
   for (const width of WIDTHS) {
     for (const url of PAGES) {
       for (const place of PLACES) {
-        test(`focus on an element ${place.name} at ${width}px on ${url}`, { timeout: TEST_LIMIT }, async () => {
+        test(`nav-menus::US-004/AC-03: focus on an element ${place.name} at ${width}px on ${url}`, { timeout: TEST_LIMIT }, async () => {
           const page = await browser.newPage({ viewport: { width, height: WINDOW_HEIGHT } })
           try {
             // Only the local server answers: the page is measured without the network, as the width check does.
@@ -187,4 +188,41 @@ describe('nav-menus on the built homepage', { timeout: 300_000 }, () => {
     }
     assert.ok(luminance(seen.light) > 0.85 && luminance(seen.dark) < 0.05, 'the card is the card colour of its appearance')
   })
+
+  // nav-menus::US-001/AC-05 on each homepage: a menu item's description takes at most two lines. The English descriptions of
+  // nav-menus::REQ-002 run to 160-230 characters, three to four lines in the card at 1440px unless the description is cut, so this
+  // reads the lines each description really takes with the pointer on each tab (the menus open on hover, nav-menus::US-001/AC-01).
+  // Only the six works of nav-menus::REQ-002 are in the menus; the header's other tabs have none.
+  for (const url of ['/', '/en/']) {
+    test(`nav-menus::US-001/AC-05: every menu item's description takes at most two lines on ${url}`, { timeout: TEST_LIMIT }, async () => {
+      const page = await browser.newPage({ viewport: { width: 1440, height: WINDOW_HEIGHT } })
+      try {
+        await page.route('**/*', (route) => (new URL(route.request().url()).origin === server.origin ? route.continue() : route.abort()))
+        await page.goto(server.origin + url, { waitUntil: 'networkidle' })
+        await page.waitForSelector('.ap-header')
+        await page.evaluate(() => document.fonts.ready)
+
+        const items = []
+        for (const tab of await page.locator('.ap-menu > a').all()) {
+          await tab.hover()
+          items.push(
+            ...(await page.$$eval('.ap-menu:hover .ap-menu-item span', (spans) =>
+              spans.map((span) => ({
+                description: span.textContent.slice(0, 40),
+                lines: Math.round(span.getBoundingClientRect().height / parseFloat(getComputedStyle(span).lineHeight)),
+              })),
+            )),
+          )
+        }
+        assert.equal(items.length, 6, `the menus of ${url} hold ${items.length} descriptions, not the six works: ${JSON.stringify(items)}`)
+        assert.deepEqual(
+          items.filter(({ lines }) => lines > 2),
+          [],
+          `descriptions of ${url} that take more than two lines`,
+        )
+      } finally {
+        await page.close()
+      }
+    })
+  }
 })

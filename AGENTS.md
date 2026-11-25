@@ -10,8 +10,9 @@ A workflow job that needs more than read access to the repository declares its o
 
 ## The homepage site (`apps/home`)
 
-Constraints on anyone changing the homepage site's stylesheets, one line each; the reason lives where the line points.
+Constraints on anyone changing `apps/home`, one line each; the reason lives where the line points.
 
+- New visible copy goes into the site's dictionary, `apps/home/public/ui.js`, in both Chinese and English, never into markup, a page template or a script; a post's own body and the labels of a post page (`postUi` in that file) are Chinese only.
 - Every colour token of `apps/home/public/site.css` and `apps/home/public/article.css` is declared in both the light and the dark block, and a colour reaches a rule only through a token (`apps/home/tests/palette.test.mjs`).
 - A token added to either stylesheet is also pinned to its light value on the diagram sheet in `apps/home/public/article.css`, so a diagram keeps its light colours (`apps/home/tests/palette.test.mjs`, site-appearance::REQ-002/AC-01).
 

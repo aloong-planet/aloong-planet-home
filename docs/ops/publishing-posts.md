@@ -12,12 +12,13 @@ A post is an entry in `apps/home/content/posts.json` plus an HTML body and a cov
      "title": "标题",
      "date": "2026-11-05",
      "summary": "一两句话，首页最多显示两行。",
+     "en": {"title": "The title in English", "summary": "One or two sentences in English."},
      "source": {"label": "被解读的文章", "url": "https://example.com/article"},
      "note": "标题下方的一句说明。"
    }
    ```
 
-   `source` and `note` are optional. With `source`, the byline adds "解读" and a link to it.
+   `en` is required: the English homepage and Blog page list the post by its English title and summary, and the build refuses an entry without them. The post itself stays Chinese, and an English entry says so beside its date. `source` and `note` are optional. With `source`, the byline adds "解读" and a link to it.
 
 2. Write `apps/home/content/posts/<slug>.html`. It holds only the article content, without a page shell or an `h1`, which the template provides.
 
@@ -26,7 +27,7 @@ A post is an entry in `apps/home/content/posts.json` plus an HTML body and a cov
 
 3. Add the cover as `apps/home/content/posts/<slug>.webp`. Make it 2.35:1, the shape of a WeChat cover, and reduce it to about 1200×511 first: the build copies it unchanged. A post republished from WeChat uses that article's cover. A cover of another shape is cropped from the center to fill its frame. The build refuses a post without a cover.
 
-4. In `apps/home/`, run `pnpm build`, then `pnpm dev`, and read the post at http://127.0.0.1:8793/blog/<slug> and its card at http://127.0.0.1:8793/blog.
+4. In `apps/home/`, run `pnpm build`, then `pnpm dev`, and read the post at http://127.0.0.1:8793/blog/<slug>, its card at http://127.0.0.1:8793/blog and its English entry at http://127.0.0.1:8793/en/blog.
 
 ## What a post gets without any styles of its own
 
@@ -53,7 +54,7 @@ The body may not contain `style` or `script` elements or a whole page's shell. A
 Generate the blog body from the reviewed local Markdown and its sibling assets in the Content Studio repository (`zhoulf1006/content-studio`). Each is `manuscripts/<slug>/source.md`, with its images in `assets/images/` and any data behind them elsewhere under `assets/`. Change nothing there.
 
 - **Slug**: the manuscript's folder name.
-- **Manifest entry**: `title` is the front matter's `title`, and `summary` is its `digest`. Leave out `source`: the byline would call the author's own article a reading of another.
+- **Manifest entry**: `title` is the front matter's `title`, and `summary` is its `digest`. Write `en.title` and `en.summary` in English from them: the title and the digest, not the post, are what gets translated. Leave out `source`: the byline would call the author's own article a reading of another.
 - **Date**: the day, in Beijing time, of `synced_at` in `publishers/wechat/productions/<slug>/receipt.yaml`, which records when the draft was last saved to WeChat; receipts so far leave `published_at` empty. Set the date once, when the post is added, and keep it if the draft is saved again later.
 - **Text**: keep every paragraph, list, table, code block, quote and link word for word, punctuation included. Leave out only the front matter, the `# title` line, and lines meant only for WeChat, such as follow prompts.
   - The text before the first `##` goes in a `<section>` with no id, so it stays out of the contents.

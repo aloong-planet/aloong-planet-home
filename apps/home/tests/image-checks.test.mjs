@@ -8,10 +8,12 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
+import {join} from 'node:path';
 import {dogSprites, pageImages, motionSheets} from '../scripts/image-checks.mjs';
+import {realSite} from './helpers/built-site.mjs';
 
 test('the deployment check finds every image the real homepage shows, in page order', async () => {
-  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const html = await readFile(join(await realSite(), 'index.html'), 'utf8');
   assert.deepEqual(pageImages(html), [
     '/assets/aloong-cartoon.webp',
     '/assets/golden-wag/idle.png',
@@ -32,7 +34,7 @@ test('the deployment check finds every motion sheet the real dog script loads, a
 });
 
 test('the deployment check refuses a body that is not the dog script, such as the homepage a host serves for a missing file', async () => {
-  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const html = await readFile(join(await realSite(), 'index.html'), 'utf8');
   assert.throws(() => motionSheets(html), /not the dog script/);
 });
 

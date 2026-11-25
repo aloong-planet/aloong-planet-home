@@ -9,11 +9,11 @@
 // A cover that fails to load keeping its frame's size and the page's ground is read in both appearances by packages/site-check/tests/blog.test.mjs.
 // Which image each post uses as its cover is content, checked by eye. Test them in the browser suite once it covers them.
 import {test} from 'node:test';
-import {realSite} from './helpers/built-site.mjs';
+import {readBuilt, realSite} from './helpers/built-site.mjs';
 import assert from 'node:assert/strict';
 import {execFile} from 'node:child_process';
 import {createServer} from 'node:http';
-import {appendFile, cp, mkdtemp, mkdir, readFile, writeFile} from 'node:fs/promises';
+import {appendFile, cp, mkdtemp, mkdir, readdir, readFile, writeFile} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {extname, join} from 'node:path';
@@ -22,17 +22,17 @@ import {buildBlog, blogChecks, readManifest} from '../scripts/blog.mjs';
 import {pageImages, motionSheets} from '../scripts/image-checks.mjs';
 
 const BODY = '<section id="s2"><h2><span class="sec">§2</span>双层架构：把连续性和吞吐量拆开</h2><p>正文</p></section>';
-const post = (slug, date = '2026-11-05', extra = {}) => ({slug, title: `标题 ${slug}`, date, summary: `摘要 ${slug}`, ...extra});
+const post = (slug, date = '2026-11-05', extra = {}) => ({slug, title: `标题 ${slug}`, date, summary: `摘要 ${slug}`, en: {title: `Title ${slug}`, summary: `Summary ${slug}`}, ...extra});
 
 /** Bytes standing in for a cover: the build only checks that the file exists and copies it, so they need not be an image. */
 const COVER = Buffer.from('RIFF cover bytes WEBP');
 
 /** Builds a small site in a temporary folder and returns a reader for its output. Every listed post gets a body and a cover unless `bodies` or `covers` maps its slug to null. */
-async function site(posts, {files = {}, bodies = {}, covers = {}, home = '<main><!-- blog:home --></main>', list = '<main><!-- blog:list --></main>'} = {}) {
+async function site(posts, {files = {}, bodies = {}, covers = {}, home = '<main><!-- blog:home --></main>', list = '<main><!-- blog:list --></main>', enHome = home, enList = list} = {}) {
   const root = await mkdtemp(join(tmpdir(), 'blog-test-'));
   const contentDir = join(root, 'content'), outDir = join(root, 'out');
   await mkdir(join(contentDir, 'posts'), {recursive: true});
-  await mkdir(outDir);
+  await mkdir(join(outDir, 'en'), {recursive: true});
   await writeFile(join(contentDir, 'posts.json'), JSON.stringify(posts));
   for (const p of Array.isArray(posts) ? posts : []) {
     if (p && typeof p.slug === 'string' && !(p.slug in bodies)) await writeFile(join(contentDir, 'posts', `${p.slug}.html`), BODY);
@@ -42,6 +42,8 @@ async function site(posts, {files = {}, bodies = {}, covers = {}, home = '<main>
   for (const [name, text] of Object.entries(files)) await writeFile(join(contentDir, 'posts', name), text);
   await writeFile(join(outDir, 'index.html'), home);
   await writeFile(join(outDir, 'blog.html'), list);
+  await writeFile(join(outDir, 'en/index.html'), enHome);
+  await writeFile(join(outDir, 'en/blog.html'), enList);
   await writeFile(join(outDir, 'site.css'), '.ap-site{--paper:#fff;--ink:#000}');
   await writeFile(join(outDir, 'article.css'), '.ap-article{--panel:#fff;--sans:Arial}');
   const build = () => buildBlog({contentDir, outDir});
@@ -50,7 +52,7 @@ async function site(posts, {files = {}, bodies = {}, covers = {}, home = '<main>
 }
 const repo = fileURLToPath(new URL('..', import.meta.url));
 /** The file a public path serves in a built site. */
-const servedFile = path => ({'/': 'index.html', '/blog': 'blog.html'})[path] ?? (extname(path) ? path.slice(1) : `${path.slice(1)}.html`);
+const servedFile = path => ({'/': 'index.html', '/blog': 'blog.html', '/en': 'en/index.html', '/en/': 'en/index.html', '/en/blog/': 'en/blog.html'})[path] ?? (extname(path) ? path.slice(1) : `${path.slice(1)}.html`);
 /** Runs a repository script as a process in the given folder; it never rejects, so callers read the exit code. */
 const runScript = (script, cwd, env = {}) => new Promise(resolve => {
   execFile(process.execPath, [join(repo, 'scripts', script)], {cwd, env: {...process.env, ...env}}, (error, stdout, stderr) => resolve({code: error ? error.code : 0, stdout, stderr}));
@@ -87,6 +89,54 @@ test('the homepage shows the newest 4 posts, or all of them when there are fewer
   const one = await site([post('only')]);
   await one.build();
   assert.deepEqual(hrefs(await one.read('index.html'), 'ap-home-post'), ['/blog/only']);
+});
+
+test('the English homepage and Blog page list the posts with their English title and summary, the date reading "<date> · In Chinese", and a link to the Chinese post (blog::REQ-006)', async () => {
+  const s = await site([post('a', '2026-01-01'), post('b', '2026-05-01', {en: {title: 'B <b> & "q"', summary: 'About b'}}), post('c', '2026-03-01'), post('d', '2026-04-01'), post('e', '2026-02-01')]);
+  await s.build();
+  const home = await s.read('en/index.html'), list = await s.read('en/blog.html');
+  // The same newest 4 as the Chinese homepage, with the English words, and the English Blog page as its "All posts".
+  assert.deepEqual(hrefs(home, 'ap-home-post'), ['/blog/b', '/blog/d', '/blog/c', '/blog/e']);
+  assert.ok(home.includes('<a class="ap-home-post" href="/blog/b" hreflang="zh-CN"><time datetime="2026-05-01">2026-05-01 · In Chinese</time><h2>B &lt;b&gt; &amp; &quot;q&quot;</h2><p>About b</p></a>'), home);
+  assert.ok(home.includes('<a class="ap-home-post" href="/blog/d" hreflang="zh-CN"><time datetime="2026-04-01">2026-04-01 · In Chinese</time><h2>Title d</h2><p>Summary d</p></a>'), home);
+  assert.ok(home.includes('<section class="ap-home-blog" aria-label="Latest posts">'), home);
+  assert.ok(home.includes('<a class="ap-link ap-home-blog-all" href="/en/blog">All posts</a>'), home);
+  // The Blog page lists every post, newest leading, with the covers of the Chinese page.
+  assert.deepEqual(hrefs(list, 'ap-post-card'), ['/blog/b', '/blog/d', '/blog/c', '/blog/e', '/blog/a']);
+  assert.ok(list.includes('<article class="ap-post-lead"><a class="ap-post-card" href="/blog/b" hreflang="zh-CN"><div class="ap-post-cover"><img src="/blog/b.webp" alt=""></div><div class="ap-post-text"><time datetime="2026-05-01">2026-05-01 · In Chinese</time><h2>B &lt;b&gt; &amp; &quot;q&quot;</h2><p>About b</p></div></a></article>'), list);
+  for (const page of [home, list]) assert.doesNotMatch(page, /标题|摘要|blog:(home|list)/);
+  // The Chinese pages keep the Chinese words and the plain date.
+  const chinese = await s.read('index.html');
+  assert.ok(chinese.includes('<a class="ap-home-post" href="/blog/d"><time datetime="2026-04-01">2026-04-01</time><h2>标题 d</h2><p>摘要 d</p></a>'), chinese);
+  assert.doesNotMatch(await s.read('blog.html') + chinese, /In Chinese|Title|hreflang/);
+});
+
+// The Blog page's header: the heading and the introduction the spec pins, in each language (blog::US-002/AC-03).
+for (const [file, intro] of [
+  ['blog.html', '关于技术、作品，以及创造的过程。把值得留下的想法，慢慢写下来。'],
+  ['en/blog.html', 'On technology, my work, and the process of making things. Writing down, slowly, the ideas worth keeping.'],
+]) {
+  test(`${file} is headed "Blog", with the introduction the spec words for its language (blog::US-002/AC-03)`, async () => {
+    const header = (await readBuilt(file)).match(/<div class="ap-blog-head"><h1>([^<]*)<\/h1><p class="ap-blog-intro">([^<]*)<\/p><\/div>/);
+    assert.deepEqual(header?.slice(1), ['Blog', intro]);
+  });
+}
+
+// blog::CON-002: no page asks for a web font. A page asks for one by declaring it, by pointing a style at a font file, by preloading
+// one, or by linking a stylesheet from a font host; the real built pages and the stylesheets they link are read for all four.
+test('no built page, in either language, and no stylesheet it links asks for a web font (blog::CON-002)', async () => {
+  const outDir = await realSite();
+  const pages = (await readdir(outDir, {recursive: true})).filter(file => file.endsWith('.html')).sort();
+  assert.ok(pages.includes('en/blog.html') && pages.includes('blog.html') && pages.filter(page => page.startsWith('blog/')).length > 1, pages.join());
+  const asksForFont = text => [/@font-face\b/i, /url\(\s*["']?[^)"']*\.(?:woff2?|ttf|otf|eot)\b/i, /<link\b[^>]*\bas=["']?font\b/i, /(?:fonts\.googleapis|fonts\.gstatic|use\.typekit|fonts\.bunny)/i].filter(rule => rule.test(text)).map(String);
+  const sheets = new Set();
+  for (const page of pages) {
+    const html = await readBuilt(page);
+    assert.deepEqual(asksForFont(html), [], page);
+    for (const [, href] of html.matchAll(/<link\b[^>]*\brel="stylesheet"[^>]*\shref="([^"]+)"/g)) sheets.add(href);
+  }
+  assert.ok(sheets.has('/site.css') && sheets.has('/article.css'), [...sheets].join());
+  for (const href of sheets) assert.deepEqual(asksForFont(await readBuilt(href.replace(/^\//, ''))), [], href);
 });
 
 test('the Blog page lists every post newest first with the newest leading, and equal dates keep manifest order', async () => {
@@ -158,7 +208,8 @@ test('every post gets the shared look and no remote stylesheet', async () => {
   const sheets = [...page.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m => m[1]);
   assert.deepEqual(sheets, ['/site.css', '/article.css']);
   assert.match(page, /<script src="\/article\.js" defer><\/script>/);
-  assert.match(page, /<main class="ap-article ap-article-page">/);
+  // The larger view's two names for assistive technology are the page's, written where the shared script reads them (blog::US-004/AC-02).
+  assert.match(page, /<main class="ap-article ap-article-page" data-dialog-label="大图" data-open-label="查看大图">/);
   assert.match(page, /class="ap-article-body post-x"/);
 });
 
@@ -433,6 +484,15 @@ test('the build refuses a bad manifest, or a listed post without its body or its
     [[{...post('x'), title: ''}], /title/],
     [[{...post('x'), summary: '  '}], /summary/],
     [[{...post('x'), title: 5}], /title/],
+    // blog::REQ-004/AC-07: each message names the post and the English field that is missing or empty.
+    [[{...post('x'), en: undefined}], /"x".*en\.title/],
+    [[{...post('x'), en: 'Title'}], /"x".*en\.title/],
+    [[{...post('x'), en: {summary: 'S'}}], /"x".*en\.title/],
+    [[{...post('x'), en: {title: '', summary: 'S'}}], /"x".*en\.title/],
+    [[{...post('x'), en: {title: 5, summary: 'S'}}], /"x".*en\.title/],
+    [[{...post('x'), en: {title: 'T'}}], /"x".*en\.summary/],
+    [[{...post('x'), en: {title: 'T', summary: '  '}}], /"x".*en\.summary/],
+    [[post('fine'), {...post('later', '2026-10-01'), en: {title: 'T', summary: ''}}], /"later".*en\.summary/],
     [[post('x'), post('x')], /duplicate/i],
     [[post('x', '2026-11-05', {source: {label: 'a'}})], /source/],
     [[post('x', '2026-11-05', {source: {label: '', url: 'https://example.com/a'}})], /source/],
@@ -452,25 +512,27 @@ test('the build refuses a bad manifest, or a listed post without its body or its
 test('a template without its slot stops the build instead of dropping the list', async () => {
   await assert.rejects((await site([post('x')], {home: '<main></main>'})).build(), /index\.html/);
   await assert.rejects((await site([post('x')], {list: '<main></main>'})).build(), /blog\.html/);
+  await assert.rejects((await site([post('x')], {enHome: '<main></main>'})).build(), /en\/index\.html/);
+  await assert.rejects((await site([post('x')], {enList: '<main></main>'})).build(), /en\/blog\.html/);
 });
 
-test('deployment checks tell every blog page of the real site from the homepage and from the not-found page', async () => {
+test('deployment checks tell every blog page of the real site from every other page, and the two languages\' pages from each other', async () => {
   const outDir = await realSite();
   const posts = await readManifest(join(repo, 'content'));
   assert.ok(posts.length > 0);
   const checks = blogChecks(posts);
-  assert.deepEqual([...new Set(checks.map(check => check.path))], ['/', '/article.css', '/article.js', '/blog', ...posts.map(p => `/blog/${p.slug}`)]);
-  const homepage = await readFile(join(outDir, 'index.html'), 'utf8');
-  const notFound = await readFile(join(outDir, '404.html'), 'utf8');
+  assert.deepEqual([...new Set(checks.map(check => check.path))], ['/', '/en/', '/article.css', '/article.js', '/blog', '/en/blog', ...posts.map(p => `/blog/${p.slug}`)]);
+  // Each check's text is in the page it names and in no other page of the site: neither a not-found page nor the other language's version satisfies it.
+  const pages = ['index.html', 'blog.html', '404.html', 'en/index.html', 'en/blog.html', 'en/404.html'];
   for (const {path, contains} of checks) {
-    assert.ok((await readFile(join(outDir, servedFile(path)), 'utf8')).includes(contains), `${path} serves ${contains}`);
-    if (path !== '/') assert.equal(homepage.includes(contains), false, `the homepage satisfies ${path}`);
-    assert.equal(notFound.includes(contains), false, `the not-found page satisfies ${path}`);
+    const file = servedFile(path);
+    assert.ok((await readFile(join(outDir, file), 'utf8')).includes(contains), `${path} serves ${contains}`);
+    for (const other of pages.filter(page => page !== file)) assert.equal((await readFile(join(outDir, other), 'utf8')).includes(contains), false, `${other} satisfies ${path}`);
   }
   const list = await readFile(join(outDir, 'blog.html'), 'utf8');
   assert.doesNotMatch(list, /排版示例/);
   assert.equal([...list.matchAll(/<a class="ap-post-card"/g)].length, posts.length);
-  for (const page of [homepage, list]) assert.deepEqual([...page.matchAll(/<(h[1-6])\b/g)].map(m => m[1]).slice(0, 2), ['h1', 'h2']);
+  for (const page of ['index.html', 'blog.html', 'en/index.html', 'en/blog.html']) assert.deepEqual([...(await readFile(join(outDir, page), 'utf8')).matchAll(/<(h[1-6])\b/g)].map(m => m[1]).slice(0, 2), ['h1', 'h2'], page);
 });
 
 test('the build script writes the blog and ships every image the homepage and the not-found page show, and a refused post stops it', async () => {
@@ -498,13 +560,36 @@ test('the build script writes the blog and ships every image the homepage and th
 const CONTENT_TYPES = {'.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript',
   '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp'};
 /**
- * Serves a built site the way the host does: an address the site does not have gets the not-found page with status 404,
- * and every file carries the content type of its extension. Images come from the repository's assets folder, where the
- * build copies them from. `fallback` changes that answer: 'homepage' answers as a host without the not-found page does,
- * with the homepage and status 200; 'soft' sends the not-found page with status 200; 'bare' sends status 404 with no page.
+ * What the host answers for an address the site does not have, by how it is set up: `dir` is the folder the closest not-found page is
+ * looked for from, '' or 'en/'. 'not-found' is the host as it is, the closest not-found page with status 404; 'homepage' answers as a
+ * host without a not-found page does, with the homepage at the root and status 200; 'soft' sends the not-found page with status 200;
+ * 'root' sends the root's not-found page whatever the folder, as a host without the English page would; 'bare' sends status 404 with no page.
+ */
+const FALLBACKS = {
+  'not-found': dir => [`${dir}404.html`, 404],
+  homepage: () => ['index.html', 200],
+  soft: dir => [`${dir}404.html`, 200],
+  root: () => ['404.html', 404],
+  bare: () => [null, 404],
+};
+/** Where the host moves an address: one written with .html or a trailing slash goes to the plain address, and /en to /en/. */
+function redirectOf(path) {
+  if (path === '/en') return '/en/';
+  if (path === '/index.html' || path === '/en/index.html') return path.slice(0, -'index.html'.length);
+  if (path.endsWith('.html')) return path.slice(0, -'.html'.length);
+  if (path.length > 1 && path !== '/en/' && path.endsWith('/')) return path.slice(0, -1);
+  return null;
+}
+/**
+ * Serves a built site the way the host does: an address the site does not have gets the closest not-found page with status 404,
+ * an address with .html or a trailing slash is redirected, and every file carries the content type of its extension. Images come
+ * from the repository's assets folder, where the build copies them from. A test changes the host to see the check fail:
+ * `fallback` and `englishFallback` set the answer for a missing address outside and under /en/ (see FALLBACKS), `missing` lists paths the
+ * host does not have, `noRedirect` lists addresses it answers itself instead of redirecting, and `englishPost` makes it answer
+ * `/en/blog/<slug>` with the Chinese post.
  */
 async function startHost(outDir) {
-  const host = {missing: new Set(), fallback: 'not-found'};
+  const host = {missing: new Set(), fallback: 'not-found', englishFallback: 'not-found', noRedirect: new Set(), englishPost: false};
   const server = createServer(async (request, response) => {
     const path = new URL(request.url, 'http://host').pathname;
     if (path === '/deployment.json') return response.end('{"revision":"abc"}');
@@ -512,9 +597,12 @@ async function startHost(outDir) {
       response.writeHead(request.method === 'POST' ? 428 : 200, {'cache-control': 'no-store', 'set-cookie': 'visitor=1'});
       return response.end('{"ready":true}');
     }
-    const wanted = host.missing.has(path) ? null : servedFile(path);
+    const moved = host.noRedirect.has(path) ? null : redirectOf(path);
+    if (moved) { response.writeHead(308, {location: moved}); return response.end(); }
+    const english = path.startsWith('/en/');
+    const wanted = host.missing.has(path) ? null : servedFile(host.englishPost && path.startsWith('/en/blog/') && path !== '/en/blog/' ? path.slice('/en'.length) : path);
     const found = wanted && await readFile(join(wanted.startsWith('assets/') ? repo : outDir, wanted)).then(body => [wanted, body, 200], () => null);
-    const [fallbackFile, fallbackStatus] = {'not-found': ['404.html', 404], homepage: ['index.html', 200], soft: ['404.html', 200], bare: [null, 404]}[host.fallback];
+    const [fallbackFile, fallbackStatus] = FALLBACKS[english ? host.englishFallback : host.fallback](english ? 'en/' : '');
     const [file, body, status] = found || (fallbackFile ? [fallbackFile, await readFile(join(outDir, fallbackFile)), fallbackStatus] : ['bare.html', 'Not Found', fallbackStatus]);
     response.writeHead(status, {'content-type': CONTENT_TYPES[extname(file)]});
     response.end(body);
@@ -531,6 +619,8 @@ test('the deployment-check script passes on the whole site and fails when a host
     await mkdir(join(cwd, 'dist'));
     await writeFile(join(cwd, 'dist/deployment.json'), '{"revision":"abc"}');
     await cp(join(outDir, '404.html'), join(cwd, 'dist/404.html'));
+    await mkdir(join(cwd, 'dist/en'));
+    await cp(join(outDir, 'en/404.html'), join(cwd, 'dist/en/404.html'));
     await writeFile(join(cwd, 'deployment.config.json'), JSON.stringify({origins: hosts.map(host => host.origin)}));
     await cp(join(repo, 'content'), join(cwd, 'content'), {recursive: true});
     const whole = await runScript('smoke.mjs', cwd);
@@ -541,7 +631,9 @@ test('the deployment-check script passes on the whole site and fails when a host
       change(host);
       const run = await runScript('smoke.mjs', cwd, {SMOKE_DEADLINE_MS: '1'});
       host.missing.clear();
-      host.fallback = 'not-found';
+      host.noRedirect.clear();
+      host.fallback = host.englishFallback = 'not-found';
+      host.englishPost = false;
       assert.equal(run.code, 1, run.stdout);
       assert.match(run.stderr, new RegExp(host.origin.replaceAll('.', '\\.') + message), run.stderr);
     };
@@ -562,6 +654,19 @@ test('the deployment-check script passes on the whole site and fails when a host
     await failsOn(hosts[1], host => { host.fallback = 'soft'; }, '/\\S+ is not the not-found page');
     await failsOn(hosts[1], host => { host.fallback = 'bare'; }, '/\\S+ is not the not-found page');
     await failsOn(hosts[1], host => { host.fallback = 'homepage'; host.missing.add('/blog'); }, '/blog is missing');
+    // The English pages: each must answer, and its own text must be in it, not the Chinese page's (site-languages::REQ-001).
+    await failsOn(hosts[1], missing('/en/'), '/en/ answered 404');
+    await failsOn(hosts[0], missing('/en/blog'), '/en/blog answered 404');
+    await failsOn(hosts[1], host => { host.englishFallback = 'homepage'; host.missing.add('/en/'); }, '/en/ is missing');
+    await failsOn(hosts[1], host => { host.englishFallback = 'homepage'; host.missing.add('/en/blog'); }, '/en/blog is missing');
+    // An address under /en/ that the site does not have answers 404 with the English page, whichever way the host gets it wrong (site-languages::REQ-001/AC-04).
+    for (const mode of ['root', 'homepage', 'soft', 'bare']) await failsOn(hosts[1], host => { host.englishFallback = mode; }, '/en/\\S+ is not the English not-found page');
+    const [{slug}] = await readManifest(join(repo, 'content'));
+    await failsOn(hosts[1], host => { host.englishPost = true; }, `/en/blog/${slug} is not the English not-found page`);
+    // /en, /en/blog/ and /en/blog.html lead to the plain address (site-languages::REQ-001/AC-03).
+    await failsOn(hosts[1], host => host.noRedirect.add('/en'), '/en did not redirect to /en/');
+    await failsOn(hosts[0], host => host.noRedirect.add('/en/blog/'), '/en/blog/ did not redirect to /en/blog');
+    await failsOn(hosts[1], host => host.noRedirect.add('/en/blog.html'), '/en/blog.html did not redirect to /en/blog');
   } finally {
     for (const host of hosts) host.server.close();
   }

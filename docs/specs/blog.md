@@ -74,8 +74,6 @@ As a reader, I see every figure whole at the article's width, and I can open it 
 - blog::REQ-002/AC-04: Posts with the same date keep their manifest order.
 - blog::REQ-002/AC-05: A manifest entry carries the post's title and summary in Chinese and in English.
 
-  > Pending: every manifest entry carries an English title and summary.
-
 ### blog::REQ-003 Shared look applies to every post
 
 - blog::REQ-003/AC-01: A post with no stylesheet of its own gets the layout, type sizes, accent, contents, jump behavior, larger view, end-of-post cards, and the shared styles for tables, figures with captions, notes, lists, quotes, code blocks, and its sources block.
