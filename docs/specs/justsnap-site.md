@@ -291,9 +291,9 @@ Applies to: the page's text. It is set in the system font stack; the page loads 
   hundred releases. A release counts when its tag is `v` followed by a formal version. “Latest” in
   justsnap-site::REQ-001/AC-02 goes by publication date; the answer's order is not relied on. A release's DMG counts
   only once its upload has finished.
-- **The language toggle** carries a script that, before leaving, notes the element in view, its distance from the top of
-  the window and the current step; the other page puts the same element back at the same distance and makes the same
-  step current (justsnap-site::REQ-004/AC-04). The element is never the pinned showcase.
+- **Keeping the place across the language switch**: before leaving, the page notes the element in view, its distance from
+  the top of the window and the current step; the other page puts the same element back at the same distance and makes
+  the same step current (justsnap-site::REQ-004/AC-04). The element is never the pinned showcase.
 
 ## Out of Scope
 

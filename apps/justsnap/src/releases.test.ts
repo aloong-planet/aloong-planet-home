@@ -53,7 +53,7 @@ const DL = 'https://dl.justsnap.aloongplanet.com'
 const DMG = `${DL}/releases/v0.2.0/JustSnap-0.2.0-mac-arm64.dmg`
 
 describe('the pointer', () => {
-  test('a pointer as agentshed’s mirror script writes it: the version and its Apple silicon DMG on the download host', async () => {
+  test('a pointer as JustSnap’s mirror script writes it: the version and its Apple silicon DMG on the download host', async () => {
     const fetch = answering(200, POINTER)
     expect(await readPointer(fetch)).toEqual({ kind: 'formal', version: '0.2.0', url: DMG })
     expect(fetch.urls).toEqual([`${DL}/latest.json`])

@@ -87,7 +87,7 @@ into this repository with those sixteen files and nothing else. Its runbook is `
   two are the same file. What they show is checked by looking at them.
 - `test/apply-download.test.ts` and `test/init-download.test.ts` apply the download states to that build's pages, the
   second through the page's script with a fake network. The reads' tests answer through an injected fetch too, so no
-  test reaches the network; `test/fixtures/` holds the answers they use: the pointer as agentshed's mirror script writes it, which is the shape JustSnap's own `Scripts/mirror-release.mjs` writes,
+  test reaches the network; `test/fixtures/` holds the answers they use: the pointer as JustSnap's `Scripts/mirror-release.mjs` writes it,
   and a real-shaped releases answer from GitHub.
 - `test/language-switch.test.ts` moves a note between the two pages through a fake session storage.
 

@@ -1,5 +1,5 @@
 // The page's download script end to end (justsnap-site::REQ-001, CON-003, failures A2, A3, A4, A7): the served page, a
-// fake fetch standing in for the network (the pointer as agentshed's mirror script writes it, GitHub's real-shaped list),
+// fake fetch standing in for the network (the pointer as JustSnap's mirror script writes it, GitHub's real-shaped list),
 // and the state the page ends in. Which URLs were asked for is asserted: CON-003 makes the two reads the requirement.
 //
 // Keeping the visitor's place when a state lands while they are scrolled (failure A5) is checked at the end of this
