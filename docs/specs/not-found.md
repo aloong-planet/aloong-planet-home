@@ -3,7 +3,7 @@
 > Related: [blog](blog.md) · [visitor total](visitor-counter.md) · [site languages](site-languages.md) · [site appearance](site-appearance.md)
 
 ## Problem Statement
-A visitor who opens a mistyped link, or the address of a post that has been removed, sees the homepage with no sign that the page does not exist. Every address on the site answers with status 200, so nothing tells the visitor, a search engine, or a check that the page is missing.
+A visitor who opens a mistyped link, or the address of a post that has been removed, should be told that the page is not there, not shown the homepage as if it were. A search engine or a check should get the answer that the page is missing, not a copy of the homepage with status 200.
 
 ## Solution
 Any address the site does not have shows a not-found page with status 404. The page keeps the site's top navigation and shows the homepage's golden retriever with a puzzled, searching face, a large "404", a short explanation, and two buttons back to the homepage and the Blog.

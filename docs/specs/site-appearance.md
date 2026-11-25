@@ -3,7 +3,7 @@
 > Related: [homepage](homepage.md) · [blog](blog.md) · [not-found page](not-found.md) · [Apps and Agents menus](nav-menus.md) · [site languages](site-languages.md)
 
 ## Problem Statement
-A visitor whose system is set to a dark appearance gets the site in bright colours, while each app site it links to follows the system into dark.
+A visitor whose system is set to a dark appearance should find every page of the site in the dark appearance too, as each app site it links to already is, rather than a page of bright colours.
 
 ## Solution
 Every page of the site follows the system's light or dark appearance. Diagrams and pictures keep their own light colours in both.
