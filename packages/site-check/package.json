@@ -7,7 +7,7 @@
     "check": "node src/check-sites.mjs"
   },
   "dependencies": {
-    "playwright": "1.62.0"
+    "playwright": "1.65.0"
   },
   "engines": {
     "node": ">=26.7.0"
