@@ -11,12 +11,13 @@ test('each pattern of routing.json routes a real path to the scopes written here
   // [a tracked path, the scopes it must select]. Take each path from the repository's tracked tree, and write
   // the scopes as literals: computing them from routing.json would only repeat it.
   const cases = [
-    ['package.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit']],
-    ['pnpm-lock.yaml', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit']],
-    ['pnpm-workspace.yaml', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit']],
-    ['packages/.gitkeep', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit']],
-    ['packages/site-check/sites/agentshed.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit']],
-    ['packages/site-kit/src/Icon.astro', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit']],
+    ['package.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
+    ['pnpm-lock.yaml', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
+    ['pnpm-workspace.yaml', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
+    ['packages/.gitkeep', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
+    ['packages/site-check/sites/agentshed.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
+    ['packages/site-kit/src/Icon.astro', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
+    ['packages/pages-deploy/src/deploy.mjs', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
     ['README.md', []],
     ['AGENTS.md', []],
     ['docs/agents/docs-layout.md', []],
@@ -56,7 +57,7 @@ test('each pattern of routing.json routes a real path to the scopes written here
     ['apps/transfer/src/pages/index.astro', ['transfer']],
     ['apps/transfer/public/screenshots/main.png', ['transfer']],
     ['apps/transfer/README.md', ['transfer']],
-    ['packages/site-check/sites/transfer.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit']],
+    ['packages/site-check/sites/transfer.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
     ['docs/specs/transfer-site.md', []]
   ]
   const hit = new Set()
@@ -89,6 +90,7 @@ const gateVerdict = (paths, tried, triedResult) => {
     'justsnap-checks': siteChecks('justsnap'),
     'transfer-checks': siteChecks('transfer'),
     'site-kit-checks': siteChecks('site_kit'),
+    'pages-deploy-checks': siteChecks('pages_deploy'),
     'width-check': { result: 'success' }
   }
   needs[tried] = { result: triedResult }
@@ -161,5 +163,18 @@ test('a change to the shared site code requires site-kit-checks beside all three
   assert.deepEqual(gateVerdict([kit], 'width-check', 'skipped'), ['width-check: skipped (selected)'])
   for (const path of ['apps/agentshed/src/pages/index.astro', 'apps/justsnap/src/pages/index.astro', 'apps/transfer/src/pages/index.astro', 'apps/home/public/index.html', 'docs/specs/app-sites.md']) {
     assert.deepEqual(gateVerdict([path], 'site-kit-checks', 'skipped'), [], path)
+  }
+})
+
+test('a change to the shared deploy command requires pages-deploy-checks beside all three sites\' checks, and a change to a site, the homepage or a document does not require it', () => {
+  const command = 'packages/pages-deploy/src/deploy.mjs'
+  assert.deepEqual(gateVerdict([command], 'pages-deploy-checks', 'failure'), ['pages-deploy-checks: failure (selected)'])
+  assert.deepEqual(gateVerdict([command], 'pages-deploy-checks', 'skipped'), ['pages-deploy-checks: skipped (selected)'])
+  // A change under packages/ selects every scope, so each site's checks run for the same change; the tests of the sites that deploy with the command check their wiring to it
+  assert.deepEqual(gateVerdict([command], 'agentshed-checks', 'skipped'), ['agentshed-checks: skipped (selected)'])
+  assert.deepEqual(gateVerdict([command], 'justsnap-checks', 'skipped'), ['justsnap-checks: skipped (selected)'])
+  assert.deepEqual(gateVerdict([command], 'transfer-checks', 'skipped'), ['transfer-checks: skipped (selected)'])
+  for (const path of ['apps/agentshed/deployment.config.json', 'apps/justsnap/src/pages/index.astro', 'apps/transfer/src/pages/index.astro', 'apps/home/public/index.html', 'docs/ops/deployment.md']) {
+    assert.deepEqual(gateVerdict([path], 'pages-deploy-checks', 'skipped'), [], path)
   }
 })

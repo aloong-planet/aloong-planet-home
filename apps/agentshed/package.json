@@ -12,9 +12,10 @@
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
     "test:lint-rule": "node --test test/eslint-browser-rule.test.mjs",
-    "cf:deploy": "node scripts/deploy.mjs"
+    "cf:deploy": "pages-deploy"
   },
   "dependencies": {
+    "@aloong-planet/pages-deploy": "workspace:*",
     "@aloong-planet/site-kit": "workspace:*",
     "astro": "7.4.0"
   },

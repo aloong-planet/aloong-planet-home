@@ -1,38 +1,38 @@
-// The script that publishes the site to Cloudflare Pages (app-sites::REQ-003/AC-01, app-sites::REQ-001), with the
-// process boundary replaced: no command here reaches Cloudflare, git or a build. The script runs after this
-// repository's checks have passed, so it publishes only a clean checkout of one commit and then confirms that
-// the deployment it created is the production deployment of that commit.
+// The command that publishes an app site to Cloudflare Pages (app-sites::REQ-003/AC-01, app-sites::REQ-001), with the
+// process boundary replaced: no command here reaches Cloudflare, git or a build. It runs after this repository's checks
+// have passed, so it publishes only a clean checkout of one commit and then confirms that the deployment it created is
+// the production deployment of that commit. The app sites deployed from here run this same command; what differs per
+// site is its deployment.config.json (the account, the Pages project, the files its build must hold).
 //
-// Not covered here, because it needs a real Cloudflare project and a real token: that Wrangler's upload is accepted
-// by the `justsnap` project and that the token may use it. The first run of the Deploy workflow's JustSnap job is that
-// check; a failure of either shows as a failed run.
+// Not covered here, because it needs a real Cloudflare project and a real token: that Wrangler's upload is accepted by
+// a site's project and that the token may use it. The first deploy run of a site after its project's Git builds are
+// turned off is that check; a failure of either shows as a failed run.
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
-import { deploy } from '../scripts/deploy.mjs'
+import { deploy } from '../src/deploy.mjs'
 
 const REV = 'a1b2c3d4e5f60718293a4b5c6d7e8f9012345678'
 const ID = '3f2a6c1e-9b8d-4e7f-a0c5-1d2e3f4a5b6c'
-// The project's own address, as Cloudflare names it: the project is called `justsnap` but `justsnap.pages.dev` is taken.
-const URL_OF_DEPLOYMENT = 'https://3f2a6c1e.justsnap-ceo.pages.dev'
-const config = { accountId: 'test-account', project: 'justsnap' }
+const URL_OF_DEPLOYMENT = 'https://3f2a6c1e.example.pages.dev'
+const config = { accountId: 'test-account', project: 'example', requiredFiles: ['index.html', 'zh/index.html'] }
 
 const BUILD = 'pnpm run build'
-const UPLOAD = `pnpm exec wrangler pages deploy dist --project-name justsnap --branch main --commit-hash ${REV} --commit-dirty=false`
-const LIST = 'pnpm exec wrangler pages deployment list --project-name justsnap --json'
+const UPLOAD = `pnpm exec wrangler pages deploy dist --project-name example --branch main --commit-hash ${REV} --commit-dirty=false`
+const LIST = 'pnpm exec wrangler pages deployment list --project-name example --json'
 
-/** What Wrangler writes to its output file for an upload (one JSON object per line), the entry the script reads */
+/** What Wrangler writes to its output file for an upload (one JSON object per line), the entry the command reads */
 const uploaded = (id = ID) =>
   [
     { type: 'wrangler-session', version: 1, wrangler_version: '4.156.1' },
-    { type: 'pages-deploy', version: 1, pages_project: 'justsnap', deployment_id: id, url: URL_OF_DEPLOYMENT },
+    { type: 'pages-deploy', version: 1, pages_project: 'example', deployment_id: id, url: URL_OF_DEPLOYMENT },
     {
       type: 'pages-deploy-detailed',
       version: 1,
-      pages_project: 'justsnap',
+      pages_project: 'example',
       deployment_id: id,
       url: URL_OF_DEPLOYMENT,
       environment: 'production',
@@ -51,7 +51,7 @@ const row = (over: Record<string, string> = {}) => ({
   Source: REV.slice(0, 7),
   Deployment: URL_OF_DEPLOYMENT,
   Status: '3 seconds ago',
-  Build: `https://dash.cloudflare.com/test-account/pages/view/justsnap/${ID}`,
+  Build: `https://dash.cloudflare.com/test-account/pages/view/example/${ID}`,
   ...over
 })
 const older = row({ Id: '64c34c98-71d5-4bd7-87f2-ce00a6e5e6bd', Source: 'ba48d34', Status: 'Idle' })
@@ -71,7 +71,7 @@ function boundary({
   fail = '',
   dirty = false,
   head = REV,
-  files = ['index.html', 'en/index.html'],
+  files = ['index.html', 'zh/index.html'],
   output = uploaded(),
   list = [row(), older]
 }: Options = {}) {
@@ -98,7 +98,7 @@ function boundary({
   }
 }
 
-describe('publishing the site', () => {
+describe('publishing a site', () => {
   test('builds one clean commit, uploads it as the production deployment and confirms it in the deployment list', () => {
     const run = boundary()
     const summary = deploy({ config, ...run })
@@ -107,7 +107,7 @@ describe('publishing the site', () => {
       'git rev-parse HEAD',
       BUILD,
       'exists index.html',
-      'exists en/index.html',
+      'exists zh/index.html',
       UPLOAD,
       'read wrangler output',
       LIST
@@ -127,10 +127,17 @@ describe('publishing the site', () => {
     expect(run.calls).toEqual(['git status --porcelain', 'git rev-parse HEAD'])
   })
 
-  test.each(['index.html', 'en/index.html'])('a build without dist/%s is not uploaded', (missing) => {
-    const run = boundary({ files: ['index.html', 'en/index.html'].filter((file) => file !== missing) })
+  test.each(['index.html', 'zh/index.html'])('a build without dist/%s is not uploaded', (missing) => {
+    const run = boundary({ files: ['index.html', 'zh/index.html'].filter((file) => file !== missing) })
     expect(() => deploy({ config, ...run })).toThrow(new RegExp(`dist/${missing}`))
     expect(run.calls).not.toContain(UPLOAD)
+  })
+
+  test("the files the build must hold are the ones the site's configuration names", () => {
+    const run = boundary({ files: ['index.html', 'en/index.html'] })
+    const summary = deploy({ config: { ...config, requiredFiles: ['index.html', 'en/index.html'] }, ...run })
+    expect(run.calls.filter((call) => call.startsWith('exists '))).toEqual(['exists index.html', 'exists en/index.html'])
+    expect(summary).toMatch(/^Deployed /)
   })
 
   test.each([BUILD, UPLOAD, LIST])('a failing command stops the run at %s', (failing) => {
@@ -167,58 +174,76 @@ describe('publishing the site', () => {
     expect(run.calls).toEqual(['git status --porcelain', 'git rev-parse HEAD'])
   })
 
-  test.each([{ accountId: '' }, { project: '' }])('a target missing %j is rejected before any command', (blank) => {
+  test.each<Record<string, unknown>>([
+    { accountId: '' },
+    { project: '' },
+    { requiredFiles: undefined },
+    { requiredFiles: [] },
+    { requiredFiles: ['index.html', ''] },
+    { requiredFiles: ['index.html', 3] },
+    { requiredFiles: 'index.html' }
+  ])('a target with %j is rejected before any command', (blank) => {
     const run = boundary()
     expect(() => deploy({ config: { ...config, ...blank }, ...run })).toThrow(/deployment target/)
     expect(run.calls).toEqual([])
   })
 })
 
-// The main block of scripts/deploy.mjs, run as the package scripts run it: from the package directory.
-const root = fileURLToPath(new URL('..', import.meta.url))
-const script = fileURLToPath(new URL('../scripts/deploy.mjs', import.meta.url))
-const runScript = (args: string[], env: Record<string, string> = {}) =>
-  spawnSync(process.execPath, [script, ...args], { cwd: root, encoding: 'utf8', env: { ...process.env, ...env } })
+// The command itself, run as pnpm runs a package's script: from the site's package directory, which holds its package.json
+// and deployment.config.json.
+const cli = fileURLToPath(new URL('../src/cli.mjs', import.meta.url))
+const PACKAGE = { name: '@example/site', scripts: { 'cf:deploy': 'pages-deploy' } }
 
-describe('the deploy script as a command', () => {
-  test("its usage line names this package's cf:deploy script, as pnpm runs it from the repository root", () => {
-    const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { name: string; scripts: Record<string, string> }
-    expect(Object.keys(pkg.scripts)).toContain('cf:deploy')
-    const run = runScript(['--no-such-flag'])
-    expect(run.status).toBe(1)
-    expect(run.stderr.trim()).toBe(`Usage: pnpm --filter ${pkg.name} run cf:deploy [--dry-run]`)
-  })
+/** A directory laid out like a site's package: its package.json and deployment.config.json, and nothing else */
+function inSitePackage() {
+  const work = mkdtempSync(join(tmpdir(), 'pages-deploy-test-'))
+  writeFileSync(join(work, 'package.json'), JSON.stringify(PACKAGE))
+  writeFileSync(join(work, 'deployment.config.json'), JSON.stringify(config))
+  return work
+}
 
-  // The script confirms a deployment in the project it was told to upload to, so a target that named another site's
-  // project would be uploaded to and confirmed all the same: this file is the only thing that says where this site goes.
-  test("deployment.config.json targets this site's Pages project, in a Cloudflare account", () => {
-    const target = JSON.parse(readFileSync(join(root, 'deployment.config.json'), 'utf8')) as { accountId: string; project: string }
-    expect(target.project).toBe('justsnap')
-    expect(target.accountId).toMatch(/^[0-9a-f]{32}$/)
+describe('the deploy command', () => {
+  test("its usage line names the site package's cf:deploy script, as pnpm runs it from the repository root", () => {
+    const work = inSitePackage()
+    try {
+      const run = spawnSync(process.execPath, [cli, '--no-such-flag'], { cwd: work, encoding: 'utf8' })
+      expect(run.status).toBe(1)
+      expect(run.stderr.trim()).toBe(`Usage: pnpm --filter ${PACKAGE.name} run cf:deploy [--dry-run]`)
+    } finally {
+      rmSync(work, { recursive: true, force: true })
+    }
   })
 
   test('an account in the environment other than the one in deployment.config.json stops it before any command', () => {
-    const run = runScript(['--dry-run'], { CLOUDFLARE_ACCOUNT_ID: 'another-account' })
-    expect(run.status).toBe(1)
-    expect(run.stdout).toBe('')
-    expect(run.stderr.trim()).toBe('CLOUDFLARE_ACCOUNT_ID differs from deployment.config.json.')
+    const work = inSitePackage()
+    try {
+      const run = spawnSync(process.execPath, [cli, '--dry-run'], {
+        cwd: work,
+        encoding: 'utf8',
+        env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: 'another-account' }
+      })
+      expect(run.status).toBe(1)
+      expect(run.stdout).toBe('')
+      expect(run.stderr.trim()).toBe('CLOUDFLARE_ACCOUNT_ID differs from deployment.config.json.')
+    } finally {
+      rmSync(work, { recursive: true, force: true })
+    }
   })
 })
 
 // The whole command with `git` and `pnpm` replaced by two small shell programs placed first on PATH: the real process
-// runner, the environment it hands Wrangler, the output file, and the temporary directory the script makes and removes.
+// runner, the environment it hands Wrangler, the output file, and the temporary directory the command makes and removes.
 // The fake pnpm writes the output file Wrangler would write only when it is told where, as Wrangler is.
 const shell = (lines: string[]) => `#!/bin/sh\n${lines.join('\n')}\n`
 
 function inFakeCheckout() {
-  const work = mkdtempSync(join(tmpdir(), 'justsnap-deploy-test-'))
+  const work = inSitePackage()
   const bin = join(work, 'bin')
   const scratch = join(work, 'scratch')
   mkdirSync(bin)
   mkdirSync(scratch)
   const log = join(work, 'calls.log')
   const write = (path: string, text: string, mode = 0o644) => writeFileSync(path, text, { mode })
-  write(join(work, 'deployment.config.json'), JSON.stringify(config))
   write(
     join(bin, 'git'),
     shell([
@@ -237,7 +262,7 @@ function inFakeCheckout() {
       'case "$*" in',
       '  "run build")',
       '    [ "$FAKE_FAIL" = build ] && exit 1',
-      '    mkdir -p dist/en && : > dist/index.html && : > dist/en/index.html ;;',
+      '    mkdir -p dist/zh && : > dist/index.html && : > dist/zh/index.html ;;',
       '  "exec wrangler pages deploy "*)',
       '    [ "$FAKE_FAIL" = upload ] && exit 1',
       '    [ -n "$WRANGLER_OUTPUT_FILE_PATH" ] || { echo "Wrangler was not told where to write its output" >&2; exit 3; }',
@@ -254,7 +279,7 @@ function inFakeCheckout() {
     scratch,
     calls: () => (existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n') : []),
     run: (args: string[] = [], fail = '') =>
-      spawnSync(process.execPath, [script, ...args], {
+      spawnSync(process.execPath, [cli, ...args], {
         cwd: work,
         encoding: 'utf8',
         env: { ...process.env, PATH: `${bin}:${process.env.PATH ?? ''}`, TMPDIR: scratch, FAKE_LOG: log, FAKE_FAIL: fail, CLOUDFLARE_ACCOUNT_ID: '' }
@@ -263,7 +288,7 @@ function inFakeCheckout() {
   }
 }
 
-describe('the deploy script run against a stand-in git and pnpm', () => {
+describe('the deploy command run against a stand-in git and pnpm', () => {
   test('builds, uploads with the account, the output file and the CI setting Wrangler needs, and removes its temporary directory', () => {
     const checkout = inFakeCheckout()
     try {

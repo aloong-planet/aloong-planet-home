@@ -10,9 +10,10 @@
     "preview": "astro preview",
     "check": "astro check",
     "test": "vitest run",
-    "cf:deploy": "node scripts/deploy.mjs"
+    "cf:deploy": "pages-deploy"
   },
   "dependencies": {
+    "@aloong-planet/pages-deploy": "workspace:*",
     "@aloong-planet/site-kit": "workspace:*",
     "astro": "7.4.0"
   },

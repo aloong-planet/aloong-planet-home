@@ -4,7 +4,8 @@
     "agentshed": ["agentshed-checks", "width-check"],
     "justsnap": ["justsnap-checks", "width-check"],
     "transfer": ["transfer-checks", "width-check"],
-    "site_kit": ["site-kit-checks"]
+    "site_kit": ["site-kit-checks"],
+    "pages_deploy": ["pages-deploy-checks"]
   },
   "rules": [
     {
