@@ -311,8 +311,7 @@ function paint(el: Element): string[] {
   return ['background-color', 'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color'].map((p) => style.getPropertyValue(p))
 }
 
-// agentshed-site::REQ-006 (The palette: the GitHub button beside Download is a secondary button, the card ground with the
-// strong line, and the accent border on the soft accent ground on hover)
+// agentshed-site::REQ-002/AC-06
 describe('the GitHub button beside Download has the card ground and the strong line, and on hover the accent border on the soft accent ground', () => {
   const cases = LOCALES.flatMap((locale) => SCHEMES.map((colorScheme) => ({ name: `${locale}/${colorScheme}`, locale, colorScheme })))
   test.for(cases)('$name', { timeout: CASE_LIMIT }, async ({ locale, colorScheme }, { expect }) => {
@@ -353,7 +352,7 @@ const WARNED = [
   { part: "the note beneath the hero's button", selector: '.hero .cta .beta-note', copy: 'note', paint: { color: '--warn-fg' } }
 ] as const
 
-// agentshed-site::REQ-006 (The palette: the pre-release version's pill and note use the app's warning pair)
+// agentshed-site::REQ-002/AC-07
 describe('in the test state the pills have the warning ground and the warning text, and the note beneath the button the warning text', () => {
   const cases = LOCALES.flatMap((locale) => SCHEMES.map((colorScheme) => ({ name: `${locale}/${colorScheme}`, locale, colorScheme })))
   test.for(cases)('$name', { timeout: CASE_LIMIT }, async ({ locale, colorScheme }, { expect }) => {
