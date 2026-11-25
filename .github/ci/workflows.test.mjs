@@ -225,7 +225,7 @@ test('pages-deploy-checks ends at a time limit of 10 minutes', () => {
   assert.match(jobs(ci).get('pages-deploy-checks').join('\n'), /^ {4}timeout-minutes: 10\s*$/m)
 })
 
-// The type check is the only check of the command's own code: each site's tests reach it through a spawned process
+// The type check is the only check of the command's own code: the tests of each site that deploys with it reach it through a spawned process
 test('pages-deploy-checks runs the type check and the tests of @aloong-planet/pages-deploy', () => {
   assert.deepEqual(runCommands('pages-deploy-checks'), [
     'pnpm install --frozen-lockfile',

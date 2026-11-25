@@ -1,8 +1,8 @@
 // The command that publishes an app site to Cloudflare Pages (app-sites::REQ-003/AC-01, app-sites::REQ-001), with the
 // process boundary replaced: no command here reaches Cloudflare, git or a build. It runs after this repository's checks
 // have passed, so it publishes only a clean checkout of one commit and then confirms that the deployment it created is
-// the production deployment of that commit. Every site runs this same command; what differs per site is its
-// deployment.config.json (the account, the Pages project, the files its build must hold).
+// the production deployment of that commit. The app sites deployed from here run this same command; what differs per
+// site is its deployment.config.json (the account, the Pages project, the files its build must hold).
 //
 // Not covered here, because it needs a real Cloudflare project and a real token: that Wrangler's upload is accepted by
 // a site's project and that the token may use it. The first deploy run of a site after its project's Git builds are

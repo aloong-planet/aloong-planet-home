@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "The `cf:deploy` command of the app sites: builds the checked-out commit, uploads dist/ to the site's Cloudflare Pages project and confirms the deployment (source only, nothing to build)",
+  "description": "The `cf:deploy` command of the app sites deployed from here: builds the checked-out commit, uploads dist/ to the site's Cloudflare Pages project and confirms the deployment (source only, nothing to build)",
   "exports": {
     ".": "./src/deploy.mjs"
   },

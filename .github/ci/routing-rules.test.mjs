@@ -170,7 +170,7 @@ test('a change to the shared deploy command requires pages-deploy-checks beside 
   const command = 'packages/pages-deploy/src/deploy.mjs'
   assert.deepEqual(gateVerdict([command], 'pages-deploy-checks', 'failure'), ['pages-deploy-checks: failure (selected)'])
   assert.deepEqual(gateVerdict([command], 'pages-deploy-checks', 'skipped'), ['pages-deploy-checks: skipped (selected)'])
-  // Every site's deploy job runs the command, and each site's own tests check the wiring to it, so each site's checks run for the same change
+  // A change under packages/ selects every scope, so each site's checks run for the same change; the tests of the sites that deploy with the command check their wiring to it
   assert.deepEqual(gateVerdict([command], 'agentshed-checks', 'skipped'), ['agentshed-checks: skipped (selected)'])
   assert.deepEqual(gateVerdict([command], 'justsnap-checks', 'skipped'), ['justsnap-checks: skipped (selected)'])
   assert.deepEqual(gateVerdict([command], 'transfer-checks', 'skipped'), ['transfer-checks: skipped (selected)'])

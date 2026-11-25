@@ -1,6 +1,6 @@
 // This site's side of its deployment (app-sites::REQ-003/AC-01, app-sites::REQ-001): the configuration the shared
 // `pages-deploy` command reads, and the script that runs it. The command's own cases (what it builds, uploads and confirms,
-// and how it fails) are in packages/pages-deploy/tests/deploy.test.ts and run once for every site.
+// and how it fails) are in packages/pages-deploy/tests/deploy.test.ts and run once, not once per site.
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'

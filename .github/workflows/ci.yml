@@ -164,9 +164,10 @@ jobs:
       - run: pnpm --filter @aloong-planet/site-kit run check
       - run: pnpm --filter @aloong-planet/site-kit run test
 
-  # The command every site's `cf:deploy` script runs, packages/pages-deploy: listed under the `pages_deploy` scope in
-  # routing.json, which only a change that selects every scope selects (see site-kit-checks above), so every site's checks
-  # run beside this job and test the site's own wiring to the command. The type check and the package's own tests are its
+  # The command that the `cf:deploy` script of each app site deployed from here runs, packages/pages-deploy: listed under
+  # the `pages_deploy` scope in routing.json, which only a change that selects every scope selects (see site-kit-checks
+  # above), so every site's checks run beside this job, and those of the sites that deploy with it test their wiring to the
+  # command. The type check and the package's own tests are its
   # scripts. The tests replace the command's process boundary (git, pnpm, Wrangler), so no browser is installed, no site is
   # built and no Cloudflare credential is used.
   pages-deploy-checks:
