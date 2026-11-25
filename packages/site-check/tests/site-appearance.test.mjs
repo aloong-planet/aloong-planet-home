@@ -186,7 +186,8 @@ function readImages(backed) {
 // file is not text to the page and is not read.
 //
 // `accents` are the colours (as the browser writes them) of the post accent: text in one of them is held to 5:1, all other text to 4.5:1.
-// Returns one row per text node: its first words, the element, the ratio it reached and the lowest it may reach, and the colours.
+// Returns one row per text node: its first words, the element, the ratio it reached and the lowest it may reach, and the colours,
+// and whether it is an item of the language switch (the page's own language, marked, or a link to another).
 function measureTexts(accents) {
   const parse = (value) => {
     const found = /^rgba?\(([^)]+)\)$/.exec(value.trim()) ?? /^color\(srgb ([^)]+)\)$/.exec(value.trim())
@@ -296,6 +297,9 @@ function measureTexts(accents) {
       minimum,
       text: rgb(shown),
       ground: rgb(ground),
+      inSwitch: Boolean(el.closest('.ap-lang')),
+      current: el.hasAttribute('aria-current'),
+      link: Boolean(el.closest('a')),
     })
   }
   takeAll.remove()
@@ -339,6 +343,19 @@ describe('site-appearance on the built homepage site', { timeout: 600_000 }, () 
     assert.deepEqual(unclassified, [], 'a page that is none of the homepage, the Blog page, a post page or the not-found page')
     assert.deepEqual([...new Set(pages.map((entry) => entry.kind))].sort(), KINDS.map((kind) => kind.name).sort())
     assert.ok(pages.every((entry) => entry.lang), 'every page declares its language')
+  })
+
+  // site-appearance::REQ-001 holds on the pages of every language the site serves (site-languages::REQ-001), the homepage, the Blog page and
+  // the not-found page in each. The pages are found on disk and the languages are the ones they declare, so this is only a floor: a build
+  // that lost a language's pages, or a classifier that stopped recognising them, would leave every case below measuring the other
+  // language alone and still pass. A post page has a Chinese version only, so none is asked for in English.
+  test('the homepage, the Blog page and the not-found page are each read in Chinese and in English', () => {
+    const read = [...new Set(pages.map((entry) => `${entry.kind} (${entry.lang})`))].sort()
+    for (const lang of ['zh-CN', 'en']) {
+      for (const kind of ['homepage', 'Blog page', 'not-found page']) {
+        assert.ok(read.includes(`${kind} (${lang})`), `no ${kind} in ${lang} was read; the pages read are ${read.join(', ')}`)
+      }
+    }
   })
 
   test('every page follows the system from light to dark and back without a reload, at both widths, and offers no switch', { timeout: TEST_LIMIT * 10 }, async (t) => {
@@ -484,6 +501,15 @@ describe('site-appearance on the built homepage site', { timeout: 600_000 }, () 
             })
             const rows = await page.evaluate(measureTexts, accents)
             assert.ok(rows.length >= 5, `only ${rows.length} texts were read`)
+            // site-appearance::QR-001/AC-01 on the language switch (site-languages::REQ-003): its items are among the texts read below, the
+            // page's own language as marked text and another as a link, so a page whose header did not mount cannot pass with the switch
+            // unmeasured; the ratio check below then holds both to their minimum.
+            const items = rows.filter((row) => row.inSwitch)
+            const own = items.filter((row) => row.current)
+            const others = items.filter((row) => !row.current)
+            assert.equal(own.length, 1, `the language switch holds ${own.length} items marked as the page's language (${items.map((row) => row.words).join(', ')})`)
+            assert.ok(!own[0].link, 'the page\'s own language is marked text, not a link')
+            assert.ok(others.length >= 1 && others.every((row) => row.link), `the language switch's other items are links (${others.map((row) => row.words).join(', ')})`)
             const unknown = rows.filter((row) => !row.known).map((row) => `${row.element} "${row.words}"`)
             assert.deepEqual(unknown, [], 'a drawing text whose ground the browser could not name')
             const below = rows.filter((row) => row.ratio < row.minimum)
