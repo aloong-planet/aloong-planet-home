@@ -248,14 +248,16 @@ export const readManifest = async contentDir => JSON.parse(await readFile(join(c
 
 /**
  * What each public blog path must serve; deployment checks request these.
- * Each has its own expected text, so neither the not-found page nor another page passes for it.
+ * Each has its own expected text, so neither the not-found page nor another page passes for it, nor does the page of the other
+ * language: a list's check carries what only that language's list holds (its heading for assistive technology, and on the
+ * English lists the language of each link).
  */
 export const blogChecks = posts => [
-  {path: '/', contains: 'class="ap-home-blog"'},
+  ...LANGUAGE_LIST.map(lang => ({path: LANGUAGES[lang].home, contains: `<section class="ap-home-blog" aria-label="${escapeHtml(ui[lang].blog.latest)}">`})),
   {path: '/article.css', contains: '.ap-article-page'},
   {path: '/article.js', contains: '.ap-toc'},
   ...posts.flatMap(post => [
-    {path: '/blog', contains: `class="ap-post-card" href="/blog/${post.slug}"`},
+    ...LANGUAGE_LIST.map(lang => ({path: LANGUAGES[lang].blog, contains: `class="ap-post-card" href="/blog/${post.slug}"${hrefLanguage(lang)}><div`})),
     {path: `/blog/${post.slug}`, contains: `class="ap-article-body post-${post.slug}"`},
   ]),
 ];
