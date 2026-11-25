@@ -1,11 +1,10 @@
 // Turns content/ into the blog: validates every post, writes static post pages, fills the homepage and Blog slots.
 import {access, copyFile, mkdir, readFile, writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
+import {LANGUAGES, ORIGIN, POST_LANGUAGE, postUi, ui} from '../public/ui.js';
+import {HOME_SLOT, LANGUAGE_LIST, LIST_SLOT, pageFile} from './pages.mjs';
 
 const HOME_POSTS = 4;
-const ORIGIN = 'https://aloongplanet.com';
-const HOME_SLOT = '<!-- blog:home -->';
-const LIST_SLOT = '<!-- blog:list -->';
 const OWN_SITE = /^(?:https?:)?\/\/(?:www\.)?aloongplanet\.com(?:[/?#]|$)/i;
 
 const escapeHtml = text => text.replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c]);
@@ -27,6 +26,8 @@ function checkManifest(posts) {
     if (seen.has(slug)) refuse(slug, 'duplicate slug.');
     seen.add(slug);
     for (const field of ['title', 'summary']) if (!filled(post[field])) refuse(slug, `${field} must not be empty.`);
+    // The English lists show the post's English title and summary in place of the Chinese ones (blog::REQ-006).
+    for (const field of ['title', 'summary']) if (!filled(post.en?.[field])) refuse(slug, `en.${field} must not be empty: every post carries its English title and summary.`);
     const date = post.date;
     const real = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(Date.parse(date)) && new Date(date).toISOString().slice(0, 10) === date;
     if (!real) refuse(slug, 'date must be a real YYYY-MM-DD date.');
@@ -168,27 +169,28 @@ function contentsOf(body) {
   });
 }
 
-const timeTag = date => `<time datetime="${date}">${date}</time>`;
+/** The date of an entry in a list, as the page's language words it (blog::REQ-006). @param {string} date @param {'zh' | 'en'} lang */
+const timeTag = (date, lang) => `<time datetime="${date}">${ui[lang].blog.dateLine(date)}</time>`;
 
 function renderContents(entries) {
   if (entries.length === 0) return '';
   const items = entries.map(({id, label}) => `<li><a href="#${id}">${label}</a></li>`).join('');
-  return `<nav class="ap-toc" aria-label="文章目录"><p class="ap-toc-title">目录</p><ol>${items}</ol></nav>`;
+  return `<nav class="ap-toc" aria-label="${postUi.contents.label}"><p class="ap-toc-title">${postUi.contents.title}</p><ol>${items}</ol></nav>`;
 }
 
 /** One side of the end-of-post row: the neighbor's card, or a card that keeps the place and says there is none. */
 function neighborCard(side, neighbor) {
-  const [cls, dir, none] = side === 'earlier' ? ['pn-prev', '上一篇', '已是最早的一篇'] : ['pn-next', '下一篇', '已是最新的一篇'];
+  const [cls, dir, none] = side === 'earlier' ? ['pn-prev', postUi.neighbours.earlier, postUi.neighbours.noEarlier] : ['pn-next', postUi.neighbours.later, postUi.neighbours.noLater];
   if (!neighbor) return `<span class="pn-card ${cls} pn-none"><span class="pn-dir">${dir}</span><span class="pn-title">${none}</span></span>`;
   return `<a class="pn-card ${cls}" href="/blog/${neighbor.slug}"><span class="pn-dir">${dir}</span><span class="pn-title">${escapeHtml(neighbor.title)}</span></a>`;
 }
 
 function renderPost(post, body, {stylesheet, script, earlier, later}) {
   const title = escapeHtml(post.title);
-  const source = post.source ? ` · 解读 <a href="${escapeHtml(post.source.url)}">${escapeHtml(post.source.label)}</a>` : '';
+  const source = post.source ? ` · ${postUi.source} <a href="${escapeHtml(post.source.url)}">${escapeHtml(post.source.label)}</a>` : '';
   const note = post.note ? `\n    <p class="ap-source-note">${escapeHtml(post.note)}</p>` : '';
   return `<!doctype html>
-<html lang="zh-CN">
+<html lang="${POST_LANGUAGE}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -207,14 +209,14 @@ function renderPost(post, body, {stylesheet, script, earlier, later}) {
   <main class="ap-article ap-article-page">
     <header class="ap-article-head">
     <h1>${title}</h1>
-    ${markExternalLinks(`<p class="ap-byline"><b>Aloong</b> · ${timeTag(post.date)}${source}</p>`)}${note}
+    ${markExternalLinks(`<p class="ap-byline"><b>Aloong</b> · ${timeTag(post.date, 'zh')}${source}</p>`)}${note}
     </header>
     ${renderContents(contentsOf(body))}
     <div class="ap-article-col">
       <div class="ap-article-body post-${post.slug}">
 ${markExternalLinks(body)}
       </div>
-      <nav class="post-nav" aria-label="上一篇和下一篇">${neighborCard('earlier', earlier)}${neighborCard('later', later)}</nav>
+      <nav class="post-nav" aria-label="${postUi.neighbours.label}">${neighborCard('earlier', earlier)}${neighborCard('later', later)}</nav>
     </div>
   </main>
 </body>
@@ -222,11 +224,14 @@ ${markExternalLinks(body)}
 `;
 }
 
-const homeEntry = post => `<li><a class="ap-home-post" href="/blog/${post.slug}">${timeTag(post.date)}<h2>${escapeHtml(post.title)}</h2><p>${escapeHtml(post.summary)}</p></a></li>`;
+// A list shows the post's title and summary in the page's language; the post itself is in Chinese only, so an entry on an English page says which language it opens in.
+const postText = (post, lang) => lang === 'zh' ? post : post.en;
+const hrefLanguage = lang => lang === 'zh' ? '' : ` hreflang="${POST_LANGUAGE}"`;
+const homeEntry = (post, lang) => `<li><a class="ap-home-post" href="/blog/${post.slug}"${hrefLanguage(lang)}>${timeTag(post.date, lang)}<h2>${escapeHtml(postText(post, lang).title)}</h2><p>${escapeHtml(postText(post, lang).summary)}</p></a></li>`;
 /** A Blog card. The newest post leads; the covers below it load lazily. A cover carries no text alternative, since the title beside it names the post. */
-const listEntry = (post, index) => `<article${index === 0 ? ' class="ap-post-lead"' : ''}><a class="ap-post-card" href="/blog/${post.slug}"><div class="ap-post-cover"><img src="/blog/${post.slug}.webp" alt=""${index === 0 ? '' : ' loading="lazy"'}></div><div class="ap-post-text">${timeTag(post.date)}<h2>${escapeHtml(post.title)}</h2><p>${escapeHtml(post.summary)}</p></div></a></article>`;
-const renderList = posts => `<div class="ap-post-list">${posts.map(listEntry).join('')}</div>`;
-const renderHome = posts => `<section class="ap-home-blog" aria-label="最新文章"><div class="ap-home-blog-inner"><ol class="ap-home-posts">${posts.slice(0, HOME_POSTS).map(homeEntry).join('')}</ol><a class="ap-link ap-home-blog-all" href="/blog">全部文章</a></div></section>`;
+const listEntry = (lang) => (post, index) => `<article${index === 0 ? ' class="ap-post-lead"' : ''}><a class="ap-post-card" href="/blog/${post.slug}"${hrefLanguage(lang)}><div class="ap-post-cover"><img src="/blog/${post.slug}.webp" alt=""${index === 0 ? '' : ' loading="lazy"'}></div><div class="ap-post-text">${timeTag(post.date, lang)}<h2>${escapeHtml(postText(post, lang).title)}</h2><p>${escapeHtml(postText(post, lang).summary)}</p></div></a></article>`;
+const renderList = (posts, lang) => `<div class="ap-post-list">${posts.map(listEntry(lang)).join('')}</div>`;
+const renderHome = (posts, lang) => `<section class="ap-home-blog" aria-label="${escapeHtml(ui[lang].blog.latest)}"><div class="ap-home-blog-inner"><ol class="ap-home-posts">${posts.slice(0, HOME_POSTS).map(post => homeEntry(post, lang)).join('')}</ol><a class="ap-link ap-home-blog-all" href="${LANGUAGES[lang].blog}">${escapeHtml(ui[lang].blog.allPosts)}</a></div></section>`;
 
 async function fillSlot(path, slot, html) {
   const template = await readFile(path, 'utf8');
@@ -285,6 +290,8 @@ export async function buildBlog({contentDir, outDir}) {
     if (script) await copyFile(join(postsDir, `${post.slug}.js`), join(blogDir, `${post.slug}.js`));
     await copyFile(join(postsDir, `${post.slug}.webp`), join(blogDir, `${post.slug}.webp`));
   }
-  await fillSlot(join(outDir, 'index.html'), HOME_SLOT, renderHome(newest));
-  await fillSlot(join(outDir, 'blog.html'), LIST_SLOT, renderList(newest));
+  for (const lang of LANGUAGE_LIST) {
+    await fillSlot(join(outDir, pageFile(lang, 'index')), HOME_SLOT, renderHome(newest, lang));
+    await fillSlot(join(outDir, pageFile(lang, 'blog')), LIST_SLOT, renderList(newest, lang));
+  }
 }

@@ -21,17 +21,17 @@ import {buildBlog, blogChecks, readManifest} from '../scripts/blog.mjs';
 import {pageImages, motionSheets} from '../scripts/image-checks.mjs';
 
 const BODY = '<section id="s2"><h2><span class="sec">§2</span>双层架构：把连续性和吞吐量拆开</h2><p>正文</p></section>';
-const post = (slug, date = '2026-11-05', extra = {}) => ({slug, title: `标题 ${slug}`, date, summary: `摘要 ${slug}`, ...extra});
+const post = (slug, date = '2026-11-05', extra = {}) => ({slug, title: `标题 ${slug}`, date, summary: `摘要 ${slug}`, en: {title: `Title ${slug}`, summary: `Summary ${slug}`}, ...extra});
 
 /** Bytes standing in for a cover: the build only checks that the file exists and copies it, so they need not be an image. */
 const COVER = Buffer.from('RIFF cover bytes WEBP');
 
 /** Builds a small site in a temporary folder and returns a reader for its output. Every listed post gets a body and a cover unless `bodies` or `covers` maps its slug to null. */
-async function site(posts, {files = {}, bodies = {}, covers = {}, home = '<main><!-- blog:home --></main>', list = '<main><!-- blog:list --></main>'} = {}) {
+async function site(posts, {files = {}, bodies = {}, covers = {}, home = '<main><!-- blog:home --></main>', list = '<main><!-- blog:list --></main>', enHome = home, enList = list} = {}) {
   const root = await mkdtemp(join(tmpdir(), 'blog-test-'));
   const contentDir = join(root, 'content'), outDir = join(root, 'out');
   await mkdir(join(contentDir, 'posts'), {recursive: true});
-  await mkdir(outDir);
+  await mkdir(join(outDir, 'en'), {recursive: true});
   await writeFile(join(contentDir, 'posts.json'), JSON.stringify(posts));
   for (const p of Array.isArray(posts) ? posts : []) {
     if (p && typeof p.slug === 'string' && !(p.slug in bodies)) await writeFile(join(contentDir, 'posts', `${p.slug}.html`), BODY);
@@ -41,6 +41,8 @@ async function site(posts, {files = {}, bodies = {}, covers = {}, home = '<main>
   for (const [name, text] of Object.entries(files)) await writeFile(join(contentDir, 'posts', name), text);
   await writeFile(join(outDir, 'index.html'), home);
   await writeFile(join(outDir, 'blog.html'), list);
+  await writeFile(join(outDir, 'en/index.html'), enHome);
+  await writeFile(join(outDir, 'en/blog.html'), enList);
   await writeFile(join(outDir, 'site.css'), '.ap-site{--paper:#fff;--ink:#000}');
   await writeFile(join(outDir, 'article.css'), '.ap-article{--panel:#fff;--sans:Arial}');
   const build = () => buildBlog({contentDir, outDir});
@@ -86,6 +88,26 @@ test('the homepage shows the newest 4 posts, or all of them when there are fewer
   const one = await site([post('only')]);
   await one.build();
   assert.deepEqual(hrefs(await one.read('index.html'), 'ap-home-post'), ['/blog/only']);
+});
+
+test('the English homepage and Blog page list the posts with their English title and summary, the date reading "<date> · In Chinese", and a link to the Chinese post (blog::REQ-006)', async () => {
+  const s = await site([post('a', '2026-01-01'), post('b', '2026-05-01', {en: {title: 'B <b> & "q"', summary: 'About b'}}), post('c', '2026-03-01'), post('d', '2026-04-01'), post('e', '2026-02-01')]);
+  await s.build();
+  const home = await s.read('en/index.html'), list = await s.read('en/blog.html');
+  // The same newest 4 as the Chinese homepage, with the English words, and the English Blog page as its "All posts".
+  assert.deepEqual(hrefs(home, 'ap-home-post'), ['/blog/b', '/blog/d', '/blog/c', '/blog/e']);
+  assert.ok(home.includes('<a class="ap-home-post" href="/blog/b" hreflang="zh-CN"><time datetime="2026-05-01">2026-05-01 · In Chinese</time><h2>B &lt;b&gt; &amp; &quot;q&quot;</h2><p>About b</p></a>'), home);
+  assert.ok(home.includes('<a class="ap-home-post" href="/blog/d" hreflang="zh-CN"><time datetime="2026-04-01">2026-04-01 · In Chinese</time><h2>Title d</h2><p>Summary d</p></a>'), home);
+  assert.ok(home.includes('<section class="ap-home-blog" aria-label="Latest posts">'), home);
+  assert.ok(home.includes('<a class="ap-link ap-home-blog-all" href="/en/blog">All posts</a>'), home);
+  // The Blog page lists every post, newest leading, with the covers of the Chinese page.
+  assert.deepEqual(hrefs(list, 'ap-post-card'), ['/blog/b', '/blog/d', '/blog/c', '/blog/e', '/blog/a']);
+  assert.ok(list.includes('<article class="ap-post-lead"><a class="ap-post-card" href="/blog/b" hreflang="zh-CN"><div class="ap-post-cover"><img src="/blog/b.webp" alt=""></div><div class="ap-post-text"><time datetime="2026-05-01">2026-05-01 · In Chinese</time><h2>B &lt;b&gt; &amp; &quot;q&quot;</h2><p>About b</p></div></a></article>'), list);
+  for (const page of [home, list]) assert.doesNotMatch(page, /标题|摘要|blog:(home|list)/);
+  // The Chinese pages keep the Chinese words and the plain date.
+  const chinese = await s.read('index.html');
+  assert.ok(chinese.includes('<a class="ap-home-post" href="/blog/d"><time datetime="2026-04-01">2026-04-01</time><h2>标题 d</h2><p>摘要 d</p></a>'), chinese);
+  assert.doesNotMatch(await s.read('blog.html') + chinese, /In Chinese|Title|hreflang/);
 });
 
 test('the Blog page lists every post newest first with the newest leading, and equal dates keep manifest order', async () => {
@@ -380,6 +402,15 @@ test('the build refuses a bad manifest, or a listed post without its body or its
     [[{...post('x'), title: ''}], /title/],
     [[{...post('x'), summary: '  '}], /summary/],
     [[{...post('x'), title: 5}], /title/],
+    // blog::REQ-004/AC-07: each message names the post and the English field that is missing or empty.
+    [[{...post('x'), en: undefined}], /"x".*en\.title/],
+    [[{...post('x'), en: 'Title'}], /"x".*en\.title/],
+    [[{...post('x'), en: {summary: 'S'}}], /"x".*en\.title/],
+    [[{...post('x'), en: {title: '', summary: 'S'}}], /"x".*en\.title/],
+    [[{...post('x'), en: {title: 5, summary: 'S'}}], /"x".*en\.title/],
+    [[{...post('x'), en: {title: 'T'}}], /"x".*en\.summary/],
+    [[{...post('x'), en: {title: 'T', summary: '  '}}], /"x".*en\.summary/],
+    [[post('fine'), {...post('later', '2026-10-01'), en: {title: 'T', summary: ''}}], /"later".*en\.summary/],
     [[post('x'), post('x')], /duplicate/i],
     [[post('x', '2026-11-05', {source: {label: 'a'}})], /source/],
     [[post('x', '2026-11-05', {source: {label: '', url: 'https://example.com/a'}})], /source/],
@@ -399,6 +430,8 @@ test('the build refuses a bad manifest, or a listed post without its body or its
 test('a template without its slot stops the build instead of dropping the list', async () => {
   await assert.rejects((await site([post('x')], {home: '<main></main>'})).build(), /index\.html/);
   await assert.rejects((await site([post('x')], {list: '<main></main>'})).build(), /blog\.html/);
+  await assert.rejects((await site([post('x')], {enHome: '<main></main>'})).build(), /en\/index\.html/);
+  await assert.rejects((await site([post('x')], {enList: '<main></main>'})).build(), /en\/blog\.html/);
 });
 
 test('deployment checks tell every blog page of the real site from the homepage and from the not-found page', async () => {

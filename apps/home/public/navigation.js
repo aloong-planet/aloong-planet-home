@@ -1,29 +1,11 @@
 // Shared navigation for the homepage, the Blog, every post and the not-found page; all destinations work without prototype tooling.
 
+import {ui} from './ui.js';
+
 /** @typedef {{name: string, href: string, text: string}} Work */
 
-/**
- * The works the menus list, in order (nav-menus::REQ-002). The homepage build renders its Agents section from the
- * same list, so the section and the menus cannot drift apart.
- */
-export const SITE_WORKS = {
-  /** @type {Work[]} */
-  apps: [
-    {name:'Transfer', href:'https://transfer.aloongplanet.com/', text:'Mac 和 Windows 之间传文件，像聊天一样随手一发就到。同一个 Wi-Fi 下打开即连，多大的文件都能传，数据只在局域网里走。'},
-    {name:'Agentshed', href:'https://agentshed.aloongplanet.com/', text:'Claude Code、Codex 等 agent 装了什么、烧了多少 token，打开 Agentshed 一眼看清，旧会话按提问一跳直达。'},
-    {name:'随译', href:'https://justsnap.aloongplanet.com/', text:'全网响应最快的截图工具，按下快捷键瞬间进入选区。框住哪里，你选的视觉模型就直接读图，文字或对照译文边生成边出现。'},
-  ],
-  /** @type {{group: string, works: Work[]}[]} */
-  agents: [
-    {group:'Skills', works:[
-      {name:'skillshed', href:'https://github.com/aloong-planet/skillshed', text:'让 coding agent 像靠谱的资深工程师一样干活。先问清需求、写好 spec，再测试先行地实现，交来的 PR 已经过独立审查。'},
-      {name:'media-studio', href:'https://github.com/aloong-planet/media-studio', text:'把一篇文章变成一支讲解视频，配音用的是你自己的声音，在本机生成，字幕和各平台封面也一并做好。'},
-    ]},
-    {group:'Plugins', works:[
-      {name:'cc-session-pool', href:'https://github.com/aloong-planet/claudecode-session-dispatcher', text:'让 Claude Code 连轴转。会话自己压缩上下文、醒来接着干，不用你守着；一个调度会话还能指挥一池 worker 同时开工。'},
-    ]},
-  ],
-};
+// Interim: the menus still read the Chinese works until the navigation takes the page's language.
+const SITE_WORKS = ui.zh.works;
 
 /** @type {Record<string, string>} */
 const ENTITIES = {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'};
