@@ -19,7 +19,7 @@ As a visitor landing on the homepage, I see recent writing beside the portrait a
 - blog::US-001/AC-03: "全部文章" beneath the list, "All posts" on the English homepage, opens the Blog page.
 - blog::US-001/AC-04: The list shows the newest 4 posts. With fewer than 4 published it shows all of them.
 - blog::US-001/AC-05: The list is at most 440px wide and has equal space to the window's left edge and to the dog; each space is at least 32px, and the list narrows rather than giving up that space.
-- blog::US-001/AC-06: The list, whatever its length, is vertically centered between the navigation bar and the bottom of the visible first screen. When it is taller than that area, it starts 24px below the navigation bar and continues past the fold instead of sliding under the bar.
+- blog::US-001/AC-06: The list is vertically centered between the navigation bar and the bottom of the visible first screen, except that it starts at least 24px below the navigation bar: a list too tall to be centered with 24px above it starts 24px below the bar, and the part of it that does not fit above the fold continues past it.
 - blog::US-001/AC-07: On a window 700px wide or narrower, the list follows the portrait group and comes before Apps, at the full content width.
 
 ### blog::US-002 Browse all posts
