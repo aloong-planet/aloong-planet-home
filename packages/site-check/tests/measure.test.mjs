@@ -213,11 +213,11 @@ test('a page that changes itself when the window is resized is measured after it
   assert.deepEqual(pages[0].violations.map((v) => v.width), [599, 320])
 })
 
-// A width condition that starts above the widest window measured is in effect in no window the check measures, so a page
-// that overflows only there would pass. The page's style sheets are read as the browser holds them, and a condition above
-// the range fails the page, naming where it was found and how far to raise the widest window (conditions.test.mjs holds
-// the rule that judges a condition; these cases hold that every place a condition can sit is read). The widest window
-// here is 1440px.
+// A width condition that changes above the widest window measured (a min-width above it, a max-width at or above it)
+// leaves the page on the other side of the change unmeasured, so a page that overflows only there would pass. The page's
+// style sheets are read as the browser holds them, and a condition above the range fails the page, naming where it was
+// found and how far to raise the widest window (conditions.test.mjs holds the rule that judges a condition; these cases
+// hold that every place a condition can sit is read). The widest window here is 1440px.
 test('a style sheet with a condition at 1600px fails the page, naming the sheet, the condition and the width to raise to; the same rule at 1280px passes', async (t) => {
   const withRule = (width) => page(`<style>body{margin:0}@media (min-width: ${width}px){body{margin:0}}</style>`, '<p>x</p>')
   const above = (await measure(t, { 'index.html': withRule(1600) })).pages[0]
@@ -249,6 +249,8 @@ const places = [
   ['the rules of an @imported sheet', { head: '<style>@import url("/b.css");</style>', files: { 'b.css': rule1600 } }, /\/b\.css/, /@media \(min-width: 1600px\)/],
   ['the media of a link', { head: '<link rel="stylesheet" href="/site.css" media="(min-width: 1600px)">', files: { 'site.css': 'p{margin:0}' } }, /\/site\.css/, /<link media="\(min-width: 1600px\)">/],
   ['the media of a style element', { head: '<style media="(min-width: 1600px)">p{margin:0}</style>' }, /<style> no\. 1/, /<style media="\(min-width: 1600px\)">/],
+  ['an inline SVG style element', { body: `<svg width="10" height="10"><style>${rule1600}</style></svg>` }, /<style> no\. 1/, /@media \(min-width: 1600px\)/],
+  ['the media of an inline SVG style element', { body: '<svg width="10" height="10"><style media="(min-width: 1600px)">rect{fill:red}</style></svg>' }, /<style> no\. 1/, /<style media="\(min-width: 1600px\)">/],
   [
     'a constructed style sheet',
     { body: `<script>const sheet = new CSSStyleSheet(); sheet.replaceSync('${rule1600}'); document.adoptedStyleSheets = [sheet]</script>` },
@@ -279,5 +281,17 @@ for (const [em, expected] of [[100, 1], [90, 0]]) {
     const head = `<style>html{font-size:10px}@media (min-width: ${em}em){p{margin:0}}</style>`
     const { pages } = await measure(t, { 'index.html': page(head, '<p>x</p>') })
     assert.equal(pages[0].problems.length, expected, pages[0].problems.join('\n'))
+  })
+}
+
+// In a container query `em` and `rem` follow the font size of the container and of the page's root element, not the
+// browser's initial one, so a bound written in them cannot be told from the text: the page fails and is told to use px.
+for (const unit of ['rem', 'em']) {
+  test(`min-width: 90${unit} in a container query fails the page, because the container's font size is not the initial one`, async (t) => {
+    const head = `<style>html{font-size:20px}@container (min-width: 90${unit}){p{margin:0}}</style>`
+    const { pages } = await measure(t, { 'index.html': page(head, '<p>x</p>') })
+    assert.equal(pages[0].problems.length, 1, pages[0].problems.join('\n'))
+    assert.match(pages[0].problems[0], new RegExp(`@container \\(min-width: 90${unit}\\)`))
+    assert.match(pages[0].problems[0], new RegExp(`cannot read.*90${unit}`))
   })
 }

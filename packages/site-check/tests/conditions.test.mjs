@@ -1,6 +1,7 @@
-// Which width conditions in a page's style sheets start above the widest window the check measures, so that no
-// measured window has them in effect: the guard of the upper end of app-sites::QR-001/AC-01. The rule judges the text
-// of a condition, so it is tested without a browser; the reading of the page is tested in measure.test.mjs.
+// Which width conditions in a page's style sheets change state above the widest window the check measures, so that the
+// page on the other side of the change is not measured: the guard of the upper end of app-sites::QR-001/AC-01. The rule
+// judges the text of a condition, so it is tested without a browser; the reading of the page is tested in
+// measure.test.mjs.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { judgeCondition, ceilingProblems } from '../src/conditions.mjs'
@@ -91,6 +92,19 @@ for (const [condition, part] of unreadable) {
   })
 }
 
+// In a container query `em` and `rem` are the font sizes of the container and of the page's root element, which the
+// check cannot tell from the text; in a media query they are the browser's initial font size and are read as 16px.
+for (const [condition, part] of [['(min-width: 90rem)', '90rem'], ['(min-width: 50em)', '50em'], ['side (width > 100em)', '100em'], ['(min-width: calc(90rem))', 'calc(90rem)']]) {
+  test(`${condition} in a container query has a width the check cannot read, and says which`, () => {
+    assert.deepEqual(judgeCondition(condition, WIDEST, { container: true }), { raiseTo: null, unreadable: part })
+  })
+}
+
+test('a container query in px is read like a media query', () => {
+  assert.deepEqual(judgeCondition('side (width > 1500px)', WIDEST, { container: true }), { raiseTo: 1501, unreadable: null })
+  assert.deepEqual(judgeCondition('(min-width: 1000px)', WIDEST, { container: true }), { raiseTo: null, unreadable: null })
+})
+
 test('a condition with a width above the range and another that cannot be read reports both', () => {
   assert.deepEqual(judgeCondition('(min-width: 1500px) and (max-width: 50vw)', WIDEST), { raiseTo: 1500, unreadable: '50vw' })
 })
@@ -113,6 +127,14 @@ test('a condition whose width cannot be read is a problem naming the style sheet
   assert.match(problems[0], /\/assets\/site\.css/)
   assert.match(problems[0], /@media \(min-width: 50vw\)/)
   assert.match(problems[0], /cannot read.*50vw/)
+})
+
+test('a container query in em or rem is a problem that says to write the width in px', () => {
+  const problems = ceilingProblems([{ ...found('@container (min-width: 90rem)', '(min-width: 90rem)'), container: true }], WIDEST)
+  assert.equal(problems.length, 1)
+  assert.match(problems[0], /@container \(min-width: 90rem\)/)
+  assert.match(problems[0], /cannot read.*90rem/)
+  assert.match(problems[0], /\bpx\b/)
 })
 
 test('conditions inside the range are no problem, and neither is no condition', () => {

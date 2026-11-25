@@ -1,7 +1,8 @@
-// Width conditions that start above the widest window the check measures. A rule such as `@media (min-width: 1600px)`
-// is in effect in no measured window, so a page that overflows only there would pass; the check fails such a page
-// instead, and says how far to raise the widest window (WIDEST in widths.mjs). This file judges the text of a
-// condition; reading the conditions out of a page is measure.mjs's job.
+// Width conditions that change state above the widest window the check measures. A rule such as
+// `@media (min-width: 1600px)` is in effect in no measured window, and `@media (max-width: 1440px)` stops being in effect
+// just above the last one, so a page that overflows only there would pass; the check fails such a page instead, and
+// says how far to raise the widest window (WIDEST in widths.mjs). This file judges the text of a condition; reading the
+// conditions out of a page is measure.mjs's job.
 
 // What `em` and `rem` are in a media condition: the browser's initial font size, not the page's own.
 const FONT_SIZE = 16
@@ -16,13 +17,17 @@ const FEATURE = /^\s*(?:(min|max)-)?(?:device-)?(?:width|inline-size)\s*:\s*(.*?
 const RANGE_FEATURE = /^(?:device-)?(?:width|inline-size)$/i
 const FLIPPED = { '<': '>', '<=': '>=', '>': '<', '>=': '<=', '=': '=' }
 
-// The width in pixels a bound is written as, or null when it is not a plain length.
-const lengthInPixels = (text) => {
+// The width in pixels a bound is written as, or null when it is not a plain length. In a container query `em` and `rem`
+// follow the font size of the container and of the page's root element, which the text does not give, so they are
+// not read there.
+const lengthInPixels = (text, container = false) => {
   const value = text.trim()
   if (NO_LENGTH_UNIT.test(value)) return 0
   const match = LENGTH.exec(value)
   if (!match) return null
-  return Number(match[1]) * (match[2].toLowerCase() === 'px' ? 1 : FONT_SIZE)
+  const unit = match[2].toLowerCase()
+  if (unit !== 'px' && container) return null
+  return Number(match[1]) * (unit === 'px' ? 1 : FONT_SIZE)
 }
 
 // The smallest whole width at which a comparison against the bound B has changed state from what it was at the widths
@@ -30,19 +35,19 @@ const lengthInPixels = (text) => {
 // B (`<=`, `=`) or on just past it (`>`). Whole widths, because the check measures whole widths.
 const changesAt = (op, bound) => (op === '>=' || op === '<' ? Math.ceil(bound) : Math.floor(bound) + 1)
 
-// Judges the text of a media or container condition against `widest`, the widest window measured. Returns
-// { raiseTo, unreadable }: raiseTo is the widest window the check must measure for no comparison on the window's width
-// to change state above it, null when none does; unreadable is the text of the bounds that could not be read as a
-// length, null when all could. Over-counting is accepted (a contradiction such as `(min-width: 1600px) and
-// (max-width: 1000px)` counts), a miss is not.
-export function judgeCondition(text, widest) {
+// Judges the text of a media or container condition (`container` set for the latter) against `widest`, the widest
+// window measured. Returns { raiseTo, unreadable }: raiseTo is the widest window the check must measure for no
+// comparison on the window's width to change state above it, null when none does; unreadable is the text of the bounds
+// that could not be read as a length, null when all could. Over-counting is accepted (a contradiction such as
+// `(min-width: 1600px) and (max-width: 1000px)` counts), a miss is not.
+export function judgeCondition(text, widest, { container = false } = {}) {
   const values = []
   const changes = []
   const unreadable = []
 
   const compare = (op, bound) => {
     const token = /^\u0000(\d+)\u0000$/.exec(bound)
-    const pixels = token ? null : lengthInPixels(bound)
+    const pixels = token ? null : lengthInPixels(bound, container)
     if (pixels === null) unreadable.push(token ? values[Number(token[1])] : bound.trim())
     else changes.push(changesAt(op, pixels))
   }
@@ -70,7 +75,7 @@ export function judgeCondition(text, widest) {
     const [whole, name, inner] = match
     let standIn = '\u0001'
     if (VALUE_FUNCTIONS.has(name.toLowerCase())) {
-      if (name.toLowerCase() === 'calc' && lengthInPixels(inner) !== null) standIn = inner.trim()
+      if (name.toLowerCase() === 'calc' && lengthInPixels(inner, container) !== null) standIn = inner.trim()
       else standIn = `\u0000${values.push(whole) - 1}\u0000`
     } else {
       judgeGroup(inner)
@@ -85,15 +90,17 @@ export function judgeCondition(text, widest) {
   }
 }
 
-// `found` is [{ sheet, rule, condition }]: the style sheet a rule was found in, the rule as it is shown ("@media (...)"),
-// and the condition's text. Returns the sentences for the rules the check cannot stand behind, in the order found.
+// `found` is [{ sheet, rule, condition, container }]: the style sheet a rule was found in, the rule as it is shown
+// ("@media (...)"), the condition's text, and whether it is a container query. Returns the sentences for the rules the
+// check cannot stand behind, in the order found.
 export function ceilingProblems(found, widest) {
   const problems = []
-  for (const { sheet, rule, condition } of found) {
-    const { raiseTo, unreadable } = judgeCondition(condition, widest)
+  for (const { sheet, rule, condition, container } of found) {
+    const { raiseTo, unreadable } = judgeCondition(condition, widest, { container })
     if (unreadable !== null) {
+      const how = container ? "write the width in px (em and rem follow the container's font size there)" : 'write the width in px, em or rem'
       problems.push(
-        `${sheet} has ${rule}, and the check cannot read "${unreadable}" as a width, so it cannot tell whether the page is measured where the rule applies; write the width in px, em or rem`,
+        `${sheet} has ${rule}, and the check cannot read "${unreadable}" as a width, so it cannot tell whether the page is measured where the rule applies; ${how}`,
       )
     }
     if (raiseTo !== null) {

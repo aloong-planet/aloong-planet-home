@@ -1,6 +1,6 @@
 // The window widths a page is measured at, and the rule a measurement is judged by.
 
-// The widest window measured. A width condition in a page's style sheets that starts above it fails the check (see
+// The widest window measured. A width condition in a page's style sheets that changes above it fails the check (see
 // conditions.mjs), so this is raised, not worked around, when a site adds a breakpoint wider than it.
 export const WIDEST = 1440
 

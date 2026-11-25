@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // The width check: opens every page of every site in the workspace in a real browser, at every whole window width from
 // 320px to 1440px, and fails when any page is wider than the window (app-sites::QR-001/AC-01). It also fails a page
-// whose style sheets hold a width condition that starts above 1440px, because no window it measures has that rule in effect.
+// whose style sheets hold a width condition that changes above 1440px, because the page is not measured beyond the change.
 //
 // What it does, in order: finds the sites (every folder of apps/ with a package.json), builds each with its own
 // `build` script, finds the pages in each build's dist/ (every .html file, no list kept by hand), serves the dist
@@ -29,13 +29,14 @@
 //      language, or builds a file for each.
 //   6. Windows wider than 1440px. The requirement (app-sites::QR-001/AC-01) says "320px wide or wider" with no upper
 //      end; the check measures up to 1440px (WIDEST in widths.mjs). A page whose style sheets hold a width condition
-//      that starts above it (a media or container query, an @import's media, a <link> or <style> media, a constructed
-//      sheet) fails and is told how far to raise WIDEST, so a rule such as a min-width of 1500px cannot hide an overflow.
-//      Still not seen above 1440px: a script that reads the window's width; sizes worked out from the window's width
-//      without a condition (calc(100vw - 1440px)); a condition on aspect-ratio, which a window above 1440px (900px high
-//      here) can bring about; a style sheet that a script adds in answer to the window's width or that sits in a shadow
-//      root; an em bound in a container query, read as 16px though a container with a larger font size makes it wider.
-//      Add what a site needs when it relies on one of these.
+//      that changes above it (a media or container query, an @import's media, a <link> or <style> media, a constructed
+//      sheet: a min-width above 1440px, or a max-width of 1440px or more) fails and is told how far to raise WIDEST, so a
+//      rule such as a min-width of 1500px cannot hide an overflow. An em or rem bound in a container query fails too: it
+//      follows the container's font size, which the style sheet does not give. Still not seen above 1440px: a script
+//      that reads the window's width; sizes worked out from the window's width without a condition (calc(100vw - 1440px));
+//      a condition on aspect-ratio, which a window above 1440px (900px high here) can bring about; a style sheet that a
+//      script adds in answer to the window's width or that sits in a shadow root. Add what a site needs when it relies on
+//      one of these.
 //   7. A layout decided once, when the page loads. Each page is loaded at 320px and the window is then made each width
 //      in turn, as a visitor who resizes would; a script that reads the window's width once at load and has no resize
 //      handler is therefore seen only as it was set up at 320px. Add a second pass that loads the page afresh at each
