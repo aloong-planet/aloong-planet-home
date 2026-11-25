@@ -136,6 +136,10 @@ test('the scripts the pages load hold no interface copy of their own: no Chinese
 // The Han guard sees Chinese in a script, not English. A string of a script that has two words in it, or two words between the tags of
 // the markup it builds, is English copy, except a CSS selector, the "use strict" directive, and the message of an Error that is thrown
 // and caught, never shown (visitor.js). Comments are not code.
+// What it does not see is a string of one word: that is as likely an identifier (an event name, a class name, the value of an attribute)
+// as copy, and a scan for it would need a long list of the identifiers these scripts hold. So a single English word written into one of
+// them for the visitor to read would show on the Chinese pages as well as the English ones, and pass here. When such a word first has to
+// be shown, it goes into the dictionary (ui.js), or a scan for it is added then.
 test('the scripts the pages load hold no English sentence of their own', async () => {
   let literals = 0;
   for (const script of SCRIPTS) {
