@@ -2,7 +2,8 @@
 // checker: it builds apps/home, serves the build the way the width check does (src/server.mjs, with the answers sites/home.json
 // gives for the homepage's backend) and switches Chromium between the appearances the system can ask for. It lives in this
 // package because this package is the project's browser suite. It rebuilds apps/home/dist, as the check does, so run it when no
-// dev server is serving that folder. The palette the stylesheets declare is checked without a browser by apps/home/tests/palette.test.mjs.
+// dev server is serving that folder. nav-menus.test.mjs rebuilds the same folder, so this package's test script runs its test files
+// one at a time (--test-concurrency=1); two files building and serving one dist at once cancel each other. The palette the stylesheets declare is checked without a browser by apps/home/tests/palette.test.mjs.
 //
 // Every page of the build is opened: the pages are the .html files of dist, found on disk, and each is classified into a page kind by
 // what it contains. A page that fits no kind fails a case of its own, so a new kind of page cannot go unmeasured. The languages are
