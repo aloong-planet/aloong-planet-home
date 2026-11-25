@@ -4,22 +4,27 @@
 // Gap: transfer-site::REQ-001/AC-02, transfer-site::REQ-001/AC-03 and transfer-site::QR-001/AC-02
 // (sizes, colours, gaps, hover and the narrow-window layout), and transfer-site::QR-001/AC-01 for
 // the download section's states, are not tested here. They are computed styles and geometry, which
-// only a browser can read, and the site has no browser test runner; app-sites::QR-001/AC-01 for the
-// pages as delivered is the width check's (packages/site-check). The one computed style read here
-// is whether a part of the download section has a box at all (display), on the built page with its
+// only a browser can read, and this suite runs none. The width check (packages/site-check) is a
+// browser check, and it holds app-sites::QR-001/AC-01 for the pages as delivered, but it opens each
+// page at rest and reads the document's width alone: it has no per-site state hook (item 4 of its
+// header) to put the download section into each of its states, and it reads no card's rectangle.
+// These can be tested when it has the hook and the reading. The one computed style read here is
+// whether a part of the download section has a box at all (display), on the built page with its
 // stylesheets; sizes and positions are not.
 //
 // Gap: the script in Download.astro that hands the browser's own fetch to initDownload runs only in
 // a browser, so these tests call initDownload with a stand-in network instead. Whether the built
-// page's script reaches it is checked on the preview deployment.
+// page's script (two inline module scripts in the build) reaches it is tested nowhere in this
+// repository; it can be when the width check has the state hook above, which opens the built page.
 //
 // Gap: transfer-site failure A3 (the pointer is written only after the release's files are on the
-// download host) belongs to the release workflow, .github/workflows/build.yml, not to the site: its
-// upload step puts the installers on R2 first and latest.json last. It can be tested once a test can run
-// that step against a stand-in bucket and see that a failed installer upload leaves latest.json
-// unwritten; the site's suite has no such runner.
+// download host) belongs to the release workflow of the app's repository, aloong-planet/transfer
+// (.github/workflows/build.yml there), not to the site: its upload step puts the installers on R2
+// first and latest.json last. It can be tested once a test can run that step against a stand-in
+// bucket and see that a failed installer upload leaves latest.json unwritten; this suite has no
+// such runner.
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
@@ -135,6 +140,33 @@ describe('the privacy pages keep the spaces written between text and inline elem
     const paragraph = [...document.querySelectorAll('p')].find((p) => p.textContent?.includes(marker))
     expect(paragraph, `a paragraph with ${marker}`).toBeDefined()
     expect(paragraph!.textContent!.replace(/\s+/g, ' ').trim()).toContain(sentence)
+  })
+})
+
+// app-sites::REQ-004/AC-01: the screenshot and the icon change only by the pull request that the asset command of the app's
+// repository (`pnpm site:assets` in aloong-planet/transfer) opens, and it writes these two files: public/screenshots/main.png
+// and public/favicon.svg. A page that read another path would leave the command sending a file that nothing shows.
+describe('the pages read the screenshot and the icon at the paths the asset command writes', () => {
+  test.each([
+    { page: 'Chinese landing page', component: ZhLanding },
+    { page: 'English landing page', component: EnLanding },
+  ])('the $page shows /screenshots/main.png', async ({ component }) => {
+    const document = await openPage(component)
+    expect([...document.querySelectorAll('img')].map((img) => img.getAttribute('src'))).toContain('/screenshots/main.png')
+  })
+
+  test.each([
+    { page: 'Chinese landing page', component: ZhLanding },
+    { page: 'English landing page', component: EnLanding },
+    { page: 'Chinese privacy page', component: ZhPrivacy },
+    { page: 'English privacy page', component: EnPrivacy },
+  ])('the $page names /favicon.svg as its icon', async ({ component }) => {
+    const document = await openPage(component)
+    expect(document.querySelector('link[rel="icon"]')?.getAttribute('href')).toBe('/favicon.svg')
+  })
+
+  test.each(['screenshots/main.png', 'favicon.svg'])('the package has public/%s, the file the command writes', (path) => {
+    expect(existsSync(fileURLToPath(new URL(`../public/${path}`, import.meta.url)))).toBe(true)
   })
 })
 

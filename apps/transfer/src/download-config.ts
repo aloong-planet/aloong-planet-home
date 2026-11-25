@@ -19,7 +19,7 @@ export function getDownloadStatsUrl(isDev: boolean) {
 
 export const DOWNLOAD_STATS_URL = getDownloadStatsUrl(import.meta.env.DEV)
 
-/** The latest-release pointer on the download host, written by the release workflow (build/gen-latest-json.cjs) */
+/** The latest-release pointer on the download host, written by the release workflow of the app's repository, aloong-planet/transfer (build/gen-latest-json.cjs) */
 export const LATEST_POINTER_URL = 'https://dl.aloongplanet.com/latest.json'
 
 /** GitHub's public releases list for this repository: one request for the first hundred */
