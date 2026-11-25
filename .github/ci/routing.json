@@ -1,6 +1,7 @@
 {
   "scopes": {
-    "home": ["home-checks", "width-check"]
+    "home": ["home-checks", "width-check"],
+    "agentshed": ["agentshed-checks", "width-check"]
   },
   "rules": [
     {
@@ -26,6 +27,11 @@
       "reason": "Homepage",
       "select": ["home"],
       "paths": ["apps/home/**"]
+    },
+    {
+      "reason": "Agentshed's site",
+      "select": ["agentshed"],
+      "paths": ["apps/agentshed/**"]
     }
   ]
 }

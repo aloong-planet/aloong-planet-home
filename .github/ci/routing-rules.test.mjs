@@ -11,10 +11,11 @@ test('each pattern of routing.json routes a real path to the scopes written here
   // [a tracked path, the scopes it must select]. Take each path from the repository's tracked tree, and write
   // the scopes as literals: computing them from routing.json would only repeat it.
   const cases = [
-    ['package.json', ['home']],
-    ['pnpm-lock.yaml', ['home']],
-    ['pnpm-workspace.yaml', ['home']],
-    ['packages/.gitkeep', ['home']],
+    ['package.json', ['home', 'agentshed']],
+    ['pnpm-lock.yaml', ['home', 'agentshed']],
+    ['pnpm-workspace.yaml', ['home', 'agentshed']],
+    ['packages/.gitkeep', ['home', 'agentshed']],
+    ['packages/site-check/sites/agentshed.json', ['home', 'agentshed']],
     ['README.md', []],
     ['AGENTS.md', []],
     ['docs/agents/docs-layout.md', []],
@@ -35,12 +36,19 @@ test('each pattern of routing.json routes a real path to the scopes written here
     ['apps/home/wrangler.jsonc', ['home']],
     ['apps/home/deployment.config.json', ['home']],
     ['apps/home/tsconfig.json', ['home']],
-    ['apps/home/tsconfig.client.json', ['home']]
+    ['apps/home/tsconfig.client.json', ['home']],
+    ['apps/agentshed/package.json', ['agentshed']],
+    ['apps/agentshed/astro.config.mjs', ['agentshed']],
+    ['apps/agentshed/eslint.config.js', ['agentshed']],
+    ['apps/agentshed/src/pages/index.astro', ['agentshed']],
+    ['apps/agentshed/public/shots/overview-en.png', ['agentshed']],
+    ['apps/agentshed/test/support/browser.ts', ['agentshed']],
+    ['apps/agentshed/README.md', ['agentshed']]
   ]
   const hit = new Set()
   for (const [path, expected] of cases) {
     const { select, pattern } = classifyPath(path, config)
-    // A path no rule matches selects every scope, which with one scope is also what a home rule selects: without
+    // A path no rule matches selects every scope, which is also what the "shared input" rule selects: without
     // this line a path whose rule is missing would pass through that fallback
     assert.notEqual(pattern, null, `${path} matches no rule`)
     assert.deepEqual(select, expected, path)
@@ -52,25 +60,45 @@ test('each pattern of routing.json routes a real path to the scopes written here
   assert.deepEqual(patterns.filter((pattern) => !hit.has(pattern)), [])
 })
 
-// Whether the CI gate requires width-check for a pull request that changes only `paths`: the gate is given the scopes
-// those paths select and every job's result except width-check's, which is the one tried.
-const widthCheckVerdict = (paths, widthCheckResult) => {
+// What the CI gate says for a pull request that changes only `paths`: the gate is given the scopes those paths select,
+// each site's checks as run when their scope is selected and skipped when not, and the result of `tried`, the one job
+// whose result is varied.
+const gateVerdict = (paths, tried, triedResult) => {
   const { scopes } = classifyPaths(paths, config)
   const outputs = Object.fromEntries(Object.entries(scopes).map(([name, on]) => [name, String(on)]))
+  const siteChecks = (scope) => ({ result: scopes[scope] ? 'success' : 'skipped' })
   const needs = {
     changes: { result: 'success', outputs },
     'repo-policy': { result: 'success' },
-    'home-checks': { result: scopes.home ? 'success' : 'skipped' },
-    'width-check': { result: widthCheckResult }
+    'home-checks': siteChecks('home'),
+    'agentshed-checks': siteChecks('agentshed'),
+    'width-check': { result: 'success' }
   }
+  needs[tried] = { result: triedResult }
   return gateFailures(needs, config)
 }
 
-test('a change to only the width check, or only to the homepage, requires width-check, and a change to only documents does not', () => {
-  for (const path of ['packages/site-check/src/check-sites.mjs', 'packages/site-check/sites/home.json', 'apps/home/public/index.html']) {
-    assert.deepEqual(widthCheckVerdict([path], 'success'), [], path)
-    assert.deepEqual(widthCheckVerdict([path], 'failure'), ['width-check: failure (selected)'], path)
-    assert.deepEqual(widthCheckVerdict([path], 'skipped'), ['width-check: skipped (selected)'], path)
+test('a change to only the width check, only to the homepage, or only to Agentshed\'s site requires width-check, and a change to only documents does not', () => {
+  for (const path of [
+    'packages/site-check/src/check-sites.mjs', 'packages/site-check/sites/home.json', 'packages/site-check/sites/agentshed.json',
+    'apps/home/public/index.html', 'apps/agentshed/src/pages/index.astro'
+  ]) {
+    assert.deepEqual(gateVerdict([path], 'width-check', 'success'), [], path)
+    assert.deepEqual(gateVerdict([path], 'width-check', 'failure'), ['width-check: failure (selected)'], path)
+    assert.deepEqual(gateVerdict([path], 'width-check', 'skipped'), ['width-check: skipped (selected)'], path)
   }
-  assert.deepEqual(widthCheckVerdict(['README.md'], 'skipped'), [])
+  assert.deepEqual(gateVerdict(['README.md'], 'width-check', 'skipped'), [])
+})
+
+test('a change to only Agentshed\'s site requires agentshed-checks and not home-checks, and a change to only the homepage the reverse', () => {
+  const site = 'apps/agentshed/public/shots/overview-en.png'
+  assert.deepEqual(gateVerdict([site], 'agentshed-checks', 'failure'), ['agentshed-checks: failure (selected)'])
+  assert.deepEqual(gateVerdict([site], 'agentshed-checks', 'skipped'), ['agentshed-checks: skipped (selected)'])
+  assert.deepEqual(gateVerdict([site], 'home-checks', 'skipped'), [])
+  const home = 'apps/home/public/index.html'
+  assert.deepEqual(gateVerdict([home], 'home-checks', 'failure'), ['home-checks: failure (selected)'])
+  assert.deepEqual(gateVerdict([home], 'agentshed-checks', 'skipped'), [])
+  // The shared input, and a document, which no site's checks depend on
+  assert.deepEqual(gateVerdict(['pnpm-lock.yaml'], 'agentshed-checks', 'skipped'), ['agentshed-checks: skipped (selected)'])
+  assert.deepEqual(gateVerdict(['docs/specs/agentshed-site.md'], 'agentshed-checks', 'skipped'), [])
 })
