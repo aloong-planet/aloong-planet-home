@@ -25,8 +25,6 @@ gives the latest formal release if there is one and otherwise the newest pre-rel
 offers GitHub's release list. A release therefore never needs a site change. The download section also says
 how many times the app has been downloaded. The screenshots are real app screenshots.
 
-> Pending: the Cloudflare Pages project `agentshed` deploys this package's build.
-
 ## User Stories
 
 ### agentshed-site::US-001 Understand what Agentshed is and download it
