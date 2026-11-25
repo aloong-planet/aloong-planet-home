@@ -111,7 +111,7 @@ anything under `apps/agentshed/` (see [deployment and CI](../../docs/ops/deploym
   fetch too, so no test reaches the network; `test/fixtures/` holds the answers they use: the pointer as the
   release script writes it, and a real releases answer from GitHub reshaped to the Agentshed repository.
 - `test/deploy-config.test.ts` checks this site's side of its publishing: `deployment.config.json` names this site's
-  Pages project and files its build makes, and `cf:deploy` runs the shared command. The command's own cases (what it
+  Pages project, the files its build makes and its production branch, and `cf:deploy` runs the shared command. The command's own cases (what it
   refuses to upload, what it requires of the deployment it made) are in `packages/pages-deploy/tests/`, with its process
   boundary replaced, so no test reaches Cloudflare. They cannot show that Cloudflare accepts the upload or that the
   token may make it; a Deploy run shows that.
