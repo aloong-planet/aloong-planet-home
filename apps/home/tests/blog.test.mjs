@@ -8,11 +8,11 @@
 // which reduced motion turns off.
 // Which image each post uses as its cover is content, checked by eye. Test them in the browser suite once it covers them.
 import {test} from 'node:test';
-import {realSite} from './helpers/built-site.mjs';
+import {readBuilt, realSite} from './helpers/built-site.mjs';
 import assert from 'node:assert/strict';
 import {execFile} from 'node:child_process';
 import {createServer} from 'node:http';
-import {appendFile, cp, mkdtemp, mkdir, readFile, writeFile} from 'node:fs/promises';
+import {appendFile, cp, mkdtemp, mkdir, readdir, readFile, writeFile} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {extname, join} from 'node:path';
@@ -108,6 +108,34 @@ test('the English homepage and Blog page list the posts with their English title
   const chinese = await s.read('index.html');
   assert.ok(chinese.includes('<a class="ap-home-post" href="/blog/d"><time datetime="2026-04-01">2026-04-01</time><h2>标题 d</h2><p>摘要 d</p></a>'), chinese);
   assert.doesNotMatch(await s.read('blog.html') + chinese, /In Chinese|Title|hreflang/);
+});
+
+// The Blog page's header: the heading and the introduction the spec pins, in each language (blog::US-002/AC-03).
+for (const [file, intro] of [
+  ['blog.html', '关于技术、作品，以及创造的过程。把值得留下的想法，慢慢写下来。'],
+  ['en/blog.html', 'On technology, my work, and the process of making things. Writing down, slowly, the ideas worth keeping.'],
+]) {
+  test(`${file} is headed "Blog", with the introduction the spec words for its language (blog::US-002/AC-03)`, async () => {
+    const header = (await readBuilt(file)).match(/<div class="ap-blog-head"><h1>([^<]*)<\/h1><p class="ap-blog-intro">([^<]*)<\/p><\/div>/);
+    assert.deepEqual(header?.slice(1), ['Blog', intro]);
+  });
+}
+
+// blog::CON-002: no page asks for a web font. A page asks for one by declaring it, by pointing a style at a font file, by preloading
+// one, or by linking a stylesheet from a font host; the real built pages and the stylesheets they link are read for all four.
+test('no built page, in either language, and no stylesheet it links asks for a web font (blog::CON-002)', async () => {
+  const outDir = await realSite();
+  const pages = (await readdir(outDir, {recursive: true})).filter(file => file.endsWith('.html')).sort();
+  assert.ok(pages.includes('en/blog.html') && pages.includes('blog.html') && pages.filter(page => page.startsWith('blog/')).length > 1, pages.join());
+  const asksForFont = text => [/@font-face\b/i, /url\(\s*["']?[^)"']*\.(?:woff2?|ttf|otf|eot)\b/i, /<link\b[^>]*\bas=["']?font\b/i, /(?:fonts\.googleapis|fonts\.gstatic|use\.typekit|fonts\.bunny)/i].filter(rule => rule.test(text)).map(String);
+  const sheets = new Set();
+  for (const page of pages) {
+    const html = await readBuilt(page);
+    assert.deepEqual(asksForFont(html), [], page);
+    for (const [, href] of html.matchAll(/<link\b[^>]*\brel="stylesheet"[^>]*\shref="([^"]+)"/g)) sheets.add(href);
+  }
+  assert.ok(sheets.has('/site.css') && sheets.has('/article.css'), [...sheets].join());
+  for (const href of sheets) assert.deepEqual(asksForFont(await readBuilt(href.replace(/^\//, ''))), [], href);
 });
 
 test('the Blog page lists every post newest first with the newest leading, and equal dates keep manifest order', async () => {

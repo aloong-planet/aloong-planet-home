@@ -39,26 +39,29 @@ function pageFixture(counter = true, lang = 'zh-CN', locale = 'en-US') {
  const history = type => lifecycle.dispatchEvent(Object.assign(new Event(type),{persisted:true}));
  return {element,page,lifecycle,visibility,history,locale};
 }
-test('the visible homepage refreshes its shared total without registering again',async(t)=>{
- t.mock.timers.enable({apis:['setTimeout']});
- const fixture=pageFixture();
- let total=1024, registrations=0;
- const fetcher=async(url,options)=>{
-  if(options.method==='POST'){registrations++;return Response.json({ordinal:1,total});}
-  return Response.json(url.includes('?')?{total}:{ready:true});
- };
- const stop=startVisitorCounter({...fixture,browser:{},fetcher});
- try{
-  await settle();
-  assert.equal(fixture.element.textContent,'本站累计访客 1,024 人');
-  total=1025;
-  t.mock.timers.tick(29999);await settle();
-  assert.equal(fixture.element.textContent,'本站累计访客 1,024 人');
-  t.mock.timers.tick(1);await settle();
-  assert.equal(fixture.element.textContent,'本站累计访客 1,025 人');
-  assert.equal(registrations,1);
- }finally{stop();}
-});
+// The refresh shows the new total in the line of the page's own language (visitor-counter::REQ-007/AC-01, visitor-counter::REQ-001/AC-02).
+for(const [lang,first,second] of [['zh-CN','本站累计访客 1,024 人','本站累计访客 1,025 人'],['en','1,024 visitors so far','1,025 visitors so far']]){
+ test(`the visible ${lang} homepage refreshes its shared total without registering again`,async(t)=>{
+  t.mock.timers.enable({apis:['setTimeout']});
+  const fixture=pageFixture(true,lang);
+  let total=1024, registrations=0;
+  const fetcher=async(url,options)=>{
+   if(options.method==='POST'){registrations++;return Response.json({ordinal:1,total});}
+   return Response.json(url.includes('?')?{total}:{ready:true});
+  };
+  const stop=startVisitorCounter({...fixture,browser:{},fetcher});
+  try{
+   await settle();
+   assert.equal(fixture.element.textContent,first);
+   total=1025;
+   t.mock.timers.tick(29999);await settle();
+   assert.equal(fixture.element.textContent,first);
+   t.mock.timers.tick(1);await settle();
+   assert.equal(fixture.element.textContent,second);
+   assert.equal(registrations,1);
+  }finally{stop();}
+ });
+}
 
 test('hidden and departed pages pause reads, and visibility or history restoration refresh immediately',async(t)=>{
  t.mock.timers.enable({apis:['setTimeout']});
@@ -119,9 +122,10 @@ test('failed refreshes hide the total and recover without registering again',asy
  }finally{stop();}
 });
 
-test('pages without a display register once and do not poll',async(t)=>{
+for(const lang of ['zh-CN','en']){
+test(`a ${lang} page without a display registers once and does not poll`,async(t)=>{
  t.mock.timers.enable({apis:['setTimeout']});
- const fixture=pageFixture(false);
+ const fixture=pageFixture(false,lang);
  let registrations=0,reads=0;
  const stop=startVisitorCounter({...fixture,browser:{},fetcher:async(url,options)=>{
   if(url.includes('?'))reads++;
@@ -134,6 +138,7 @@ test('pages without a display register once and do not poll',async(t)=>{
   assert.equal(registrations,1);assert.equal(reads,0);
  }finally{stop();}
 });
+}
 
 test('total reads accept zero, reject corrupt numbers and never bootstrap an identity',async()=>{
  for(const total of [0,42,-1,0.5,'42',null,Number.MAX_SAFE_INTEGER+1]){

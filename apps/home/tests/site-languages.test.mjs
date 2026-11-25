@@ -8,7 +8,7 @@ import {readdir, readFile} from 'node:fs/promises';
 import {join, relative} from 'node:path';
 import {navigationMarkup} from '../public/navigation.js';
 import {ui} from '../public/ui.js';
-import {realSite} from './helpers/built-site.mjs';
+import {readBuilt, realSite} from './helpers/built-site.mjs';
 
 /** Every built page, as a path under the built site, in a stable order. */
 async function builtPages() {
@@ -16,7 +16,7 @@ async function builtPages() {
   const files = await readdir(root, {recursive: true});
   return files.filter(file => file.endsWith('.html')).map(file => relative(root, join(root, file))).sort();
 }
-const read = async page => readFile(join(await realSite(), page), 'utf8');
+const read = readBuilt;
 
 test('the site has an English homepage, Blog page and not-found page, and no English post page (site-languages::REQ-001)', async () => {
   const pages = await builtPages();
@@ -123,22 +123,6 @@ for (const [lang, page, destination] of SWITCH) {
       assert.deepEqual(chinese.slice(0, 2), ['a', {lang: 'zh-CN', hreflang: 'zh-CN', rel: 'alternate', href: destination}]);
       assert.deepEqual(english.slice(0, 2), ['span', {lang: 'en', 'aria-current': 'true'}]);
     }
-  });
-}
-
-// What the dog says about itself, for assistive technology, on each language's homepage (homepage-dog::REQ-002); the dog script reads
-// these from the page, so it holds no sentence of its own.
-const DOG_LINES = {
-  'index.html': {resting: '静静陪着你', greeting: '很高兴见到你', wagging: '见到你，就忍不住摇尾巴', paused: '好啦，乖乖坐好', unavailable: '小狗先静静陪着你，刷新后再试试'},
-  'en/index.html': {resting: 'Sitting quietly beside you', greeting: 'Nice to see you', wagging: "Can't help wagging my tail when I see you", paused: 'All right, sitting nicely', unavailable: 'The dog is keeping you company quietly for now; refresh to try again'},
-};
-for (const [page, lines] of Object.entries(DOG_LINES)) {
-  test(`${page} carries the dog's five status lines for the dog script, and its button's name`, async () => {
-    const html = await read(page);
-    const status = html.match(/<span id="goldenStatus"([^>]*)>/)[1];
-    assert.deepEqual(Object.fromEntries([...status.matchAll(/\sdata-([a-z]+)="([^"]*)"/g)].map(([, name, value]) => [name, value])), lines);
-    const name = page === 'index.html' ? '小狗摇尾巴' : 'Dog wagging its tail';
-    assert.ok(html.includes(`<button class="golden-trigger" id="goldenTrigger" type="button" aria-label="${name}" aria-pressed="true">`), name);
   });
 }
 

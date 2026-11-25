@@ -11,11 +11,9 @@
 // run); and no visitor request. Test them in the browser suite once it covers them.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
-import {join} from 'node:path';
 import {pageImages} from '../scripts/image-checks.mjs';
 import {isNotFoundAnswer, notFoundHeading} from '../scripts/not-found-check.mjs';
-import {realSite} from './helpers/built-site.mjs';
+import {readBuilt} from './helpers/built-site.mjs';
 
 // What each language's page reads (not-found::US-001/AC-01, not-found::US-001/AC-02, not-found::US-001/AC-04) and where its
 // buttons lead (site-languages::REQ-005).
@@ -31,7 +29,7 @@ const PAGES = [
     buttons: [['Back to home', '/en/'], ['Read the blog', '/en/blog']], title: 'This page got lost · Aloong Planet',
   },
 ];
-const page = async file => readFile(join(await realSite(), file), 'utf8');
+const page = readBuilt;
 
 for (const expected of PAGES) {
   test(`the ${expected.name} not-found page shows the puzzled dog, 404, the heading and the explanation, with no footer`, async () => {

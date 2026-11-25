@@ -15,7 +15,7 @@ import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {navigationMarkup} from '../public/navigation.js';
 import {readManifest} from '../scripts/blog.mjs';
-import {realSite} from './helpers/built-site.mjs';
+import {readBuilt, realSite} from './helpers/built-site.mjs';
 
 // The works table of nav-menus::REQ-002 for each language: group, name, address, description.
 const WORKS = {
@@ -38,7 +38,7 @@ const WORKS = {
 };
 const LANGUAGES = ['zh', 'en'];
 const HOMEPAGES = {zh: 'index.html', en: 'en/index.html'};
-const homepage = async lang => readFile(join(await realSite(), HOMEPAGES[lang]), 'utf8');
+const homepage = async lang => readBuilt(HOMEPAGES[lang]);
 
 /** The navigation's own tabs, as [text, address]: every link in it that is not a menu item. */
 const tabs = html => [...html.match(/<nav\b[^>]*>([\s\S]*)<\/nav>/)[1].matchAll(/<a\b(?![^>]*\bap-menu-item\b)[^>]*\shref="([^"]+)"[^>]*>([^<]*)<\/a>/g)]

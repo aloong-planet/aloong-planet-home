@@ -1,4 +1,4 @@
-import {cp, mkdtemp} from 'node:fs/promises';
+import {cp, mkdtemp, readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -16,3 +16,5 @@ export const realSite = () => built ??= (async () => {
   await buildHomepage({outDir});
   return outDir;
 })();
+/** One page of the real built site as text, by its path under the built site (`en/blog.html`). */
+export const readBuilt = async page => readFile(join(await realSite(), page), 'utf8');
