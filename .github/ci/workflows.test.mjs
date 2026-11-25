@@ -188,6 +188,22 @@ test('justsnap-checks runs the type check and the tests of @aloong-planet/justsn
   ])
 })
 
+// transfer-checks runs no browser either (the site's tests are unit tests and a build read by happy-dom or jsdom; the page's
+// width is the width check's), so its limit is JustSnap's
+test('transfer-checks ends at a time limit of 10 minutes', () => {
+  assert.match(jobs(ci).get('transfer-checks').join('\n'), /^ {4}timeout-minutes: 10\s*$/m)
+})
+
+// The package's tests build the site themselves (src/landing-page.test.ts), so no build step comes before them, and no
+// browser is installed. The type check is the one the ticket's acceptance names: the gate must route apps/transfer to it
+test('transfer-checks runs the type check and the tests of @aloong-planet/transfer', () => {
+  assert.deepEqual(runCommands('transfer-checks'), [
+    'pnpm install --frozen-lockfile',
+    'pnpm --filter @aloong-planet/transfer run check',
+    'pnpm --filter @aloong-planet/transfer run test'
+  ])
+})
+
 // site-kit-checks runs no browser either: the package's tests render the icon component and read stylesheets as files, so
 // its limit is JustSnap's
 test('site-kit-checks ends at a time limit of 10 minutes', () => {

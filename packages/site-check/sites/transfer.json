@@ -1,0 +1,8 @@
+{
+  "origin": "https://transfer.aloongplanet.com",
+  "linkExceptions": [
+    { "path": "/en", "reason": "Cloudflare Pages answers /en with a redirect to /en/, which is built (en/index.html) and measured" },
+    { "path": "/privacy", "reason": "Cloudflare Pages answers /privacy with a redirect to /privacy/, which is built (privacy/index.html) and measured" },
+    { "path": "/en/privacy", "reason": "Cloudflare Pages answers /en/privacy with a redirect to /en/privacy/, which is built (en/privacy/index.html) and measured" }
+  ]
+}
