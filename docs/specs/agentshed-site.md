@@ -18,7 +18,7 @@ never heard of also looks for a sign that other people download it.
 
 A package of this repository, `apps/agentshed`, built with Astro and deployed by Cloudflare Pages at
 `agentshed.aloongplanet.com`, in English (at `/`) and Chinese (at `/zh/`). It is
-one long page (form "L1"): header, hero with the download, a scroll-linked features section, three
+one long page: header, hero with the download, a scroll-linked features section, three
 install steps, a download section and a footer. The visitor's browser decides what to offer. It reads
 the R2 latest pointer for a formal release. Failing that, it reads GitHub's public releases API, which
 gives the latest formal release if there is one and otherwise the newest pre-release. Failing both, it
@@ -64,7 +64,7 @@ what I would get.
   each project has, what the agents remember, token usage and trends, sessions revisited, and search
   across projects — each with a screenshot of that view (agentshed-site::REQ-004, agentshed-site::REQ-005).
 - agentshed-site::US-003/AC-02: The sessions step speaks of searching within the project, and the search
-  step of searching what you asked across every project, so the two read as different features. The
+  step of searching what you asked across every project. The
   search step names no keyboard shortcut.
 
 ### agentshed-site::US-004 Know what installing involves
@@ -115,7 +115,7 @@ notice does not alarm me.
 ### agentshed-site::REQ-003 Page structure (direct acceptance)
 
 The header holds the brand (icon and name), the navigation (Features, Install, Download, GitHub; hidden
-below 760px) and the language toggle, and it stays at the top while scrolling. Below it come the hero,
+below the layout breakpoint of agentshed-site::REQ-004/AC-06) and the language toggle, and it stays at the top while scrolling. Below it come the hero,
 the features section (title "One app, the whole picture", subtitle "It only reads the files your coding
 agents leave on your Mac."), the install section, the download section, and a footer with GitHub,
 Releases and the copyright line.
@@ -131,7 +131,7 @@ Releases and the copyright line.
   place: nothing moves, and every step's text starts on the same line. Under reduced motion the switch
   is instant. Only the current step's text and screenshot are visible to the pointer and to assistive
   technology.
-- agentshed-site::REQ-004/AC-06: Below 760px nothing is pinned. Each step's own screenshot sits under its
+- agentshed-site::REQ-004/AC-06: The page's layout breakpoint is 760px: below it nothing is pinned. Each step's own screenshot sits under its
   text, with a clear gap before the next step's title.
 - agentshed-site::REQ-004/AC-07: Switching language keeps the current step and the scroll position.
 - agentshed-site::REQ-004/AC-08: The page scrolls as usual and nothing captures the wheel. A unit is 60% of
@@ -150,9 +150,9 @@ Releases and the copyright line.
   is retaken from the built app over an English example conversation, including English questions,
   replies and tool details.
 - agentshed-site::REQ-005/AC-02: Each feature screenshot is cut to the part of the window its step is about. All six are the
-  same size (920×517pt at 2×, 16:9) at the same zoom, so the text stays one size as the steps turn. Each
-  cut ends between list rows. The token cut holds the trend chart and the per-model figures whole and
-  leaves out the recent-sessions list. The memory cut shows a memory file open in the drawer as rendered
+  same size (920×517.5pt at 2×, 16:9) at the same zoom. Each cut ends between list rows. The token cut
+  holds the trend chart and the per-model figures whole and leaves out the recent-sessions list. The
+  memory cut shows a memory file open in the drawer as rendered
   Markdown, over the Agents page's Memory section with that file's project (one with only a few memory
   files) expanded and other projects still in view, and ends between the drawer's lines too. The search
   cut starts at the search box and keeps each row's hit count and time. The memory, search and English
@@ -178,7 +178,7 @@ and the same list with the section's Chinese label in Chinese.
 
 ### agentshed-site::REQ-009 Walkthrough video
 
-- agentshed-site::REQ-009/AC-01: Both pages show the approved local poster in the existing window frame. The playback entry reads
+- agentshed-site::REQ-009/AC-01: Both pages show the approved local poster in the window frame. The playback entry reads
   “Watch demo · 1:07” in English and uses its localized label with the same duration in Chinese. Each page opens its own video with
   English narration and captions in the page language.
 - agentshed-site::REQ-009/AC-02: No YouTube player, thumbnail, preconnect or script loads before activation.
@@ -192,8 +192,8 @@ and the same list with the section's Chinese label in Chinese.
 
 ### agentshed-site::REQ-010 Author homepage (direct acceptance)
 
-In both languages, the existing footer copyright line links the author name "aloongplanet" to
-`https://aloongplanet.com` in a new tab, with the existing footer layout and styling.
+In both languages, the footer's copyright line links the author name "aloongplanet" to
+`https://aloongplanet.com` in a new tab.
 
 ### agentshed-site::REQ-011 The download count
 
@@ -243,8 +243,7 @@ a single static file and not a site kept in the app's repository (ADR-0001 optio
 
 ### agentshed-site::CON-002 Two languages (direct acceptance)
 
-Applies to: every page and string of the site. Chinese and English only, by choice and not by omission:
-the landing page is a front door outside [ADR-0013][ag-adr-0013]'s scope ([ADR-0050][ag-adr-0050] option 2). The app
+Applies to: every page and string of the site. Chinese and English only ([ADR-0050][ag-adr-0050] option 2). The app
 speaks the same two languages ([ADR-0035][ag-adr-0035]).
 
 ### agentshed-site::CON-003 What the page reads (direct acceptance)
@@ -252,7 +251,7 @@ speaks the same two languages ([ADR-0035][ag-adr-0035]).
 Applies to: the visitor's browser. To decide what download to offer, the page reads the R2 latest pointer
 and GitHub's public releases API, and no other source. Its only other read is the statistics file, for
 the download count (agentshed-site::REQ-011). The walkthrough additionally loads YouTube only after the
-visitor activates its poster (REQ-009). Pre-releases are never looked for on R2, since they never reach it
+visitor activates its poster (REQ-009). Pre-releases are never looked for on R2
 ([mac-distribution::CON-004][ag-mac-distribution]).
 
 ## Failure modes and boundaries
@@ -260,8 +259,7 @@ visitor activates its poster (REQ-009). Pre-releases are never looked for on R2,
 **Sequence A: deciding the download**
 
 - A1 Before any release exists: no pointer, and GitHub lists none → the list state, leading to an empty
-  release list. The site goes live pointing at the first pre-release ([ADR-0031][ag-adr-0031]), so this state lasts
-  only as long as the site is up before that release.
+  release list.
 - A2 Only `v0.1.0-beta` exists → the test state with `0.1.0-beta` (agentshed-site::REQ-001/AC-02).
 - A3 A formal release has just been published on GitHub and its mirroring is still running → the
   pointer still names the previous formal release, which the page offers from R2 until the pointer
@@ -293,7 +291,7 @@ visitor activates its poster (REQ-009). Pre-releases are never looked for on R2,
 
 - C1 A fast scroll, or a jump to the download section and back → the showcase shows the step the scroll
   position gives (agentshed-site::REQ-004/AC-08), never one left over from before the jump.
-- C2 Resizing across 760px, or changing the window's height → the layout switches between the pinned
+- C2 Resizing across the layout breakpoint (agentshed-site::REQ-004/AC-06), or changing the window's height → the layout switches between the pinned
   showcase and the stacked steps, and the step shown follows the scroll position under the new height,
   with no stale step.
 - C3 A short window → the screenshot shrinks so that the whole of it stays under the header
@@ -301,7 +299,7 @@ visitor activates its poster (REQ-009). Pre-releases are never looked for on R2,
 - C4 Screenshots not yet loaded → their space is held (agentshed-site::REQ-005/AC-03).
 - C5 A language switch while the showcase is pinned → the other page shows the same step
   (agentshed-site::REQ-004/AC-07). The pinned showcase stays at one distance from the top wherever the
-  visitor is within it, so it cannot be what marks the visitor's place.
+  visitor is within it.
 - C6 A screen reader on a wide screen meets the current step only; the other steps are reached by
   scrolling (agentshed-site::REQ-004/AC-05).
 - C7 A visitor without scripts → the stacked steps show at every width, each with its screenshot: nothing
@@ -347,7 +345,6 @@ visitor activates its poster (REQ-009). Pre-releases are never looked for on R2,
   and fullscreen allowed, and the `strict-origin-when-cross-origin` referrer policy, which sends YouTube
   the embedding origin. No YouTube API library is loaded.
 
-- **The Pages project** permanently redirects the legacy English URLs; the static build includes a fallback for local previews.
 - **The pointer read** takes a pointer only when its version is a formal version and its files name the
   arm64 DMG, by its packaged name, at exactly the URL the mirror's layout gives that version. Anything
   else is unreadable; a 404 means there is no pointer yet.
@@ -387,7 +384,7 @@ visitor activates its poster (REQ-009). Pre-releases are never looked for on R2,
 
 ## Out of Scope
 
-- Retaking the screenshots only because the Instructions section changed its name and place (E2).
+- Retaking the screenshots to follow a section's rename or move (E2).
 - A count per release, per period or per source on the page: the figure answers one question, how many
   times Agentshed has been downloaded ([ADR-0055][ag-adr-0055]).
 - More than two languages ([ADR-0050][ag-adr-0050] option 2).
@@ -407,7 +404,6 @@ visitor activates its poster (REQ-009). Pre-releases are never looked for on R2,
 - The download host is `dl.agentshed.aloongplanet.com` ([mac-distribution::REQ-004][ag-mac-distribution]), and the pointer is
   `latest.json` at its root; the pointer's shape is in [mac-distribution][ag-mac-distribution]'s Implementation Decisions.
 
-[ag-adr-0013]: https://github.com/aloong-planet/agentshed/blob/main/docs/adr/0013-ui-language-set-and-i18n-scope.md
 [ag-adr-0031]: https://github.com/aloong-planet/agentshed/blob/main/docs/adr/0031-macos-release-line.md
 [ag-adr-0035]: https://github.com/aloong-planet/agentshed/blob/main/docs/adr/0035-ui-languages-chinese-and-english.md
 [ag-adr-0050]: https://github.com/aloong-planet/agentshed/blob/main/docs/adr/0050-landing-page-in-this-repository.md
