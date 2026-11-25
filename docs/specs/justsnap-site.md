@@ -13,7 +13,7 @@ page has to offer the current formal release every time, without anyone editing 
 ## Solution
 
 A package of this repository, `apps/justsnap`, built with Astro and deployed by Cloudflare Pages at
-`justsnap.aloongplanet.com`, in Chinese (at `/`) and English (at `/en`). It is one long page: header, a hero that fills
+`justsnap.aloongplanet.com`, in Chinese (at `/`) and English (at `/en/`). It is one long page: header, a hero that fills
 the first screen and carries the download button, a scroll-linked features section, a “Download and install” section
 with the download and the install steps, and a footer. The visitor's browser decides what to offer from the release
 data it reads. A release therefore never needs a site change.
@@ -35,7 +35,7 @@ justsnap-site::REQ-002.
 
 As a visitor, I want to read the page in Chinese or English, so that it reads comfortably.
 
-- justsnap-site::US-002/AC-01: Chinese is at `/` and English at `/en`; the toggle at the right of the header switches
+- justsnap-site::US-002/AC-01: Chinese is at `/` and English at `/en/`; the toggle at the right of the header switches
   between them.
 - justsnap-site::US-002/AC-02: Both languages carry the same sections and the same download states, and each its own
   set of screenshots.
@@ -253,7 +253,7 @@ Applies to: the page's text. It is set in the system font stack; the page loads 
 
 **Sequence B: languages and navigation**
 
-- B1 A direct visit to `/en` → English, with the toggle at EN; the toggle goes to the other language's page.
+- B1 A direct visit to `/en/` → English, with the toggle at EN; the toggle goes to the other language's page.
 - B2 The navigation's GitHub link opens the repository in a new tab. The section links scroll within the page.
 
 **Sequence C: the features section**
