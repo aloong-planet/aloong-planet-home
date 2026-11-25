@@ -377,7 +377,7 @@ visitor activates its poster (REQ-009). Pre-releases are never looked for on R2
 
 | Field | Type | Meaning |
 |---|---|---|
-| `schemaVersion` | number | `1`; another value: agentshed-site::REQ-011/AC-05 |
+| `schemaVersion` | number | The file's format version; which value is read: agentshed-site::REQ-011/AC-05 |
 | `summary.total` | number | The download count, unrounded |
 | `summary.sources.github` | number | The GitHub share of the total |
 | `summary.sources.r2` | number | The R2 share of the total |
