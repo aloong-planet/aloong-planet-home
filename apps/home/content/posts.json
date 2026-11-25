@@ -1,5 +1,11 @@
 [
   {
+    "slug": "claude-session-pool-autonomy",
+    "title": "实战分享-用 cc-session-pool 让多个 Claude Code 会话自己跑完一整个需求",
+    "date": "2026-11-17",
+    "summary": "一个调度会话派活、几个 worker 会话干活，派活和汇报不用人，开窗口、清上下文、压缩、重启却都得人来。这篇讲我怎么用一个插件把这些动作交还给会话自己。调度会话管 worker，每个会话看得见自己有多大，该压时自己压缩再接着干，人只管启动和拍板。"
+  },
+  {
     "slug": "super-agent-architecture",
     "title": "Super-agent 架构图解",
     "date": "2026-11-05",
