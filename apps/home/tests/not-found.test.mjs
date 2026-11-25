@@ -1,5 +1,5 @@
 // These have no DOM or host here and are checked by recorded runs in a real browser and on the local Pages emulator,
-// because the project's browser suite, packages/site-check, only measures page widths: the centered layout and the whole page fitting the first screen at
+// because the project's browser suite, packages/site-check, covers only page widths and where focus lands under the pinned header: the centered layout and the whole page fitting the first screen at
 // 1440×900 and 390×844; the buttons' solid dark and outlined looks, size, corners, hover states and focus ring; the
 // keyboard order of the brand, navigation and buttons; the page at a nested address; no section marked in the
 // navigation at an address under /blog/; with scripting unavailable, the dog, text and buttons working without the

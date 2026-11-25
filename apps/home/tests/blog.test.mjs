@@ -1,4 +1,4 @@
-// These have no DOM here and are checked by recorded real-browser runs, because the project's browser suite, packages/site-check, only measures page widths:
+// These have no DOM here and are checked by recorded real-browser runs, because the project's browser suite, packages/site-check, covers only page widths and where focus lands under the pinned header:
 // layout, type sizes, centering, shared table and figure styles, hover states, the keyboard focus ring,
 // jumps and scrolling including figure and contents-column scrolling, the homepage's kept smooth scroll,
 // the contents mark, interactive figures, scripting unavailable, a throwing post script, long text in full

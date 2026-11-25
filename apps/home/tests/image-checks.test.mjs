@@ -1,4 +1,4 @@
-// These have no DOM here and are checked by recorded real-browser runs, because the project's browser suite, packages/site-check, only measures page widths:
+// These have no DOM here and are checked by recorded real-browser runs, because the project's browser suite, packages/site-check, covers only page widths and where focus lands under the pinned header:
 // the portrait requested at high priority, the sitting dog at low priority, the dog's motion sheets waiting for the
 // page's load event, automatic wagging and pause/resume controls once motion sheets are ready, how the reduced
 // portrait looks at its displayed size, and how the re-encoded motion sheets look as the dog plays. Dog visibility,
