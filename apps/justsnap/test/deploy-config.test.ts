@@ -19,6 +19,13 @@ describe("this site's deployment", () => {
     expect(target.accountId).toMatch(/^[0-9a-f]{32}$/)
   })
 
+  // The command uploads to this branch and confirms the deployment on it, and the project takes an upload as its production
+  // deployment only from its production branch. Which branch that is, is set in aloong-planet/infra, which no test here
+  // reads: a value that differs from it is a Preview upload and shows as a failed deploy run.
+  test("deployment.config.json names the branch this site's Pages project takes as production", () => {
+    expect(read<{ productionBranch: string }>('deployment.config.json').productionBranch).toBe('main')
+  })
+
   // A file the build never makes would refuse every deploy of this site; the two named are its home page in each language.
   test('the files a deploy requires of the build are the ones this site builds', () => {
     const { requiredFiles } = read<{ requiredFiles: string[] }>('deployment.config.json')

@@ -2,7 +2,8 @@
 // process boundary replaced: no command here reaches Cloudflare, git or a build. It runs after this repository's checks
 // have passed, so it publishes only a clean checkout of one commit and then confirms that the deployment it created is
 // the production deployment of that commit. The app sites deployed from here run this same command; what differs per
-// site is its deployment.config.json (the account, the Pages project, the files its build must hold).
+// site is its deployment.config.json (the account, the Pages project, the files its build must hold, and the project's
+// production branch).
 //
 // Not covered here, because it needs a real Cloudflare project and a real token: that Wrangler's upload is accepted by
 // a site's project and that the token may use it. The first deploy run of a site after its project's Git builds are
@@ -18,10 +19,17 @@ import { deploy } from '../src/deploy.mjs'
 const REV = 'a1b2c3d4e5f60718293a4b5c6d7e8f9012345678'
 const ID = '3f2a6c1e-9b8d-4e7f-a0c5-1d2e3f4a5b6c'
 const URL_OF_DEPLOYMENT = 'https://3f2a6c1e.example.pages.dev'
-const config = { accountId: 'test-account', project: 'example', requiredFiles: ['index.html', 'zh/index.html'] }
+const config = {
+  accountId: 'test-account',
+  project: 'example',
+  requiredFiles: ['index.html', 'zh/index.html'],
+  productionBranch: 'main'
+}
 
 const BUILD = 'pnpm run build'
-const UPLOAD = `pnpm exec wrangler pages deploy dist --project-name example --branch main --commit-hash ${REV} --commit-dirty=false`
+const uploadTo = (branch: string) =>
+  `pnpm exec wrangler pages deploy dist --project-name example --branch ${branch} --commit-hash ${REV} --commit-dirty=false`
+const UPLOAD = uploadTo('main')
 const LIST = 'pnpm exec wrangler pages deployment list --project-name example --json'
 
 /** What Wrangler writes to its output file for an upload (one JSON object per line), the entry the command reads */
@@ -140,6 +148,14 @@ describe('publishing a site', () => {
     expect(summary).toMatch(/^Deployed /)
   })
 
+  test("a site is uploaded to, and confirmed on, the production branch its configuration names (a project whose production branch is master)", () => {
+    const run = boundary({ list: [row({ Branch: 'master' }), older] })
+    const summary = deploy({ config: { ...config, productionBranch: 'master' }, ...run })
+    expect(run.calls).toContain(uploadTo('master'))
+    expect(run.calls).not.toContain(UPLOAD)
+    expect(summary).toBe(`Deployed ${ID} (Production, ${REV.slice(0, 7)}) ${URL_OF_DEPLOYMENT}`)
+  })
+
   test.each([BUILD, UPLOAD, LIST])('a failing command stops the run at %s', (failing) => {
     const run = boundary({ fail: failing })
     expect(() => deploy({ config, ...run })).toThrow(/external process failure/)
@@ -174,9 +190,17 @@ describe('publishing a site', () => {
     expect(run.calls).toEqual(['git status --porcelain', 'git rev-parse HEAD'])
   })
 
+  test("a dry run names the production branch the site's configuration gives", () => {
+    const run = boundary()
+    expect(deploy({ config: { ...config, productionBranch: 'master' }, ...run, dryRun: true })).toContain('production branch master')
+  })
+
   test.each<Record<string, unknown>>([
     { accountId: '' },
     { project: '' },
+    { productionBranch: undefined },
+    { productionBranch: '' },
+    { productionBranch: 3 },
     { requiredFiles: undefined },
     { requiredFiles: [] },
     { requiredFiles: ['index.html', ''] },

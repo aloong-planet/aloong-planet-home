@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // `pages-deploy`: the `cf:deploy` command of a site package (app-sites::REQ-003/AC-01). A site's package.json names it as
 // its `cf:deploy` script, and pnpm runs that from the package directory, which holds the site's package.json and its
-// deployment.config.json: {accountId, project, requiredFiles}. The command's logic is in deploy.mjs; this file reads the
-// configuration and supplies the real process boundary.
+// deployment.config.json: {accountId, project, requiredFiles, productionBranch}. The command's logic is in deploy.mjs; this
+// file reads the configuration and supplies the real process boundary.
 import {spawnSync} from 'node:child_process';
 import {existsSync, mkdtempSync, readFileSync, rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
