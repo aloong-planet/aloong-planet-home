@@ -68,6 +68,8 @@ jobs:
   # 320px to 1440px and fails when a page is wider than the window (app-sites::QR-001/AC-01). The check builds every
   # site under apps/ itself, so a site added later is covered without a change here. Listed under the `home` scope
   # with the homepage; a site added later lists this job under its own scope too, because the check opens all sites.
+  # The package's tests run in the same job and include a browser test of the homepage (nav-menus::US-004/AC-03), which
+  # builds apps/home itself.
   # The browser is Playwright's headless shell, downloaded on every run: there is no cache yet, so read this step's
   # time in a run before adding one.
   width-check:

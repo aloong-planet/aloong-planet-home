@@ -1,6 +1,7 @@
 * { box-sizing: border-box; }
-/* The top padding is the pinned navigation's height, so a jump to a section or a focused element lands below the bar instead of under it. */
-html { scroll-behavior: smooth; scroll-padding-top:76px; }
+/* The pinned header's height, stated once per layout (the phone layout restates it below). Everything that has to clear the header reads it, so changing the height here changes them together: the header, the boxes that fill the window beneath it, and the top padding, which makes a jump to a section or a focused element land below the bar instead of under it. The browser test of that is packages/site-check/tests/nav-menus.test.mjs. */
+:root { --ap-header-height:76px; }
+html { scroll-behavior: smooth; scroll-padding-top:var(--ap-header-height); }
 body { margin: 0; }
 .ap-site { --paper:#fafaf9; --ink:#20211f; --muted:#777971; --line:#e6e7e1; --accent:#335bc7; --tag:#efefeb; --card:#fff; --shadow:#20211f1a; background:var(--paper); color:var(--ink); font-family:Arial,"PingFang SC",sans-serif; min-height:100svh; -webkit-font-smoothing:antialiased; }
 a { color:inherit; text-decoration:none; }
@@ -8,7 +9,7 @@ button { font:inherit; }
 a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
 /* navigation.js fills this mount with the header. A sticky box moves only within its containing block, which for the header would be this mount, exactly as tall as the header; the mount's own containing block is the page body, so the mount is the box that sticks, and the page scrolls beneath it. */
 [data-site-navigation] { position:sticky; top:0; z-index:10; }
-.ap-header { height:76px; padding:0 32px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; background:var(--paper); border-bottom:1px solid transparent; }
+.ap-header { height:var(--ap-header-height); padding:0 32px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; background:var(--paper); border-bottom:1px solid transparent; }
 .ap-brand { display:flex; align-items:center; gap:12px; font-size:17px; letter-spacing:-.6px; font-weight:700; }
 .ap-brand small { font-size:11px; padding:7px 8px; background:var(--tag); font-weight:400; letter-spacing:0; }
 .ap-nav { display:flex; gap:30px; font-size:13px; }
@@ -37,7 +38,7 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 /* Set by navigation.js after Escape or a click on the tab, until the pointer and keyboard focus have both left the menu. */
 .ap-menu[data-dismissed] .ap-menu-panel { display:none; }
 .ap-social { justify-self:end; font-size:12px; border-bottom:1px solid var(--ink); padding:7px 0; }
-.ap-hero { height:calc(100svh - 76px); min-height:720px; max-height:950px; position:relative; margin:0 32px; }
+.ap-hero { height:calc(100svh - var(--ap-header-height)); min-height:720px; max-height:950px; position:relative; margin:0 32px; }
 .ap-hero-profile { position:absolute; inset:0 0 0 40%; }
 .ap-scene { width:470px; height:430px; position:absolute; left:50%; top:38%; transform:translate(-50%,-50%); }
 .ap-person { position:absolute; height:390px; width:260px; object-fit:contain; left:175px; bottom:0; }
@@ -53,7 +54,7 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 .ap-intro p { font-size:14px; line-height:1.8; margin:0; color:var(--muted); }
 .ap-intro .ap-visitor { margin-top:18px; font-size:12px; min-height:22px; font-variant-numeric:tabular-nums; }
 /* The block runs from the window's left edge to the dog (the portrait group is centred at 70% of the hero) and over the visible part of the hero, so the list centred inside has equal whitespace on both sides and above and below. Auto margins, unlike align-items:center, stop at the top when the list is taller than the window, so it never slides under the navigation. */
-.ap-home-blog { position:absolute; top:0; left:-32px; width:calc(70% - 146px); height:min(100%,calc(100svh - 76px)); padding:24px 32px; display:flex; pointer-events:none; }
+.ap-home-blog { position:absolute; top:0; left:-32px; width:calc(70% - 146px); height:min(100%,calc(100svh - var(--ap-header-height))); padding:24px 32px; display:flex; pointer-events:none; }
 /* The block's empty right edge overlaps the dog button's hit area, so only the list itself takes pointer input. */
 .ap-home-blog-inner { width:100%; max-width:440px; margin:auto; pointer-events:auto; }
 .ap-home-posts { list-style:none; margin:0; padding:0; }
@@ -114,7 +115,7 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 .ap-post-card:hover .ap-post-cover { transform:translateY(-4px); }
 .ap-blog-back { margin-top:50px; }
 /* The not-found page fills the window below the header; the larger bottom padding lifts the group slightly above the middle. */
-.ap-notfound { min-height:calc(100svh - 76px); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px 32px 76px; }
+.ap-notfound { min-height:calc(100svh - var(--ap-header-height)); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px 32px var(--ap-header-height); }
 .ap-notfound-dog { display:block; width:160px; height:160px; object-fit:contain; }
 .ap-notfound-code { margin:4px 0 0; font-size:clamp(64px,9vw,96px); font-weight:500; letter-spacing:-.05em; line-height:1; font-variant-numeric:tabular-nums; }
 .ap-notfound h1 { margin:14px 0 12px; font-size:24px; font-weight:500; letter-spacing:-.6px; }
@@ -130,8 +131,8 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
  .ap-home-blog { width:calc(70% - 128px); }
 }
 @media(max-width:700px) {
- html { scroll-padding-top:96px; }
- .ap-header { padding:0 20px; grid-template-columns:1fr auto; height:96px; gap:10px; }
+ :root { --ap-header-height:96px; }
+ .ap-header { padding:0 20px; grid-template-columns:1fr auto; gap:10px; }
  .ap-brand { font-size:15px; } .ap-brand small { display:none; }
  .ap-nav { grid-row:2; grid-column:1/-1; justify-content:space-between; gap:10px; padding-bottom:15px; }
  .ap-social { grid-column:2; grid-row:1; }
@@ -148,7 +149,7 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
  .ap-blog { padding:32px 20px 70px; }
  .ap-post-list { grid-template-columns:1fr; gap:44px; } .ap-post-lead { margin-bottom:0; }
  .ap-post-lead .ap-post-card { display:block; } .ap-post-lead time { margin-top:18px; } .ap-post-lead h2 { font-size:22px; } .ap-post-lead p { font-size:13px; }
- .ap-notfound { min-height:calc(100svh - 96px); padding:32px 20px 96px; }
+ .ap-notfound { padding:32px 20px var(--ap-header-height); }
 }
 @media(max-width:380px) {
  .ap-scene { transform:translate(-50%,-50%) scale(.64); }

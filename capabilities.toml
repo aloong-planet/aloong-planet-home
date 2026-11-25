@@ -13,7 +13,7 @@ enabled = false
 [e2e-suite]
 enabled = true
 source = "packages/site-check/src/check-sites.mjs"
-enforced-by = ["pnpm --filter @aloong-planet/site-check run check"]
+enforced-by = ["pnpm --filter @aloong-planet/site-check run check", "pnpm --filter @aloong-planet/site-check run test"]
 
 [mutation-testing]
 enabled = false
