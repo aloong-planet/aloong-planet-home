@@ -120,6 +120,6 @@ anything under `apps/agentshed/` (see [deployment and CI](../../docs/ops/deploym
 The Deploy workflow (`.github/workflows/deploy.yml`) publishes the site after CI has passed on a push to main: its job
 `deploy-agentshed` runs `cf:deploy`, which builds the site, uploads `dist/` to the Cloudflare Pages project `agentshed`
 (the one behind `agentshed.aloongplanet.com`) as the production deployment of that commit, and then checks the
-project's deployment list for it. A push deploys both sites, whichever it changed. The project's Cloudflare Git builds
+project's deployment list for it. A push deploys every site, whichever it changed. The project's Cloudflare Git builds
 are off, so nothing else publishes it. [Deployment and CI](../../docs/ops/deployment.md) has the command's details, the
 token and how to recover.
