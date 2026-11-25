@@ -1,4 +1,4 @@
-// A state's view applied to the page as served (justsnap-site::REQ-002, US-001/AC-02, AC-03, failures A7, E1): the
+// A state's view applied to the page as served (justsnap-site::REQ-002, failures A7, E1): the
 // pages come from the run's fresh build, and each case gets its own DOM, since applying a view writes to it.
 //
 // Not covered here: whether the page keeps the visitor's place when a state lands while they are scrolled down

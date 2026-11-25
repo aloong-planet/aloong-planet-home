@@ -6,13 +6,13 @@
 // else, however close, is unreadable, and the page tries GitHub; on GitHub, a release not shaped like this
 // repository's is passed over and the others still count, and an answer that is not a list is unreadable.
 // Nothing else of an answer (release notes, names, other URLs) is ever kept. There is one package, Apple
-// silicon (ADR-0004): other architectures in a pointer are ignored, and pre-releases are never offered.
+// silicon (JustSnap's ADR-0004): other architectures in a pointer are ignored, and pre-releases are never offered.
 
 export const DOWNLOAD_HOST = 'https://dl.justsnap.aloongplanet.com'
 export const POINTER_URL = `${DOWNLOAD_HOST}/latest.json`
 export const RELEASES_API = 'https://api.github.com/repos/aloong-planet/justsnap/releases?per_page=100'
 
-/** How long a read may take before the page stops waiting for it (failure A2) */
+/** How long a read may take before the page stops waiting for it (justsnap-site::CON-005/AC-01, failure A2) */
 const TIMEOUT_MS = 5000
 
 export type PointerRead = { kind: 'formal'; version: string; url: string } | { kind: 'absent' } | { kind: 'unreadable' }
@@ -34,7 +34,7 @@ async function get(fetch: Fetch, url: string, timeoutMs: number): Promise<{ stat
   const abort = new AbortController()
   const timer = setTimeout(() => abort.abort(), timeoutMs)
   try {
-    // Only `accept`: any other header would make the browser send a CORS preflight these hosts do not answer
+    // Only `accept` (justsnap-site::CON-005/AC-02): any other header would make the browser send a CORS preflight these hosts do not answer
     const response = await fetch(url, { signal: abort.signal, headers: { accept: 'application/json' } })
     if (response.status !== 200) return { status: response.status, body: undefined }
     return { status: 200, body: (await response.json()) as unknown }

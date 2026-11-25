@@ -1,4 +1,4 @@
-// The two reads (justsnap-site::REQ-001, CON-003, failures A1–A7, E1), through an injected fetch: no case reaches
+// The two reads (justsnap-site::REQ-001, CON-003, CON-005, failures A1–A7, E1), through an injected fetch: no case reaches
 // the network. The fixtures are real shapes: the pointer as agentshed's mirror script writes it (JustSnap's own writer is not built
 // yet; when it is, its output replaces this fixture), the 404 the download
 // host answers before the first release (an HTML body), and a public GitHub releases answer (drafts, pre-releases,
