@@ -11,9 +11,14 @@ const urls = [
   ['blog/index.html', '/blog/'],
   ['blog/a.html', '/blog/a'],
   ['404.html', '/404'],
+  // A name with a character that an address treats as more than a name is asked for with that character escaped, so the
+  // address names that file and nothing else.
+  ['100%.html', '/100%25'],
+  ['what?.html', '/what%3F'],
+  ['a#b.html', '/a%23b'],
 ]
 for (const [file, url] of urls) {
-  test(`the built file ${file} is served at ${url}`, () => {
+  test(`the built file ${file} is asked for as ${url}`, () => {
     assert.equal(pageUrl(file), url)
   })
 }
@@ -64,14 +69,3 @@ test('a workspace with no site is an error, so a check that finds nothing cannot
   const root = await tree(t, { 'packages/site-check/package.json': '{}', 'apps/notes/readme.md': 'x' })
   await assert.rejects(listSites(root), /no site/i)
 })
-
-const awkward = [
-  ['100%.html', '/100%25'],
-  ['what?.html', '/what%3F'],
-  ['a#b.html', '/a%23b'],
-]
-for (const [file, url] of awkward) {
-  test(`the built file ${file} is asked for as ${url}, so the address names that file and nothing else`, () => {
-    assert.equal(pageUrl(file), url)
-  })
-}

@@ -30,6 +30,21 @@ const readLinks = () =>
 
 const readText = () => document.body?.innerText.trim().length ?? 0
 
+// An image marked loading="lazy" is fetched only once it is near the window, and a visitor scrolls to it, so every one
+// is loaded before anything is measured: a wide image far below the first screen would otherwise never take its room.
+// An image that fails to load counts as done here; its failure is reported by the request listeners.
+const loadLazyImages = () =>
+  Promise.all(
+    [...document.images].map((image) => {
+      image.loading = 'eager'
+      if (image.complete) return undefined
+      return new Promise((resolve) => {
+        image.addEventListener('load', resolve, { once: true })
+        image.addEventListener('error', resolve, { once: true })
+      })
+    }),
+  )
+
 async function measurePage({ context, origin, url, files, config, widths }) {
   const problems = []
   const blocked = []
@@ -55,9 +70,12 @@ async function measurePage({ context, origin, url, files, config, widths }) {
       if (new URL(request.url()).origin !== origin || reported.has(request.url())) return
       problems.push(`${request.url()} failed: ${request.failure()?.errorText}`)
     })
+    // A script that stopped with an error left the page as it was at that moment, not as a visitor gets it.
+    page.on('pageerror', (error) => problems.push(`a script on the page threw: ${error.message}`))
 
     await page.setViewportSize({ width: widths[0], height: WINDOW_HEIGHT })
     await page.goto(origin + url, { waitUntil: 'networkidle' })
+    await page.evaluate(loadLazyImages)
     await page.evaluate(() => document.fonts.ready)
     if ((await page.evaluate(readText)) === 0) problems.push('the page has no visible text')
 
@@ -95,8 +113,9 @@ async function measurePage({ context, origin, url, files, config, widths }) {
 export async function measureSite({ browser, dist, config, widths = WIDTHS }) {
   const { files, pages } = await readDist(dist)
   const server = await startServer({ dist, fixtures: config.fixtures })
-  const context = await browser.newContext({ viewport: { width: widths[0], height: WINDOW_HEIGHT } })
+  let context
   try {
+    context = await browser.newContext({ viewport: { width: widths[0], height: WINDOW_HEIGHT } })
     const results = new Array(pages.length)
     let next = 0
     const worker = async () => {
@@ -108,7 +127,8 @@ export async function measureSite({ browser, dist, config, widths = WIDTHS }) {
     await Promise.all(Array.from({ length: Math.min(PAGES_AT_ONCE, pages.length) }, worker))
     return { pages: results }
   } finally {
-    await context.close()
-    await server.close()
+    // Both are let go whatever happened: a context that cannot close (its browser is gone) must not leave the server
+    // listening, which would keep the process alive, and closing neither may hide the error that is already on its way.
+    await Promise.allSettled([context?.close(), server.close()])
   }
 }

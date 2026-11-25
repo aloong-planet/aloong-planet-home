@@ -39,22 +39,51 @@ for (const [file, content] of Object.entries(${JSON.stringify(pages)})) {
   }
 }
 
-test('a site nobody listed is found, built and measured; one that fails fails the run, and so does anything that stops a site being measured', async (t) => {
+// A page whose only fault is not its width: a stylesheet of its own site that is not built.
+const unstyled = '<!doctype html><meta charset="utf-8"><title>t</title><link rel="stylesheet" href="/missing.css"><body><p>fits</p></body>'
+
+// Each of these is the only site in the workspace, so the exit code can only come from that one failure.
+const failures = [
+  [
+    'a page wider than the window',
+    site('bad', { 'index.html': wide }),
+    [/^bad: 1 page x 1121 widths, 1121 violations$/m, /^ {2}\/ is wider than the window at 320-1440: the page is 2000px wide in a 320px window$/m],
+  ],
+  [
+    'a page that fits but could not be measured as a visitor sees it',
+    site('stale', { 'index.html': unstyled }),
+    [/^stale: 1 page x 1121 widths, 1 violation$/m, /^ {2}\/: .*\/missing\.css was answered with 404$/m],
+  ],
+  ['a site with no config', site('lost', { 'index.html': fits }, { config: null }), [/^lost: .*no config for the site lost/m]],
+  ['a site with no build script', site('nobuild', { 'index.html': fits }, { build: null }), [/^nobuild: .*no build script/m]],
+  [
+    'a site whose build fails',
+    site('broken', { 'index.html': fits }, { build: 'node -e "console.log(\'boom from the build\'); process.exit(3)"' }),
+    [/^broken: the build of broken failed[^]*boom from the build/m],
+  ],
+]
+for (const [name, files, expected] of failures) {
+  test(`${name} fails the run, and the run says why`, async (t) => {
+    const root = await tree(t, files)
+    const { code, output } = await run(['--root', root, '--config-dir', join(root, 'cfg')])
+    assert.equal(code, 1, output)
+    for (const line of expected) assert.match(output, line)
+  })
+}
+
+test('a site nobody listed is found, built and measured, and a site that fails does not stop the sites after it being measured', async (t) => {
+  // The sites are taken in the order of their names: bad, broken, good, lost, nobuild.
   const root = await tree(t, {
     ...site('good', { 'index.html': fits, 'about.html': fits }),
     ...site('bad', { 'index.html': wide }),
     ...site('lost', { 'index.html': fits }, { config: null }),
     ...site('nobuild', { 'index.html': fits }, { build: null }),
-    ...site('broken', { 'index.html': fits }, { build: 'node -e "console.log(\'boom from the build\'); process.exit(3)"' }),
+    ...site('broken', { 'index.html': fits }, { build: 'node -e "process.exit(3)"' }),
   })
   const { code, output } = await run(['--root', root, '--config-dir', join(root, 'cfg')])
-  assert.equal(code, 1)
+  assert.equal(code, 1, output)
   assert.match(output, /^good: 2 pages x 1121 widths, 0 violations$/m)
-  assert.match(output, /^bad: 1 page x 1121 widths, 1121 violations$/m)
-  assert.match(output, /^ {2}\/ is wider than the window at 320-1440: the page is 2000px wide in a 320px window$/m)
-  assert.match(output, /^lost: .*no config for the site lost/m)
   assert.match(output, /^nobuild: .*no build script/m)
-  assert.match(output, /^broken: the build of broken failed[^]*boom from the build/m)
 })
 
 test('sites that all fit pass the run, and --no-build measures what is already built without running the build', async (t) => {

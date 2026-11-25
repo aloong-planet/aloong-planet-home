@@ -26,7 +26,14 @@
 //      file per language is covered. A language chosen at run time (a script swaps the text from a cookie, the browser's
 //      language or a switch) is measured in its first state only. Such a site adds a per-site state hook that selects each
 //      language, or builds a file for each.
-// Outside the requirement and so outside the check: windows narrower than 320px or wider than 1440px.
+//   6. Windows wider than 1440px. The requirement (app-sites::QR-001/AC-01) says "320px wide or wider" with no upper
+//      end; the check stops at 1440px, the bound its ticket sets. A page that overflows only above 1440px (a media query
+//      with a min-width of 1500px, say) passes. Raise the bound in widths.mjs when a site has a layout rule above 1440px.
+//   7. A layout decided once, when the page loads. Each page is loaded at 320px and the window is then made each width
+//      in turn, as a visitor who resizes would; a script that reads the window's width once at load and has no resize
+//      handler is therefore seen only as it was set up at 320px. Add a second pass that loads the page afresh at each
+//      width (or a per-site state hook) when a site has such a script.
+// Windows narrower than 320px are outside the requirement and so outside the check.
 //
 // Usage: pnpm --filter @aloong-planet/site-check run check [--root <dir>] [--config-dir <dir>] [--no-build]
 //   --root        the workspace (default: this repository)

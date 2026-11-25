@@ -7,6 +7,7 @@
 // the page), and the server answers a page with 200 or 404 only.
 import { test, before, after } from 'node:test'
 import assert from 'node:assert/strict'
+import { setTimeout as delay } from 'node:timers/promises'
 import { chromium } from 'playwright'
 import { measureSite } from '../src/measure.mjs'
 import { WIDTHS } from '../src/widths.mjs'
@@ -108,6 +109,20 @@ test('a page with no visible text fails, so a blank page is not a page that fits
   assert.match(pages[0].problems[0], /no visible text/)
 })
 
+// A script that stops with an error leaves the page as it was at that moment (a header that is built by the script is not
+// there), which is not the page a visitor gets, so the width read from it says nothing.
+const errors = [
+  ['a script that throws', '<script>throw new Error("boom from the page")</script>'],
+  ['a promise that is rejected and never handled', '<script>Promise.reject(new Error("boom from the page"))</script>'],
+]
+for (const [name, script] of errors) {
+  test(`${name} fails the page and says what it threw`, async (t) => {
+    const { pages } = await measure(t, { 'index.html': page('', `<p>x</p>${script}`) })
+    assert.equal(pages[0].problems.length, 1)
+    assert.match(pages[0].problems[0], /boom from the page/)
+  })
+}
+
 // A page that writes a long number into a line that cannot wrap, after asking its own backend for it.
 const counter = page('<style>body{margin:0}#n{white-space:nowrap}</style>', '<p id="n">…</p><script>fetch("/api/visitor").then((r) => r.json()).then((d) => { document.getElementById("n").textContent = d.total })</script>')
 const huge = '9'.repeat(200)
@@ -119,10 +134,12 @@ test('a request to the site\'s own backend is answered from the site\'s fixture,
   assert.ok(pages[0].violations.some((v) => v.width === 320))
 })
 
+// The page's own script then fails on the answer it got, and that is reported as well, so the 404 is looked for among
+// the problems instead of being taken to be the only one.
 test('without a fixture the same request fails the page instead of being passed over', async (t) => {
   const { pages } = await measure(t, { 'index.html': counter })
-  assert.equal(pages[0].problems.length, 1)
-  assert.match(pages[0].problems[0], /\/api\/visitor.*404/)
+  assert.ok(pages[0].problems.length >= 1)
+  assert.ok(pages[0].problems.some((problem) => /\/api\/visitor.*404/.test(problem)), pages[0].problems.join('\n'))
 })
 
 // A link inside the site is held to land on a built page or file; the page is read after its scripts ran, so links they
@@ -152,6 +169,41 @@ for (const [name, body, site, expected] of links) {
 test('the same missing link written twice is reported once', async (t) => {
   const { pages } = await measure(t, { 'index.html': page('', '<p>x</p><a href="/nope">a</a><a href="/nope">b</a>') })
   assert.equal(pages[0].problems.length, 1)
+})
+
+// An image marked loading="lazy" is fetched only once it is near the window, and a visitor scrolls to it, so one that
+// is far below the first screen has to take its room in the measurement too. This one is 2000px wide and has no width
+// attribute, so it makes the page 2000px wide.
+const wideImage = '<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="10"><rect width="2000" height="10"/></svg>'
+
+test('a wide image that loads lazily, far below the first screen, is measured: the windows narrower than it fail', async (t) => {
+  const body = '<div style="height:6000px">x</div><img loading="lazy" src="/wide.svg" alt="">'
+  const { pages } = await measure(t, { 'index.html': page('<style>body{margin:0}</style>', body), 'wide.svg': wideImage }, { widths: [320, 1000, 2000, 2100] })
+  assert.deepEqual(pages[0].problems, [])
+  assert.deepEqual(pages[0].violations.map((v) => v.width), [320, 1000])
+})
+
+test('a lazy image that fails to load fails the page and does not hold the measuring up', { timeout: 60_000 }, async (t) => {
+  const { pages } = await measure(t, { 'index.html': page('', '<div style="height:6000px">x</div><img loading="lazy" src="/gone.svg" alt="" width="10" height="10">') })
+  assert.equal(pages[0].problems.length, 1)
+  assert.match(pages[0].problems[0], /\/gone\.svg.*404/)
+})
+
+// The measuring serves the build on a port of its own. When the browser goes away while a page is being measured, the
+// measuring fails, and the port is let go: a server left listening keeps the process alive, so the run would hang for the
+// time limit of its job instead of failing. The listening servers are counted from the process's own resource list.
+test('a browser that is closed in the middle of the measuring fails it and leaves no server listening', async (t) => {
+  const own = await chromium.launch()
+  t.after(() => own.close())
+  const dist = await tree(t, { 'index.html': page('', '<p>x</p>') })
+  const listening = () => process.getActiveResourcesInfo().filter((resource) => resource === 'TCPServerWrap').length
+  const before = listening()
+  const measuring = measureSite({ browser: own, dist, config, widths: WIDTHS }).then(() => null, (error) => error)
+  await delay(1000)
+  assert.equal(listening(), before + 1, 'the measuring has not started its server')
+  await own.close()
+  assert.ok(await measuring, 'the measuring did not fail')
+  assert.equal(listening(), before)
 })
 
 test('a page that changes itself when the window is resized is measured after it has changed', async (t) => {
