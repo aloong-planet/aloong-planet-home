@@ -16,7 +16,7 @@
 // (agentshed-site::REQ-009/AC-02), in `test/agentshed-site-video.test.ts`.
 // What the page looks like in light and dark, listed above, now has its cases there too, switching between them and
 // the screenshots staying light included (agentshed-site::REQ-006, Failure D1), in `test/agentshed-site-colours.test.ts`.
-// The page's font (agentshed-site::REQ-006) has its cases there too, in `test/agentshed-site-font.test.ts`.
+// The page's font (agentshed-site::CON-005) has its cases there too, in `test/agentshed-site-font.test.ts`.
 // Host HTTP status and query/fragment preservation require a Cloudflare Pages runtime browser check;
 // this suite checks the emitted redirect fallback and host configuration, not the host itself.
 import { readdirSync, readFileSync } from 'node:fs'
@@ -79,7 +79,7 @@ describe('page structure', () => {
     ])
   })
 
-  // agentshed-site::REQ-012/AC-01. The expected names are literals rather than the dictionary's text.
+  // agentshed-site::REQ-012/AC-01 and agentshed-site::REQ-012/AC-04. The expected names are literals rather than the dictionary's text.
   test.each(LOCALES)('%s: the header opens with the trail back to the aloong planet homepage, then the brand', (locale) => {
     const trail = pages[locale].querySelector('header .bar')?.firstElementChild
     expect(trail?.tagName).toBe('NAV')

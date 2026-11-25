@@ -93,14 +93,15 @@ anything under `apps/agentshed/` (see [deployment and CI](../../docs/ops/deploym
   switch. `test/agentshed-site-colours.test.ts` checks the page's colours in the browser, in both appearances: every
   colour of its text, grounds and borders a palette token's, the parts the palette names their role's, its recolouring
   when the system appearance changes, the screenshots staying light and the GitHub button beside Download
-  (agentshed-site::REQ-006, Failure D1). Every browser case opens the build through `visit()`, and `lint` fails
+  (agentshed-site::REQ-006, agentshed-site::REQ-002/AC-06, Failure D1). Every browser case opens the build through `visit()`, and `lint` fails
   on any other import of Playwright by its package name in a JavaScript or TypeScript file of the package;
   `test/eslint-browser-rule.test.mjs` (the script `test:lint-rule`) runs each form of import the rule refuses through
   the package's own lint configuration.
-  `test/agentshed-site-colours.test.ts` also checks the test state's pills and note in the warning pair, and
+  `test/agentshed-site-colours.test.ts` also checks the test state's pills and note in the warning pair
+  (agentshed-site::REQ-002/AC-07), and
   `test/agentshed-site-font.test.ts` the font: the stylesheet's two families, the body's and the feature steps'
   numbers', beginning with the system stack, and in the browser, in the test state at two widths, no font face, no
-  font file asked for and every text in the family its rule declares (agentshed-site::REQ-006).
+  font file asked for and every text in the family its rule declares (agentshed-site::CON-005).
 - `src/styles/palette.test.ts` checks that the stylesheet declares every colour token in both the light and the dark
   appearance.
 - `test/apply-download.test.ts` and `test/init-download.test.ts` apply the download states to that build's
