@@ -15,9 +15,8 @@ page has to offer the current formal release every time, without anyone editing 
 A package of this repository, `apps/justsnap`, built with Astro and deployed by Cloudflare Pages at
 `justsnap.aloongplanet.com`, in Chinese (at `/`) and English (at `/en`). It is one long page: header, a hero that fills
 the first screen and carries the download button, a scroll-linked features section, a “Download and install” section
-with the download and three install steps, and a footer. The visitor's browser decides what to offer. It reads the R2
-latest pointer. Failing that, it reads GitHub's public releases API. Failing both, it offers GitHub's release list. A
-release therefore never needs a site change.
+with the download and the install steps, and a footer. The visitor's browser decides what to offer from the release
+data it reads. A release therefore never needs a site change.
 
 > Pending: Cloudflare Pages deploys the site from this repository's `apps/justsnap`.
 
@@ -206,8 +205,7 @@ Applies to: all text of the page, in both appearances.
 ### justsnap-site::CON-001 Where the site lives (direct acceptance)
 
 Applies to: the website. A package of this repository, `apps/justsnap`, built with Astro and deployed by Cloudflare
-Pages at `justsnap.aloongplanet.com` ([ADR-0001](../adr/0001-app-websites-in-this-repository.md)). It is not a single
-static file and not a site kept in the app's repository (ADR-0001 option 2).
+Pages at `justsnap.aloongplanet.com` ([ADR-0001](../adr/0001-app-websites-in-this-repository.md)).
 
 ### justsnap-site::CON-002 Two languages (direct acceptance)
 
@@ -300,7 +298,7 @@ Applies to: the page's text. It is set in the system font stack; the page loads 
 ## Out of Scope
 
 - A download entry for the Universal and Intel packages: the release has one Apple silicon package
-  ([ADR-0004][js-adr-0004]), and the page neither offers nor mentions the others (justsnap-site::CON-004).
+  ([ADR-0004][js-adr-0004]) (justsnap-site::CON-004).
 - A download state for pre-releases: there is no pre-release channel.
 - Download statistics.
 - Languages other than the two.
