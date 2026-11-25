@@ -1,6 +1,7 @@
 // Measuring a built site in a real browser: the build output is served locally, every page is opened, and at every
 // width the page is asked how wide it is. What the page asks of the outside world is answered or refused here, so
 // the measurement does not depend on the network.
+import { ceilingProblems } from './conditions.mjs'
 import { affectsLayout } from './requests.mjs'
 import { classifyLink, linkResolves } from './links.mjs'
 import { readDist } from './pages.mjs'
@@ -29,6 +30,65 @@ const readLinks = () =>
   })
 
 const readText = () => document.body?.innerText.trim().length ?? 0
+
+// The width conditions the page's style sheets hold, as the browser holds them: [{ sheet, rule, condition, container }],
+// where `sheet` says which style sheet a condition was found in, `rule` shows it the way it was written and `container`
+// is set for a container query. Every place a condition can sit is read: a rule at any depth (inside @layer, @supports
+// and nested style rules), the media of an @import and the rules of the sheet it brings in, the media of a <link> or
+// <style>, and constructed sheets. A sheet from another origin cannot be read (it throws a SecurityError); the check
+// refuses every other origin and reports it there, so it is skipped here rather than reported twice. Style sheets
+// inside shadow roots are not reached.
+const readConditions = () => {
+  const found = []
+  const seen = new Set()
+  const styles = [...document.querySelectorAll('style')]
+  const near = (href) => {
+    try {
+      const url = new URL(href, document.baseURI)
+      return url.origin === location.origin ? url.pathname + url.search : href
+    } catch {
+      return href
+    }
+  }
+  const nameOf = (sheet) => {
+    if (sheet.href) return sheet.href.startsWith('data:') ? 'a style sheet at a data: URL' : near(sheet.href)
+    if (sheet.ownerNode?.localName === 'style') return `<style> no. ${styles.indexOf(sheet.ownerNode) + 1}`
+    return 'a constructed style sheet'
+  }
+  const readSheet = (sheet) => {
+    if (seen.has(sheet)) return
+    seen.add(sheet)
+    let rules
+    try {
+      rules = sheet.cssRules
+    } catch (error) {
+      if (error.name === 'SecurityError') return
+      throw error
+    }
+    const name = nameOf(sheet)
+    const media = sheet.media.mediaText
+    if (media) {
+      const element = sheet.ownerNode?.localName
+      const rule = element === 'link' || element === 'style' ? `<${element} media="${media}">` : `a style sheet with media "${media}"`
+      found.push({ sheet: name, rule, condition: media })
+    }
+    readRules(rules, name)
+  }
+  const readRules = (rules, name) => {
+    for (const rule of rules) {
+      if (rule instanceof CSSImportRule) {
+        if (rule.media.mediaText) found.push({ sheet: name, rule: `@import ${near(rule.href)} ${rule.media.mediaText}`, condition: rule.media.mediaText })
+        if (rule.styleSheet) readSheet(rule.styleSheet)
+        continue
+      }
+      if (rule instanceof CSSMediaRule) found.push({ sheet: name, rule: `@media ${rule.conditionText}`, condition: rule.conditionText })
+      if (rule instanceof CSSContainerRule) found.push({ sheet: name, rule: `@container ${rule.conditionText}`, condition: rule.conditionText, container: true })
+      if (rule.cssRules) readRules(rule.cssRules, name)
+    }
+  }
+  for (const sheet of [...document.styleSheets, ...document.adoptedStyleSheets]) readSheet(sheet)
+  return found
+}
 
 // An image marked loading="lazy" is fetched only once it is near the window, and a visitor scrolls to it, so every one
 // is loaded before anything is measured: a wide image far below the first screen would otherwise never take its room.
@@ -78,6 +138,7 @@ async function measurePage({ context, origin, url, files, config, widths }) {
     await page.evaluate(loadLazyImages)
     await page.evaluate(() => document.fonts.ready)
     if ((await page.evaluate(readText)) === 0) problems.push('the page has no visible text')
+    problems.push(...ceilingProblems(await page.evaluate(readConditions), Math.max(...widths)))
 
     const violations = []
     let measured = 0
