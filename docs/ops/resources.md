@@ -8,6 +8,7 @@
 | Cloudflare account | 7f1ceca4bab4b98d5d778e1231d7abaa | Existing account; Free Workers/Pages and D1 |
 | Pages project | aloong-planet-home | Existing Direct Upload project, production branch main |
 | Pages project | agentshed | Existing project behind https://agentshed.aloongplanet.com; its Git builds are off and this repository uploads it, production branch main |
+| Pages project | justsnap | Existing project behind https://justsnap.aloongplanet.com, with its own address https://justsnap-ceo.pages.dev; its Git builds are off and this repository uploads it, production branch main |
 | Canonical hostname | https://aloongplanet.com | Public personal homepage |
 | Alternate hostname | https://www.aloongplanet.com | Same homepage and shared visitor cookie |
 | Pages hostname | https://aloong-planet-home.pages.dev | Production alias; own host cookie, production database |
