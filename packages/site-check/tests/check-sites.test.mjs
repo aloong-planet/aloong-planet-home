@@ -39,6 +39,9 @@ for (const [file, content] of Object.entries(${JSON.stringify(pages)})) {
   }
 }
 
+// A page that fits at every width it is measured at and has a rule that starts at the given width.
+const stepped = (width) => html(`<style>@media (min-width: ${width}px){p{margin:0}}</style><p>fits</p>`)
+
 // A page whose only fault is not its width: a stylesheet of its own site that is not built.
 const unstyled = '<!doctype html><meta charset="utf-8"><title>t</title><link rel="stylesheet" href="/missing.css"><body><p>fits</p></body>'
 
@@ -53,6 +56,11 @@ const failures = [
     'a page that fits but could not be measured as a visitor sees it',
     site('stale', { 'index.html': unstyled }),
     [/^stale: 1 page x 1121 widths, 1 violation$/m, /^ {2}\/: .*\/missing\.css was answered with 404$/m],
+  ],
+  [
+    'a page with a width condition above the widest window measured',
+    site('tall', { 'index.html': stepped(1600) }),
+    [/^tall: 1 page x 1121 widths, 1 violation$/m, /^ {2}\/: <style> no\. 2 has @media \(min-width: 1600px\).*widths\.mjs to at least 1600$/m],
   ],
   ['a site with no config', site('lost', { 'index.html': fits }, { config: null }), [/^lost: .*no config for the site lost/m]],
   ['a site with no build script', site('nobuild', { 'index.html': fits }, { build: null }), [/^nobuild: .*no build script/m]],
@@ -86,14 +94,17 @@ test('a site nobody listed is found, built and measured, and a site that fails d
   assert.match(output, /^nobuild: .*no build script/m)
 })
 
-test('sites that all fit pass the run, and --no-build measures what is already built without running the build', async (t) => {
+test('sites that all fit pass the run, one with a width condition inside the range among them, and --no-build measures what is already built without running the build', async (t) => {
   const root = await tree(t, {
     ...site('ok', { 'index.html': fits }, { build: 'node -e "process.exit(9)"' }),
     'apps/ok/dist/index.html': fits,
+    ...site('edge', { 'index.html': stepped(1280) }, { build: 'node -e "process.exit(9)"' }),
+    'apps/edge/dist/index.html': stepped(1280),
   })
   const { code, output } = await run(['--root', root, '--config-dir', join(root, 'cfg'), '--no-build'])
   assert.equal(code, 0, output)
   assert.match(output, /^ok: 1 page x 1121 widths, 0 violations$/m)
+  assert.match(output, /^edge: 1 page x 1121 widths, 0 violations$/m)
 })
 
 test('a workspace with no site fails the run', async (t) => {
