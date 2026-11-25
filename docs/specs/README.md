@@ -14,3 +14,4 @@ Each spec is the current requirement picture for one feature, for people changin
 | [Site appearance](site-appearance.md) | Every page follows the system's light or dark appearance, and diagrams and pictures keep their light colours. |
 | [App sites](app-sites.md) | Where the homepage and the JustSnap, Agentshed and Transfer sites are built and deployed, and how app screenshots and icons reach them. |
 | [Agentshed's site](agentshed-site.md) | What Agentshed's page offers to download whichever release exists, its features walkthrough and install steps, in English and Chinese. |
+| [JustSnap's site](justsnap-site.md) | What JustSnap's page offers to download whichever formal release exists, its features walkthrough and install steps, in Chinese and English. |
