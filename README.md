@@ -25,7 +25,7 @@ Run from `apps/home/`.
 
 The HTTP check is hardcoded to the local server and creates local disposable test visitors. It never targets production. Lint and mutation testing are explicitly disabled in capabilities.toml, and the only automated browser suite is the one in `packages/site-check`, described below: the width check and a test of where keyboard focus lands under the pinned header. Native browser checks supplement request-level tests.
 
-The width check opens every page of every site under `apps/` in a browser, at every whole window width from 320px to 1440px, and fails when a page is wider than the window. It builds each site, finds the pages in the build output, and never leaves the local machine. Run it from the repository root; the browser is installed once:
+The width check opens every page of every site under `apps/` in a browser, at every whole window width from 320px to 1440px, and fails when a page is wider than the window, or when its style sheets hold a width condition that starts above 1440px (raise `WIDEST` in `packages/site-check/src/widths.mjs` when a site adds a breakpoint wider than that). It builds each site, finds the pages in the build output, and never leaves the local machine. Run it from the repository root; the browser is installed once:
 
 ```sh
 pnpm --filter @aloong-planet/site-check exec playwright install --only-shell chromium

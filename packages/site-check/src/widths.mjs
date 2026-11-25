@@ -1,8 +1,12 @@
 // The window widths a page is measured at, and the rule a measurement is judged by.
 
-// Every whole pixel from 320 to 1440. Overflow does not grow steadily with the window (a media query can switch a
+// The widest window measured. A width condition in a page's style sheets that starts above it fails the check (see
+// conditions.mjs), so this is raised, not worked around, when a site adds a breakpoint wider than it.
+export const WIDEST = 1440
+
+// Every whole pixel from 320 to WIDEST. Overflow does not grow steadily with the window (a media query can switch a
 // fixed-width box on at 600px and off again at 700px), so sampling widths could step over the widths that fail.
-export const WIDTHS = Array.from({ length: 1440 - 320 + 1 }, (_, i) => 320 + i)
+export const WIDTHS = Array.from({ length: WIDEST - 320 + 1 }, (_, i) => 320 + i)
 
 // `measured` is what the browser reports at `width`: the window's own width, and the scroll width of the document
 // element and of the body. The body is read as well because `overflow-x: hidden` on both html and body holds the
