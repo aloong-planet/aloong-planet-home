@@ -78,11 +78,29 @@ test('the pnpm --filter commands of the workflows name a workspace package and a
   for (const script of ['typecheck', 'test', 'build']) {
     assert.ok(checks.some(([name, s]) => name === '@aloong-planet/home' && s === script), `home-checks runs ${script} of @aloong-planet/home`)
   }
-  assert.ok(release.some(([name, script]) => name === '@aloong-planet/home' && script === 'cf:deploy'), 'Deploy runs cf:deploy of @aloong-planet/home')
+  for (const site of ['home', 'agentshed']) {
+    assert.ok(release.some(([name, script]) => name === `@aloong-planet/${site}` && script === 'cf:deploy'), `Deploy runs cf:deploy of @aloong-planet/${site}`)
+  }
   for (const [name, script] of [...filterCommands(ci), ...release]) {
     assert.ok(packages.has(name), `${name} is no package of apps/ or packages/`)
     assert.ok(packages.get(name).includes(script), `${name} has no script ${script}`)
   }
+})
+
+// Two jobs of one workflow in one concurrency group: when a newer run's jobs wait behind a running one, GitHub cancels
+// the pending job of the older run, and with a shared group that is its sibling's pending job too, so a site would miss
+// its deploy. Each deploy job has its own group, and none cancels a deploy that is running.
+test('each Deploy job has its own concurrency group and does not cancel a running deploy', () => {
+  const all = jobs(deploy)
+  assert.ok(all.size > 1)
+  const groups = [...all].map(([id, lines]) => {
+    const text = lines.join('\n')
+    assert.match(text, /^ {6}cancel-in-progress: false\s*$/m, `${id} lets a running deploy finish`)
+    const group = text.match(/^ {6}group: (\S+)\s*$/m)
+    assert.ok(group, `${id} has a concurrency group`)
+    return group[1]
+  })
+  assert.equal(new Set(groups).size, groups.length, `the jobs share a concurrency group: ${groups}`)
 })
 
 // Its commands, in order. The browser is installed with `exec`, which the test above does not see, and pnpm answers a
