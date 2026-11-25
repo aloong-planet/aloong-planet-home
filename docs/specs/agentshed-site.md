@@ -108,7 +108,7 @@ notice does not alarm me.
   the pill, and its one button reads "Download the pre-release version from GitHub".
 - agentshed-site::REQ-002/AC-04: **List**: the hero button reads "Download Agentshed from GitHub" and leads
   to the release list. Beneath it is the platform line, with no pill and no version anywhere in the
-  buttons. The download section reads "Version details can't be loaded right now — download from
+  buttons. The download section reads "Version details can’t be loaded right now — download from
   GitHub", with one button, "Download from GitHub".
 - agentshed-site::REQ-002/AC-05: Links to GitHub open in a new tab. The R2 download starts in place.
 

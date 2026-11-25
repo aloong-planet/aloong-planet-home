@@ -10,6 +10,8 @@ The owner publishes a website for each app (JustSnap, Agentshed and Transfer) be
 
 The homepage and every app site are built, checked and deployed from this repository, each at the address it has today. Visitors see the same pages at the same addresses, and an app's repository only supplies the screenshots and the icon its site shows.
 
+> Pending: every app site is a package under `apps/` that this repository's CI deploys. Today only the homepage is deployed from this repository; the JustSnap and Transfer sites are not packages here yet, and Agentshed's site (`apps/agentshed`) is built and checked here but not yet deployed from here.
+
 ## Functional Requirements
 
 ### app-sites::REQ-001 Every site keeps its address (direct acceptance)

@@ -97,6 +97,6 @@ Applies to: the homepage's Apps and Agents sections. Their cards and lists are p
 ## Out of Scope
 - Menus on touch screens and narrow windows: there is no hover to open them, and the tab already leads to the section that lists the same works.
 - Icons or screenshots in the menus: each item is a name and a description only.
-- A copy of these menus on the app websites: each app website's header, including any link back to the homepage, belongs to that website's own landing-page spec, in its repository.
+- A copy of these menus on the app websites: each app website's header, including any link back to the homepage, belongs to that website's own spec: Agentshed's is [Agentshed's site](agentshed-site.md) in this repository, and the other app websites' specs are in their own repositories.
 - openclaw-memory-core-plus and xnote-extension: they are not listed.
 - An English homepage: the site has one language, so the English name JustSnap has no place on it.
