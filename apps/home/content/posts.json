@@ -3,13 +3,21 @@
     "slug": "claude-session-pool-autonomy",
     "title": "实战分享-用 cc-session-pool 让多个 Claude Code 会话自己跑完一整个需求",
     "date": "2026-11-17",
-    "summary": "一个调度会话派活、几个 worker 会话干活，派活和汇报不用人，开窗口、清上下文、压缩、重启却都得人来。这篇讲我怎么用一个插件把这些动作交还给会话自己。调度会话管 worker，每个会话看得见自己有多大，该压时自己压缩再接着干，人只管启动和拍板。"
+    "summary": "一个调度会话派活、几个 worker 会话干活，派活和汇报不用人，开窗口、清上下文、压缩、重启却都得人来。这篇讲我怎么用一个插件把这些动作交还给会话自己。调度会话管 worker，每个会话看得见自己有多大，该压时自己压缩再接着干，人只管启动和拍板。",
+    "en": {
+      "title": "Hands-on: using cc-session-pool to let several Claude Code sessions run a whole requirement on their own",
+      "summary": "One dispatcher session hands out work and several worker sessions do it. Assigning work and reporting back need no human, but opening windows, clearing context, compacting and restarting still do. This post is about how I used a plugin to give those actions back to the sessions themselves: the dispatcher manages the workers, each session can see how big it has grown and compacts itself when it should before carrying on, and the human only starts things and makes the calls."
+    }
   },
   {
     "slug": "super-agent-architecture",
     "title": "Super-agent 架构图解",
     "date": "2026-11-05",
     "summary": "DeepSeek 提出的 Super-agent 架构怎么运转？跟一条事件走完全程，再对照公开原型，看哪些已经实现。",
+    "en": {
+      "title": "Super-agent architecture, illustrated",
+      "summary": "How does the Super-agent architecture proposed by DeepSeek work? Follow one event from start to finish, then compare it with the public prototype to see what has already been built."
+    },
     "source": {
       "label": "DeepSeek Harness 团队《Super-agent 设计探索》",
       "url": "https://mp.weixin.qq.com/s/zoS7GlReWPhfCjENGxXCdg"
@@ -20,36 +28,60 @@
     "slug": "claude-code-idle-compaction",
     "title": "省钱提醒-马上升级你的 claudecode 到最新版以使用idleCompaction功能",
     "date": "2026-11-05",
-    "summary": "离开超过一小时再回来，Claude Code 要把整段上下文重写进缓存。新版的 idleCompaction 赶在缓存过期前先压缩。按 API 价折算，我的 28 次真实记录里回来这一下少花 73%，整张账单估计省 8% 到 14%。"
+    "summary": "离开超过一小时再回来，Claude Code 要把整段上下文重写进缓存。新版的 idleCompaction 赶在缓存过期前先压缩。按 API 价折算，我的 28 次真实记录里回来这一下少花 73%，整张账单估计省 8% 到 14%。",
+    "en": {
+      "title": "Save money: upgrade Claude Code to the latest version now to get idleCompaction",
+      "summary": "Come back after more than an hour away and Claude Code has to rewrite the whole context into the cache. The new idleCompaction compacts it before the cache expires. At API prices, across 28 real records of mine, coming back cost 73% less, and the whole bill is estimated to drop by 8% to 14%."
+    }
   },
   {
     "slug": "subagent-review-token-postmortem",
     "title": "惨痛教训-复盘用子 agent 做对抗性测试后一个晚上多花掉 2.6 亿 token",
     "date": "2026-10-30",
-    "summary": "把测试审查换成独立子 agent 做对抗性测试后，一个需求跑一晚上用掉 18 亿 token。拆开会话记录才发现，2.6 亿（14.4%）花在了「等」上：一个子 agent 每 4 秒查一次进度。这篇讲怎么查出来、怎么用一条规则解决。"
+    "summary": "把测试审查换成独立子 agent 做对抗性测试后，一个需求跑一晚上用掉 18 亿 token。拆开会话记录才发现，2.6 亿（14.4%）花在了「等」上：一个子 agent 每 4 秒查一次进度。这篇讲怎么查出来、怎么用一条规则解决。",
+    "en": {
+      "title": "A painful lesson: subagent adversarial testing burned 260 million extra tokens in one night, a postmortem",
+      "summary": "After I replaced test review with independent subagents doing adversarial testing, one requirement used 1.8 billion tokens in a single night. Taking the session records apart showed that 260 million of them (14.4%) went on waiting: one subagent checked progress every 4 seconds. This post covers how I found it and how one rule fixed it."
+    }
   },
   {
     "slug": "agent-live-model-e2e-testing",
     "title": "聊一聊 Agent 开发中的真模型端到端回归测试",
     "date": "2026-10-20",
-    "summary": "刚开始用 Codex 开发微信插件时，测试通过并不意味着实际交付符合预期。后来，我让真实模型参与端到端回归，把用户交互、工具决策和执行结果一起验证。这篇介绍为什么原来的测试会漏掉问题，以及怎样把反复修复的过程提前到交付之前。"
+    "summary": "刚开始用 Codex 开发微信插件时，测试通过并不意味着实际交付符合预期。后来，我让真实模型参与端到端回归，把用户交互、工具决策和执行结果一起验证。这篇介绍为什么原来的测试会漏掉问题，以及怎样把反复修复的过程提前到交付之前。",
+    "en": {
+      "title": "On end-to-end regression tests with a real model in agent development",
+      "summary": "When I first built a WeChat plugin with Codex, passing tests did not mean the delivery was what I expected. Later I had a real model take part in the end-to-end regression, checking the user interaction, the tool decisions and the results together. This post explains why the earlier tests missed problems, and how to move the repeated fixing to before delivery."
+    }
   },
   {
     "slug": "agent-opentelemetry",
     "title": "聊一聊 OpenTelemetry 在 Agent 开发中的作用",
     "date": "2026-10-08",
-    "summary": "我开发了一个以微信 Clawbot 为入口的 Codex 插件。权限、沙箱与职责分离让执行链路更复杂，也增加了 Agent 排障的难度。我通过 OpenTelemetry Tracing 和集中 instrumentation 串起执行过程，让 Agent 更快定位故障，更准确地分析耗时。"
+    "summary": "我开发了一个以微信 Clawbot 为入口的 Codex 插件。权限、沙箱与职责分离让执行链路更复杂，也增加了 Agent 排障的难度。我通过 OpenTelemetry Tracing 和集中 instrumentation 串起执行过程，让 Agent 更快定位故障，更准确地分析耗时。",
+    "en": {
+      "title": "On the role of OpenTelemetry in agent development",
+      "summary": "I built a Codex plugin whose entry point is WeChat Clawbot. Permissions, sandboxing and separation of duties make the execution chain more complex, and agent troubleshooting harder. By tying the execution together with OpenTelemetry tracing and centralised instrumentation, I let the agent locate faults faster and analyse timing more accurately."
+    }
   },
   {
     "slug": "agent-structured-result-testing",
     "title": "聊一聊Agent开发中的语义化测试替代方案",
     "date": "2026-09-16",
-    "summary": "模型换了一种说法，测试就失败，是否应该再请一个模型来评分？评分器不难接，但会增加调用、校准和维护成本。我的做法是用结构化结果和真实执行记录验证业务结论，把语义评分留给确实需要理解语言的部分。"
+    "summary": "模型换了一种说法，测试就失败，是否应该再请一个模型来评分？评分器不难接，但会增加调用、校准和维护成本。我的做法是用结构化结果和真实执行记录验证业务结论，把语义评分留给确实需要理解语言的部分。",
+    "en": {
+      "title": "On an alternative to semantic testing in agent development",
+      "summary": "A model words something differently and the test fails: should another model be asked to grade it? A grader is easy enough to wire in, but it adds calls, calibration and maintenance. My approach is to verify the business conclusion with structured results and real execution records, and leave semantic grading to the parts that truly need to understand language."
+    }
   },
   {
     "slug": "skill-pitfalls",
     "title": "你的 skill 为什么没有按预期工作——聊一聊如何评估和优化 skills",
     "date": "2026-09-08",
-    "summary": "skill 失效不报错——agent 只是安静地执行出另一种行为,而那不是随机的。触发、记忆、执行三道关,每道关都有确定的失效机制:歧义被默认值填满、每个词都过它自己的解释器、没被要求的内容从未被生成。懂了机制,评估和优化才有抓手。"
+    "summary": "skill 失效不报错——agent 只是安静地执行出另一种行为,而那不是随机的。触发、记忆、执行三道关,每道关都有确定的失效机制:歧义被默认值填满、每个词都过它自己的解释器、没被要求的内容从未被生成。懂了机制,评估和优化才有抓手。",
+    "en": {
+      "title": "Why your skill doesn't work as expected: how to evaluate and optimise skills",
+      "summary": "A failing skill raises no error: the agent quietly does something else, and it is not random. There are three gates, triggering, memory and execution, and each fails by a definite mechanism: ambiguity is filled with defaults, every word passes through its own interpreter, and what was never asked for is never generated. Once you know the mechanisms, you have something to hold on to when evaluating and optimising."
+    }
   }
 ]

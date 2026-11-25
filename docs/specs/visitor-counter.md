@@ -12,8 +12,6 @@ Count anonymous browsers across the site and show the shared visitor total on th
 - visitor-counter::REQ-001/AC-01: With scripting enabled, opening the homepage, Blog list or any published post registers a browser that accepts the identity cookie, including on its first visit to the site.
 - visitor-counter::REQ-001/AC-02: The visitor line below the homepage introduction displays “本站累计访客 N 人” on the Chinese homepage, and "N visitors so far" on the English homepage, "1 visitor so far" when N is 1. N is written in the browser's own number format, whatever the page's language. N is the number of visitor records when the API reads the total, including those whose cookies have expired. Blog pages have no visible counter.
 
-  > Pending: N is written in the browser's own number format.
-
 ### visitor-counter::REQ-002 Returning visit (direct acceptance)
 Refreshes, later visits, navigation between counted pages and new tabs with the same cookie do not add another visitor record. On arrival, the homepage displays the total from registration under visitor-counter::REQ-001/AC-02.
 

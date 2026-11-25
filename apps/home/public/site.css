@@ -25,7 +25,7 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 /* Items sit 2px apart, so each focus ring is drawn inside its own item. */
 .ap-nav .ap-menu-item:focus-visible { outline-offset:-2px; }
 .ap-menu-item strong { display:block; font-size:14px; font-weight:500; letter-spacing:-.2px; }
-.ap-menu-item span { display:block; margin-top:3px; font-size:12px; line-height:1.6; color:var(--muted); text-wrap:pretty; }
+.ap-menu-item span { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin-top:3px; font-size:12px; line-height:1.6; color:var(--muted); text-wrap:pretty; }
 .ap-menu-group { margin:0; padding:10px 12px 4px; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); }
 .ap-menu-group:not(:first-child) { margin-top:6px; border-top:1px solid var(--line); padding-top:14px; }
 /* Menus open only where the pointer can hover and the window is wider than the phone layout; elsewhere the tab is just the link to its section. navigation.js sets data-keyboard-focus while a menu holds keyboard focus, which a mouse click does not give, so a clicked item does not hold its menu open. While the pointer rests on one menu, another that only holds keyboard focus stays shut. */
@@ -37,7 +37,14 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 }
 /* Set by navigation.js after Escape or a click on the tab, until the pointer and keyboard focus have both left the menu. */
 .ap-menu[data-dismissed] .ap-menu-panel { display:none; }
-.ap-social { justify-self:end; font-size:12px; border-bottom:1px solid var(--ink); padding:7px 0; }
+/* The right end of the header: the GitHub link, then the language switch, which is the header's last item. The switch reads like the navigation's tabs: the page's own language is ink and bold, so it does not rest on colour alone, and the other is muted grey, a link that turns ink on hover. */
+.ap-header-end { justify-self:end; display:flex; align-items:center; gap:18px; }
+.ap-social { font-size:12px; border-bottom:1px solid var(--ink); padding:7px 0; }
+.ap-lang { display:flex; align-items:center; gap:14px; font-size:12px; }
+.ap-lang > * { padding:7px 0; color:var(--muted); }
+.ap-lang a { transition:color .15s; }
+.ap-lang a:hover { color:var(--ink); }
+.ap-lang [aria-current] { color:var(--ink); font-weight:600; }
 .ap-hero { height:calc(100svh - var(--ap-header-height)); min-height:720px; max-height:950px; position:relative; margin:0 32px; }
 .ap-hero-profile { position:absolute; inset:0 0 0 40%; }
 .ap-scene { width:470px; height:430px; position:absolute; left:50%; top:38%; transform:translate(-50%,-50%); }
@@ -135,7 +142,7 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
  .ap-header { padding:0 20px; grid-template-columns:1fr auto; gap:10px; }
  .ap-brand { font-size:15px; } .ap-brand small { display:none; }
  .ap-nav { grid-row:2; grid-column:1/-1; justify-content:space-between; gap:10px; padding-bottom:15px; }
- .ap-social { grid-column:2; grid-row:1; }
+ .ap-header-end { grid-column:2; grid-row:1; }
  .ap-hero { margin:0 20px; height:auto; min-height:0; max-height:none; }
  .ap-hero-profile { position:relative; inset:auto; height:620px; }
  .ap-home-blog { position:static; width:auto; height:auto; padding:0 0 20px; display:block; }
@@ -154,4 +161,4 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 @media(max-width:380px) {
  .ap-scene { transform:translate(-50%,-50%) scale(.64); }
 }
-@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .ap-art,.ap-nav a,.ap-nav .ap-menu-item,.ap-button,.ap-post-cover { transition:none; } .ap-post-card:hover .ap-post-cover { transform:none; } }
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .ap-art,.ap-nav a,.ap-nav .ap-menu-item,.ap-lang a,.ap-button,.ap-post-cover { transition:none; } .ap-post-card:hover .ap-post-cover { transform:none; } }

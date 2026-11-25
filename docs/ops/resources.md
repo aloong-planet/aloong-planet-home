@@ -24,7 +24,7 @@ The initial production table was created through the dashboard using apps/home/m
 
 The repository is a pnpm workspace (`pnpm-workspace.yaml`): `apps/home/` is the homepage, the package `@aloong-planet/home`, and `packages/` holds parts shared between apps. The directories below are under `apps/home/`, except those that start with `docs/`.
 
-- public/: shipping HTML, styles, navigation, the shared article look, and visitor client.
+- public/: shipping styles, navigation, the shared article look, the interface dictionary ui.js and the visitor client. The homepage, Blog page and not-found page of each language are rendered from ui.js by scripts/pages.mjs, and the posts by scripts/blog.mjs.
 - content/: the blog's post list, post bodies and covers, with any post's own stylesheet and script. See [publishing a post](publishing-posts.md).
 - assets/: one copy of each shipping portrait, dog animation, not-found dog and app screenshot, plus the supplied portrait illustration, the generated not-found dog image and JustSnap's full-size translation screenshot, each kept as the source of its reduced copy and not deployed.
 - functions/: Pages Functions request handler.
