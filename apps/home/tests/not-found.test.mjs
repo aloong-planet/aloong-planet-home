@@ -1,5 +1,5 @@
 // These have no DOM or host here and are checked by recorded runs in a real browser and on the local Pages emulator,
-// because the project has no browser test suite: the centered layout and the whole page fitting the first screen at
+// because the project's browser suite, packages/site-check, only measures page widths: the centered layout and the whole page fitting the first screen at
 // 1440×900 and 390×844; the buttons' solid dark and outlined looks, size, corners, hover states and focus ring; the
 // keyboard order of the brand, navigation and buttons; the page at a nested address; no section marked in the
 // navigation at an address under /blog/; with scripting unavailable, the dog, text and buttons working without the
@@ -8,7 +8,7 @@
 // status 404 for addresses the site does not have; an existing address written with a trailing slash or `.html`
 // still redirecting to its plain address; the page's own address /404 answering 200 and /404.html redirecting there;
 // an existing page with a query string unchanged (a hash never reaches the host, so it needs no run); and no visitor
-// request. Test them here once the browser suite capability is enabled.
+// request. Test them in the browser suite once it covers them.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';

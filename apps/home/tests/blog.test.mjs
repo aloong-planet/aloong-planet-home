@@ -1,4 +1,4 @@
-// These have no DOM here and are checked by recorded real-browser runs, because the project has no browser test suite:
+// These have no DOM here and are checked by recorded real-browser runs, because the project's browser suite, packages/site-check, only measures page widths:
 // layout, type sizes, centering, shared table and figure styles, hover states, the keyboard focus ring,
 // jumps and scrolling including figure and contents-column scrolling, the homepage's kept smooth scroll,
 // the contents mark, interactive figures, scripting unavailable, a throwing post script, long text in full
@@ -6,7 +6,7 @@
 // and centered on each other, two cards to a row with a leftover card alone on the left, one column on a phone, cover
 // frames at 2.35:1 that crop another shape and keep their size when an image fails, and the cover lift on hover,
 // which reduced motion turns off.
-// Which image each post uses as its cover is content, checked by eye. Test them here once the browser suite capability is enabled.
+// Which image each post uses as its cover is content, checked by eye. Test them in the browser suite once it covers them.
 import {test} from 'node:test';
 import {realSite} from './helpers/built-site.mjs';
 import assert from 'node:assert/strict';

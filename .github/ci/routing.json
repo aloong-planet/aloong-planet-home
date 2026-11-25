@@ -1,6 +1,6 @@
 {
   "scopes": {
-    "home": ["home-checks"]
+    "home": ["home-checks", "width-check"]
   },
   "rules": [
     {

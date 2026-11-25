@@ -2,7 +2,8 @@
 // skill's template; ci-routing.test.mjs beside it tests the fixed behaviour and is not edited.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { classifyPath, readConfig } from './ci-scope.mjs'
+import { classifyPath, classifyPaths, readConfig } from './ci-scope.mjs'
+import { gateFailures } from './ci-gate.mjs'
 
 const config = readConfig()
 
@@ -49,4 +50,27 @@ test('each pattern of routing.json routes a real path to the scopes written here
   const patterns = config.rules.flatMap((rule) => rule.patterns.map(({ pattern }) => pattern))
   assert.ok(patterns.length > 0)
   assert.deepEqual(patterns.filter((pattern) => !hit.has(pattern)), [])
+})
+
+// Whether the CI gate requires width-check for a pull request that changes only `paths`: the gate is given the scopes
+// those paths select and every job's result except width-check's, which is the one tried.
+const widthCheckVerdict = (paths, widthCheckResult) => {
+  const { scopes } = classifyPaths(paths, config)
+  const outputs = Object.fromEntries(Object.entries(scopes).map(([name, on]) => [name, String(on)]))
+  const needs = {
+    changes: { result: 'success', outputs },
+    'repo-policy': { result: 'success' },
+    'home-checks': { result: scopes.home ? 'success' : 'skipped' },
+    'width-check': { result: widthCheckResult }
+  }
+  return gateFailures(needs, config)
+}
+
+test('a change to only the width check, or only to the homepage, requires width-check, and a change to only documents does not', () => {
+  for (const path of ['packages/site-check/src/check-sites.mjs', 'packages/site-check/sites/home.json', 'apps/home/public/index.html']) {
+    assert.deepEqual(widthCheckVerdict([path], 'success'), [], path)
+    assert.deepEqual(widthCheckVerdict([path], 'failure'), ['width-check: failure (selected)'], path)
+    assert.deepEqual(widthCheckVerdict([path], 'skipped'), ['width-check: skipped (selected)'], path)
+  }
+  assert.deepEqual(widthCheckVerdict(['README.md'], 'skipped'), [])
 })
