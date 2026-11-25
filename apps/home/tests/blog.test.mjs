@@ -292,6 +292,37 @@ test('the build refuses a post stylesheet that would break the shared look', asy
     ['@layer x{.post-bad .a{color:red}}', /at-rule/],
     ['.post-bad .a{color-scheme:dark}', /dark/],
     ['.post-bad .a{color:light-dark(#000,#fff)}', /dark/],
+    // blog::REQ-004/AC-03: the dark appearance is one top-level (prefers-color-scheme: dark) block of the post's own custom properties; every other form is refused.
+    ['.post-bad{--x:light-dark(#000,#fff)}', /dark/],
+    ['.post-bad{color-scheme:light dark}', /dark/],
+    ['.post-bad{--x:#000}@media (prefers-color-scheme:dark){.post-bad{color-scheme:dark}}', /dark/],
+    ['@media (prefers-color-scheme:dark){.post-bad{--x:light-dark(#000,#fff)}}', /dark/],
+    ['.post-bad[data-theme="dark"]{--x:#fff}', /dark/],
+    ['@media (prefers-color-scheme:dark){.post-bad[data-theme="dark"]{--x:#fff}}', /dark/],
+    ['@media (prefers-color-scheme:light){.post-bad{--x:#fff}}', /dark/],
+    ['@media (prefers-color-scheme:no-preference){.post-bad{--x:#fff}}', /dark/],
+    ['@media not (prefers-color-scheme:dark){.post-bad{--x:#fff}}', /dark/],
+    ['@media (prefers-color-scheme:dark) and (min-width:1px){.post-bad{--x:#fff}}', /dark/],
+    ['@media screen and (prefers-color-scheme:dark){.post-bad{--x:#fff}}', /dark/],
+    ['@media (prefers-color-scheme:dark),(min-width:1px){.post-bad{--x:#fff}}', /dark/],
+    ['@media (min-width:1px){@media (prefers-color-scheme:dark){.post-bad{--x:#fff}}}', /dark/],
+    ['@supports (display:grid){@media (prefers-color-scheme:dark){.post-bad{--x:#fff}}}', /dark/],
+    ['@media (prefers-color-scheme:dark){@media (min-width:1px){.post-bad{--x:#fff}}}', /dark/],
+    ['@media (prefers-color-scheme:dark){@supports (display:grid){.post-bad{--x:#fff}}}', /dark/],
+    ['@media (prefers-color-scheme:dark){@keyframes f{to{--x:#fff}}}', /dark/],
+    ['@media (prefers-color-scheme:dark){.post-bad .a{--x:#fff}}', /dark/],
+    ['@media (prefers-color-scheme:dark){.post-bad:hover{--x:#fff}}', /dark/],
+    ['@media (prefers-color-scheme:dark){.post-bad.b{--x:#fff}}', /dark/],
+    ['@media (prefers-color-scheme:dark){.post-bad,.b{--x:#fff}}', /dark/],
+    ['@media (prefers-color-scheme:dark){.b{--x:#fff}}', /dark/],
+    ['@media (prefers-color-scheme:dark){:root{--x:#fff}}', /dark/],
+    ['@media (prefers-color-scheme:dark){.post-bad{color:#fff}}', /dark/],
+    ['@media (prefers-color-scheme:dark){.post-bad{--x:#fff;background:#000}}', /dark/],
+    ['@media (prefers-color-scheme:dark){.post-bad{--x:#fff;font-family:Georgia}}', /dark/],
+    ['@media (prefers-color-scheme:dark){.post-bad{--ink:#fff}}', /shared token/],
+    ['@media (prefers-color-scheme:dark){.post-bad{--x:#fff;--panel:#000}}', /shared token/],
+    ['@media (prefers-color-scheme:dark){.post-bad{--paper:#000}}', /shared token/],
+    ['.post-bad .a{--x:(prefers-color-scheme:dark)}', /dark/],
     ['.post-bad .a{background:image-set("https://example.com/a.png" 1x)}', /remote/],
     ['.post-bad .a{background:image-set("a.png" 1x,"https://example.com/a.png" 2x)}', /remote/],
     ['.post-bad .a{background:image-set("a.png" 1x,"//example.com/a.png" 2x)}', /remote/],
@@ -365,6 +396,27 @@ test('real article stylesheet shapes pass the check', async () => {
 @media (prefers-reduced-motion:reduce){.post-fine .edge{transition:none}}`}});
   await s.build();
   assert.match(await s.read('blog/fine.html'), /\/blog\/fine\.css/);
+});
+
+// blog::REQ-004/AC-03: what is allowed is one top-level (prefers-color-scheme: dark) block of rules that set only the post's own custom properties on its own class.
+test('a post stylesheet may give dark values for its own custom properties, and the page is served with them', async () => {
+  const light = '.post-fine{--ok:#1a7f4b;--warn:#8a5a00}\n.post-fine .pill{color:var(--ok)}\n';
+  for (const dark of [
+    '@media (prefers-color-scheme: dark){.post-fine{--ok:#6fd49a;--warn:#e0b04a}}',
+    '@media(prefers-color-scheme:dark){.post-fine{--ok:#6fd49a}}',
+    '@MEDIA ( PREFERS-COLOR-SCHEME : DARK ){.post-fine{--ok:#6fd49a}}',
+    '@media (prefers-color-scheme:\n  dark)\n{\n  .post-fine\n  {\n    --ok: #6fd49a;\n  }\n}',
+    '@media (prefers-color-scheme: dark){.post-fine{--ok:#6fd49a}.post-fine{--warn:#e0b04a}}',
+    '@media (prefers-color-scheme: dark){.post-fine{--ok:#6fd49a}}\n@media (prefers-color-scheme: dark){.post-fine{--warn:#e0b04a}}',
+    '@media (prefers-color-scheme: dark){.post-fine{--warn:var(--ok);--ok:rgb(111 212 154 / .9)!important}}',
+    // A word that only looks like the feature, in a class name or in a string, is not a use of it.
+    '@media (prefers-color-scheme: dark){.post-fine{--ok:#6fd49a}}\n.post-fine .prefers-color-scheme-demo::before{content:"(prefers-color-scheme: light)"}',
+  ]) {
+    const css = light + dark;
+    const s = await site([post('fine')], {files: {'fine.css': css}});
+    await s.build();
+    assert.equal(await s.read('blog/fine.css'), css, dark);
+  }
 });
 
 test('the build refuses a bad manifest, or a listed post without its body or its cover', async () => {

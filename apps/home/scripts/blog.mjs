@@ -86,7 +86,12 @@ const SHARED_FONT_FAMILY = /^(?:inherit|var\(--(?:sans|mono)\))\s*(?:!important)
 const FONT_SIZE = String.raw`(?:[\d.]+[a-z%]*|(?:calc|clamp|min|max)\((?:[^()]|\([^()]*\))*\)|xx-small|x-small|small|medium|large|x-large|xx-large|smaller|larger)(?:\/\S+)?`;
 /** In the shorthand the family is what follows the size, so a shared token must come straight after it. */
 const SHARED_FONT = new RegExp(String.raw`^(?:inherit|(?:[^,"']*\s)?${FONT_SIZE}\s+var\(--(?:sans|mono)\))\s*(?:!important)?$`, 'i');
-const DARK_APPEARANCE = /\(\s*prefers-color-scheme\b|(?:^|[;{\s])color-scheme\s*:|light-dark\(|\[\s*data-theme\b/i;
+/** Ways to switch the look that are not a media query: a color-scheme declaration, light-dark(), or a theme attribute. A post uses none of them. */
+const SCHEME_SWITCH = /(?:^|[;{\s])color-scheme\s*:|light-dark\(|\[\s*data-theme\b/i;
+/** Every use of the media feature, however it is combined or nested. */
+const SCHEME_FEATURE = /\(\s*prefers-color-scheme\b/gi;
+/** The one condition a post's dark values may sit under, as the whole head of a top-level rule. */
+const DARK_QUERY = /^@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)$/i;
 
 function checkDeclarations(slug, body, tokens) {
   for (const [, name] of body.matchAll(/(?:^|[;\s])(--[\w-]+)\s*:/g)) if (tokens.has(name)) refuse(slug, `stylesheet redefines the shared token ${name}.`);
@@ -97,6 +102,18 @@ function checkDeclarations(slug, body, tokens) {
 }
 /** The rest of the compound selector that starts with the post's class: it still targets the post's own element. */
 const SAME_ELEMENT = /^(?:[.#][\w-]+|\[[^\]]*\]|:{1,2}[\w-]+(?:\((?:[^()]|\([^()]*\))*\))?)*/;
+
+/** The rules inside a post's dark block: each sets custom properties of the post on its own class and nothing else. */
+function checkDarkValues(slug, rules, tokens) {
+  const scope = `.post-${slug}`;
+  for (const {head, body} of rules) {
+    if (head !== scope) refuse(slug, `a dark block may only set custom properties on ${scope} itself, not "${head}".`);
+    if (body.includes('{')) refuse(slug, `a dark block rule on ${scope} must not nest rules.`);
+    const other = body.split(';').map(part => part.trim()).find(part => part !== '' && !part.startsWith('--'));
+    if (other) refuse(slug, `a dark block may only set custom properties, not "${other}".`);
+    checkDeclarations(slug, body, tokens);
+  }
+}
 
 function checkRules(slug, rules, tokens) {
   const scope = `.post-${slug}`;
@@ -141,8 +158,12 @@ function checkStylesheet(slug, source, tokens) {
   if (/@import\b/i.test(css)) refuse(slug, 'stylesheet must not use @import.');
   if (/@font-face\b/i.test(css)) refuse(slug, 'stylesheet must not declare fonts with @font-face.');
   if (loadsRemoteFile(withStrings(source, text => text))) refuse(slug, 'stylesheet must not load remote files.');
-  if (DARK_APPEARANCE.test(css)) refuse(slug, 'stylesheet must not add a dark appearance; the site has one light appearance.');
-  checkRules(slug, cssRules(css), tokens);
+  if (SCHEME_SWITCH.test(css)) refuse(slug, 'stylesheet must not set color-scheme, use light-dark() or key its styles on data-theme; its dark values are only a top-level @media (prefers-color-scheme: dark) block of custom properties.');
+  const rules = cssRules(css);
+  const dark = rules.filter(({head}) => DARK_QUERY.test(head));
+  for (const {body} of dark) checkDarkValues(slug, cssRules(body), tokens);
+  if ([...css.matchAll(SCHEME_FEATURE)].length !== dark.length) refuse(slug, 'a dark appearance must be a top-level @media (prefers-color-scheme: dark) block; any other prefers-color-scheme condition, nested or combined, is not allowed.');
+  checkRules(slug, rules.filter(rule => !dark.includes(rule)), tokens);
 }
 
 function markExternalLinks(html) {
