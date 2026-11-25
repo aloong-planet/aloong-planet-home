@@ -50,8 +50,8 @@ every window width (see the [README](../../README.md)). Both run when a pull req
   of JustSnap's repository opens into this one (app-sites::REQ-004/AC-01). The screenshots are the hero's and the six
   features', all 1840×1035 (16:9), light appearance, over made-up content; see "Screenshots" below.
 - `deployment.config.json`: what the shared publish command (`pages-deploy` of `packages/pages-deploy/`, run by the
-  `cf:deploy` script; see Deploying) needs of this site: the Cloudflare account and Pages project it publishes to, and
-  the files the build must hold before anything is uploaded.
+  `cf:deploy` script; see Deploying) needs of this site: the Cloudflare account and Pages project it publishes to, the
+  files the build must hold before anything is uploaded, and the project's production branch.
 
 ## Screenshots
 
@@ -96,7 +96,7 @@ into this repository with those sixteen files and nothing else. Its runbook is `
   and a real-shaped releases answer from GitHub.
 - `test/language-switch.test.ts` moves a note between the two pages through a fake session storage.
 - `test/deploy-config.test.ts` checks this site's side of its publishing: `deployment.config.json` names this site's
-  Pages project and files its build makes, and `cf:deploy` runs the shared command. The command's own cases (what it
+  Pages project, the files its build makes and its production branch, and `cf:deploy` runs the shared command. The command's own cases (what it
   refuses to upload, what it requires of the deployment it made) are in `packages/pages-deploy/tests/`, with its process
   boundary replaced, so no test reaches Cloudflare. They cannot show that Cloudflare accepts the upload or that the
   token may make it; a Deploy run shows that.

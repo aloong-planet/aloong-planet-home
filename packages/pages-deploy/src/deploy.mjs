@@ -15,6 +15,7 @@
  * @property {string} accountId The Cloudflare account that owns the project
  * @property {string} project The Pages project
  * @property {string[]} requiredFiles The files of dist/ the build must hold before anything is uploaded
+ * @property {string} productionBranch The project's production branch; an upload to it is the project's production deployment
  */
 
 /**
@@ -32,10 +33,12 @@
  * @returns {string} The line that reports the result
  */
 export function deploy({config, execute, readOutput, exists, dryRun = false}) {
-  const {accountId, project, requiredFiles} = config;
+  const {accountId, project, requiredFiles, productionBranch} = config;
   if (!accountId || !project || !Array.isArray(requiredFiles) || requiredFiles.length === 0 ||
-    requiredFiles.some(file => typeof file !== 'string' || !file)) {
-    throw new Error('Missing deployment target: the account, the Pages project and the files the build must hold.');
+    requiredFiles.some(file => typeof file !== 'string' || !file) ||
+    typeof productionBranch !== 'string' || !productionBranch) {
+    throw new Error('Missing deployment target: the account, the Pages project, the files the build must hold and the ' +
+      'project\'s production branch.');
   }
   if (execute('git', ['status', '--porcelain'], true).trim()) {
     throw new Error('Commit or stash local changes before publishing.');
@@ -44,20 +47,20 @@ export function deploy({config, execute, readOutput, exists, dryRun = false}) {
   if (!/^[a-f0-9]{40}$/.test(revision)) throw new Error('Cannot identify the source revision.');
   const shortRevision = revision.slice(0, 7);
   if (dryRun) {
-    return `Plan: publish revision ${revision} to the Pages project ${project} (account ${accountId}, production branch main): ` +
-      'build, upload dist, confirm the deployment in the project\'s list. Nothing was built or uploaded.';
+    return `Plan: publish revision ${revision} to the Pages project ${project} (account ${accountId}, production branch ` +
+      `${productionBranch}): build, upload dist, confirm the deployment in the project's list. Nothing was built or uploaded.`;
   }
   execute('pnpm', ['run', 'build']);
   for (const file of requiredFiles) {
     if (!exists(file)) throw new Error(`The build has no dist/${file}; nothing was uploaded.`);
   }
   execute('pnpm', ['exec', 'wrangler', 'pages', 'deploy', 'dist', '--project-name', project,
-    '--branch', 'main', '--commit-hash', revision, '--commit-dirty=false']);
+    '--branch', productionBranch, '--commit-hash', revision, '--commit-dirty=false']);
   const deploymentId = reportedDeploymentId(readOutput());
   const deployments = JSON.parse(execute('pnpm', ['exec', 'wrangler', 'pages', 'deployment', 'list',
     '--project-name', project, '--json'], true));
   const listed = deployments.find((/** @type {{Id: string}} */ entry) => entry.Id === deploymentId);
-  if (listed?.Environment !== 'Production' || listed.Branch !== 'main' || listed.Source !== shortRevision) {
+  if (listed?.Environment !== 'Production' || listed.Branch !== productionBranch || listed.Source !== shortRevision) {
     throw new Error(`Deployment ${deploymentId} is not the production deployment of ${shortRevision} in the project's deployment list.`);
   }
   return `Deployed ${deploymentId} (Production, ${shortRevision}) ${listed.Deployment}`;

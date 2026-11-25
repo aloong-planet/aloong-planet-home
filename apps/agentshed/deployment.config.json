@@ -1,5 +1,6 @@
 {
   "accountId": "7f1ceca4bab4b98d5d778e1231d7abaa",
   "project": "agentshed",
-  "requiredFiles": ["index.html", "zh/index.html"]
+  "requiredFiles": ["index.html", "zh/index.html"],
+  "productionBranch": "main"
 }

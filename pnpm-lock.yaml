@@ -111,6 +111,9 @@ importers:
 
   apps/transfer:
     dependencies:
+      '@aloong-planet/pages-deploy':
+        specifier: workspace:*
+        version: link:../../packages/pages-deploy
       '@aloong-planet/site-kit':
         specifier: workspace:*
         version: link:../../packages/site-kit
@@ -133,6 +136,9 @@ importers:
       vitest:
         specifier: 5.0.5
         version: 5.0.5(@types/node@22.20.5)(happy-dom@21.0.4)(vite@8.3.8(@types/node@22.20.5)(yaml@2.9.1))
+      wrangler:
+        specifier: ^4.156.1
+        version: 4.156.1(@cloudflare/workers-types@5.20261102.1)(@types/node@22.20.5)
 
   packages/pages-deploy:
     devDependencies:
