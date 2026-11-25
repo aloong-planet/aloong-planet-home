@@ -1,5 +1,5 @@
-// A stylesheet's palette as it declares it: the light appearance's tokens and the dark one's. The palette test checks
-// that both declare the same tokens; the browser cases take from it what each appearance should paint the page with.
+// A stylesheet's palette as it declares it: the light appearance's tokens and the dark one's. The sites' palette tests
+// check that both declare the same tokens; their other tests take from it what each appearance should paint the page with.
 import { readFileSync } from 'node:fs'
 import postcss, { type Root } from 'postcss'
 
