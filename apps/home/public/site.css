@@ -25,7 +25,7 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 /* Items sit 2px apart, so each focus ring is drawn inside its own item. */
 .ap-nav .ap-menu-item:focus-visible { outline-offset:-2px; }
 .ap-menu-item strong { display:block; font-size:14px; font-weight:500; letter-spacing:-.2px; }
-.ap-menu-item span { display:block; margin-top:3px; font-size:12px; line-height:1.6; color:var(--muted); text-wrap:pretty; }
+.ap-menu-item span { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin-top:3px; font-size:12px; line-height:1.6; color:var(--muted); text-wrap:pretty; }
 .ap-menu-group { margin:0; padding:10px 12px 4px; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); }
 .ap-menu-group:not(:first-child) { margin-top:6px; border-top:1px solid var(--line); padding-top:14px; }
 /* Menus open only where the pointer can hover and the window is wider than the phone layout; elsewhere the tab is just the link to its section. navigation.js sets data-keyboard-focus while a menu holds keyboard focus, which a mouse click does not give, so a clicked item does not hold its menu open. While the pointer rests on one menu, another that only holds keyboard focus stays shut. */
