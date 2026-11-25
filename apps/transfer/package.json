@@ -1,0 +1,28 @@
+{
+  "name": "@aloong-planet/transfer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Transfer's website, in Chinese and English (Astro static site)",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro sync && astro-check",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@aloong-planet/site-kit": "workspace:*",
+    "astro": "7.4.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@types/node": "^22.20.5",
+    "happy-dom": "^21.0.4",
+    "typescript": "^6.0.3",
+    "vitest": "5.0.5"
+  },
+  "engines": {
+    "node": ">=26.7.0"
+  }
+}

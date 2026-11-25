@@ -11,12 +11,12 @@ test('each pattern of routing.json routes a real path to the scopes written here
   // [a tracked path, the scopes it must select]. Take each path from the repository's tracked tree, and write
   // the scopes as literals: computing them from routing.json would only repeat it.
   const cases = [
-    ['package.json', ['home', 'agentshed', 'justsnap', 'site_kit']],
-    ['pnpm-lock.yaml', ['home', 'agentshed', 'justsnap', 'site_kit']],
-    ['pnpm-workspace.yaml', ['home', 'agentshed', 'justsnap', 'site_kit']],
-    ['packages/.gitkeep', ['home', 'agentshed', 'justsnap', 'site_kit']],
-    ['packages/site-check/sites/agentshed.json', ['home', 'agentshed', 'justsnap', 'site_kit']],
-    ['packages/site-kit/src/Icon.astro', ['home', 'agentshed', 'justsnap', 'site_kit']],
+    ['package.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit']],
+    ['pnpm-lock.yaml', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit']],
+    ['pnpm-workspace.yaml', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit']],
+    ['packages/.gitkeep', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit']],
+    ['packages/site-check/sites/agentshed.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit']],
+    ['packages/site-kit/src/Icon.astro', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit']],
     ['README.md', []],
     ['AGENTS.md', []],
     ['docs/agents/docs-layout.md', []],
@@ -50,7 +50,14 @@ test('each pattern of routing.json routes a real path to the scopes written here
     ['apps/justsnap/src/pages/index.astro', ['justsnap']],
     ['apps/justsnap/public/shots/hero-zh.png', ['justsnap']],
     ['apps/justsnap/test/built-site.test.ts', ['justsnap']],
-    ['apps/justsnap/README.md', ['justsnap']]
+    ['apps/justsnap/README.md', ['justsnap']],
+    ['apps/transfer/package.json', ['transfer']],
+    ['apps/transfer/astro.config.mjs', ['transfer']],
+    ['apps/transfer/src/pages/index.astro', ['transfer']],
+    ['apps/transfer/public/screenshots/main.png', ['transfer']],
+    ['apps/transfer/README.md', ['transfer']],
+    ['packages/site-check/sites/transfer.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit']],
+    ['docs/specs/transfer-site.md', []]
   ]
   const hit = new Set()
   for (const [path, expected] of cases) {
@@ -80,6 +87,7 @@ const gateVerdict = (paths, tried, triedResult) => {
     'home-checks': siteChecks('home'),
     'agentshed-checks': siteChecks('agentshed'),
     'justsnap-checks': siteChecks('justsnap'),
+    'transfer-checks': siteChecks('transfer'),
     'site-kit-checks': siteChecks('site_kit'),
     'width-check': { result: 'success' }
   }
@@ -87,10 +95,12 @@ const gateVerdict = (paths, tried, triedResult) => {
   return gateFailures(needs, config)
 }
 
-test('a change to only the width check, only to the homepage, or only to either app\'s site requires width-check, and a change to only documents does not', () => {
+test('a change to only the width check, only to the homepage, or only to any app\'s site requires width-check, and a change to only documents does not', () => {
   for (const path of [
     'packages/site-check/src/check-sites.mjs', 'packages/site-check/sites/home.json', 'packages/site-check/sites/agentshed.json',
-    'apps/home/public/index.html', 'apps/agentshed/src/pages/index.astro', 'apps/justsnap/src/pages/index.astro'
+    'packages/site-check/sites/transfer.json',
+    'apps/home/public/index.html', 'apps/agentshed/src/pages/index.astro', 'apps/justsnap/src/pages/index.astro',
+    'apps/transfer/src/pages/index.astro'
   ]) {
     assert.deepEqual(gateVerdict([path], 'width-check', 'success'), [], path)
     assert.deepEqual(gateVerdict([path], 'width-check', 'failure'), ['width-check: failure (selected)'], path)
@@ -125,15 +135,31 @@ test('a change to only JustSnap\'s site requires justsnap-checks and neither of 
   assert.deepEqual(gateVerdict(['docs/specs/justsnap-site.md'], 'justsnap-checks', 'skipped'), [])
 })
 
-test('a change to the shared site code requires site-kit-checks beside both sites\' checks, and a change to a site, the homepage or a document does not require it', () => {
+test('a change to only Transfer\'s site requires transfer-checks and none of the other sites\' checks, and a change to any of those does not require it', () => {
+  const site = 'apps/transfer/public/screenshots/main.png'
+  assert.deepEqual(gateVerdict([site], 'transfer-checks', 'failure'), ['transfer-checks: failure (selected)'])
+  assert.deepEqual(gateVerdict([site], 'transfer-checks', 'skipped'), ['transfer-checks: skipped (selected)'])
+  assert.deepEqual(gateVerdict([site], 'justsnap-checks', 'skipped'), [])
+  assert.deepEqual(gateVerdict([site], 'agentshed-checks', 'skipped'), [])
+  assert.deepEqual(gateVerdict([site], 'home-checks', 'skipped'), [])
+  assert.deepEqual(gateVerdict(['apps/justsnap/src/pages/index.astro'], 'transfer-checks', 'skipped'), [])
+  assert.deepEqual(gateVerdict(['apps/agentshed/src/pages/index.astro'], 'transfer-checks', 'skipped'), [])
+  assert.deepEqual(gateVerdict(['apps/home/public/index.html'], 'transfer-checks', 'skipped'), [])
+  // The shared input, and a document, which no site's checks depend on
+  assert.deepEqual(gateVerdict(['pnpm-lock.yaml'], 'transfer-checks', 'skipped'), ['transfer-checks: skipped (selected)'])
+  assert.deepEqual(gateVerdict(['docs/specs/transfer-site.md'], 'transfer-checks', 'skipped'), [])
+})
+
+test('a change to the shared site code requires site-kit-checks beside all three sites\' checks, and a change to a site, the homepage or a document does not require it', () => {
   const kit = 'packages/site-kit/src/Icon.astro'
   assert.deepEqual(gateVerdict([kit], 'site-kit-checks', 'failure'), ['site-kit-checks: failure (selected)'])
   assert.deepEqual(gateVerdict([kit], 'site-kit-checks', 'skipped'), ['site-kit-checks: skipped (selected)'])
   // Every site renders the component, so each site's checks and the width check run for the same change
   assert.deepEqual(gateVerdict([kit], 'agentshed-checks', 'skipped'), ['agentshed-checks: skipped (selected)'])
   assert.deepEqual(gateVerdict([kit], 'justsnap-checks', 'skipped'), ['justsnap-checks: skipped (selected)'])
+  assert.deepEqual(gateVerdict([kit], 'transfer-checks', 'skipped'), ['transfer-checks: skipped (selected)'])
   assert.deepEqual(gateVerdict([kit], 'width-check', 'skipped'), ['width-check: skipped (selected)'])
-  for (const path of ['apps/agentshed/src/pages/index.astro', 'apps/justsnap/src/pages/index.astro', 'apps/home/public/index.html', 'docs/specs/app-sites.md']) {
+  for (const path of ['apps/agentshed/src/pages/index.astro', 'apps/justsnap/src/pages/index.astro', 'apps/transfer/src/pages/index.astro', 'apps/home/public/index.html', 'docs/specs/app-sites.md']) {
     assert.deepEqual(gateVerdict([path], 'site-kit-checks', 'skipped'), [], path)
   }
 })

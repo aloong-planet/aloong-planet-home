@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "What the Agentshed and JustSnap sites share and that changes nothing a visitor sees: the icon component, the palette reader their tests use, and the TypeScript and Vitest base configuration (source only, nothing to build)",
+  "description": "What the app sites share, each as much as it uses, and that changes nothing a visitor sees: the icon component, the palette reader their tests use, and the TypeScript and Vitest base configuration (source only, nothing to build)",
   "exports": {
     "./Icon.astro": "./src/Icon.astro",
     "./testing/palette": "./src/testing/palette.ts",
