@@ -11,11 +11,11 @@ test('each pattern of routing.json routes a real path to the scopes written here
   // [a tracked path, the scopes it must select]. Take each path from the repository's tracked tree, and write
   // the scopes as literals: computing them from routing.json would only repeat it.
   const cases = [
-    ['package.json', ['home', 'agentshed']],
-    ['pnpm-lock.yaml', ['home', 'agentshed']],
-    ['pnpm-workspace.yaml', ['home', 'agentshed']],
-    ['packages/.gitkeep', ['home', 'agentshed']],
-    ['packages/site-check/sites/agentshed.json', ['home', 'agentshed']],
+    ['package.json', ['home', 'agentshed', 'justsnap']],
+    ['pnpm-lock.yaml', ['home', 'agentshed', 'justsnap']],
+    ['pnpm-workspace.yaml', ['home', 'agentshed', 'justsnap']],
+    ['packages/.gitkeep', ['home', 'agentshed', 'justsnap']],
+    ['packages/site-check/sites/agentshed.json', ['home', 'agentshed', 'justsnap']],
     ['README.md', []],
     ['AGENTS.md', []],
     ['docs/agents/docs-layout.md', []],
@@ -43,7 +43,13 @@ test('each pattern of routing.json routes a real path to the scopes written here
     ['apps/agentshed/src/pages/index.astro', ['agentshed']],
     ['apps/agentshed/public/shots/overview-en.png', ['agentshed']],
     ['apps/agentshed/test/support/browser.ts', ['agentshed']],
-    ['apps/agentshed/README.md', ['agentshed']]
+    ['apps/agentshed/README.md', ['agentshed']],
+    ['apps/justsnap/package.json', ['justsnap']],
+    ['apps/justsnap/astro.config.mjs', ['justsnap']],
+    ['apps/justsnap/src/pages/index.astro', ['justsnap']],
+    ['apps/justsnap/public/shots/hero-zh.png', ['justsnap']],
+    ['apps/justsnap/test/built-site.test.ts', ['justsnap']],
+    ['apps/justsnap/README.md', ['justsnap']]
   ]
   const hit = new Set()
   for (const [path, expected] of cases) {
@@ -72,16 +78,17 @@ const gateVerdict = (paths, tried, triedResult) => {
     'repo-policy': { result: 'success' },
     'home-checks': siteChecks('home'),
     'agentshed-checks': siteChecks('agentshed'),
+    'justsnap-checks': siteChecks('justsnap'),
     'width-check': { result: 'success' }
   }
   needs[tried] = { result: triedResult }
   return gateFailures(needs, config)
 }
 
-test('a change to only the width check, only to the homepage, or only to Agentshed\'s site requires width-check, and a change to only documents does not', () => {
+test('a change to only the width check, only to the homepage, or only to either app\'s site requires width-check, and a change to only documents does not', () => {
   for (const path of [
     'packages/site-check/src/check-sites.mjs', 'packages/site-check/sites/home.json', 'packages/site-check/sites/agentshed.json',
-    'apps/home/public/index.html', 'apps/agentshed/src/pages/index.astro'
+    'apps/home/public/index.html', 'apps/agentshed/src/pages/index.astro', 'apps/justsnap/src/pages/index.astro'
   ]) {
     assert.deepEqual(gateVerdict([path], 'width-check', 'success'), [], path)
     assert.deepEqual(gateVerdict([path], 'width-check', 'failure'), ['width-check: failure (selected)'], path)
@@ -101,4 +108,17 @@ test('a change to only Agentshed\'s site requires agentshed-checks and not home-
   // The shared input, and a document, which no site's checks depend on
   assert.deepEqual(gateVerdict(['pnpm-lock.yaml'], 'agentshed-checks', 'skipped'), ['agentshed-checks: skipped (selected)'])
   assert.deepEqual(gateVerdict(['docs/specs/agentshed-site.md'], 'agentshed-checks', 'skipped'), [])
+})
+
+test('a change to only JustSnap\'s site requires justsnap-checks and neither of the other sites\' checks, and a change to either of those does not require it', () => {
+  const site = 'apps/justsnap/public/shots/hero-zh.png'
+  assert.deepEqual(gateVerdict([site], 'justsnap-checks', 'failure'), ['justsnap-checks: failure (selected)'])
+  assert.deepEqual(gateVerdict([site], 'justsnap-checks', 'skipped'), ['justsnap-checks: skipped (selected)'])
+  assert.deepEqual(gateVerdict([site], 'agentshed-checks', 'skipped'), [])
+  assert.deepEqual(gateVerdict([site], 'home-checks', 'skipped'), [])
+  assert.deepEqual(gateVerdict(['apps/agentshed/src/pages/index.astro'], 'justsnap-checks', 'skipped'), [])
+  assert.deepEqual(gateVerdict(['apps/home/public/index.html'], 'justsnap-checks', 'skipped'), [])
+  // The shared input, and a document, which no site's checks depend on
+  assert.deepEqual(gateVerdict(['pnpm-lock.yaml'], 'justsnap-checks', 'skipped'), ['justsnap-checks: skipped (selected)'])
+  assert.deepEqual(gateVerdict(['docs/specs/justsnap-site.md'], 'justsnap-checks', 'skipped'), [])
 })

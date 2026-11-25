@@ -2,14 +2,15 @@ client-framework = "none"
 working-language = "en"
 
 # Each site that has pages of its own keeps its interface copy in a dictionary with a Chinese and an English version, and
-# AGENTS.md holds both sites to theirs. The homepage dictionary's two languages are held to one shape by its typecheck.
+# AGENTS.md holds each of the three to its own. The homepage dictionary's two languages are held to one shape by its
+# typecheck; the other two are held by their own tests.
 [i18n]
 enabled = true
-source = ["apps/home/public/ui.js", "apps/agentshed/src/i18n/ui.ts"]
-enforced-by = ["pnpm --filter @aloong-planet/home run typecheck", "pnpm --filter @aloong-planet/home run test", "pnpm --filter @aloong-planet/agentshed run check", "pnpm --filter @aloong-planet/agentshed run test"]
+source = ["apps/home/public/ui.js", "apps/agentshed/src/i18n/ui.ts", "apps/justsnap/src/i18n/ui.ts"]
+enforced-by = ["pnpm --filter @aloong-planet/home run typecheck", "pnpm --filter @aloong-planet/home run test", "pnpm --filter @aloong-planet/agentshed run check", "pnpm --filter @aloong-planet/agentshed run test", "pnpm --filter @aloong-planet/justsnap run check", "pnpm --filter @aloong-planet/justsnap run test"]
 
 # Theming stays off: it is a repository-wide claim about the product interface, and apps/home has one appearance.
-# AGENTS.md holds apps/agentshed to its light and dark tokens, and its tests check both.
+# AGENTS.md holds apps/agentshed and apps/justsnap to their light and dark tokens, and their tests check both.
 [theming]
 enabled = false
 
@@ -20,8 +21,8 @@ enforced-by = ["pnpm --filter @aloong-planet/agentshed run lint", "pnpm --filter
 
 [e2e-suite]
 enabled = true
-source = ["packages/site-check/src/check-sites.mjs", "apps/agentshed/vitest.config.ts"]
-enforced-by = ["pnpm --filter @aloong-planet/site-check run check", "pnpm --filter @aloong-planet/site-check run test", "pnpm --filter @aloong-planet/agentshed run test"]
+source = ["packages/site-check/src/check-sites.mjs", "apps/agentshed/vitest.config.ts", "apps/justsnap/vitest.config.ts"]
+enforced-by = ["pnpm --filter @aloong-planet/site-check run check", "pnpm --filter @aloong-planet/site-check run test", "pnpm --filter @aloong-planet/agentshed run test", "pnpm --filter @aloong-planet/justsnap run test"]
 
 [mutation-testing]
 enabled = false

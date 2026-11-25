@@ -23,6 +23,14 @@ Constraints on anyone changing `apps/agentshed`, one line each; the reason lives
 - A site browser case opens the build through `visit()` (`apps/agentshed/test/support/browser.ts`); `pnpm --filter @aloong-planet/agentshed run lint` fails on any other import of Playwright by its package name in a JavaScript or TypeScript file of the package (the reason is in that file's header).
 - The screenshots and the icons under `apps/agentshed/public/` change only through the pull request that `pnpm site:assets` of Agentshed's repository opens (`docs/specs/app-sites.md`, app-sites::REQ-004/AC-01).
 
+## JustSnap's site (`apps/justsnap`)
+
+Constraints on anyone changing `apps/justsnap`, one line each; the reason lives where the line points.
+
+- New visible copy goes into the site's dictionary, `apps/justsnap/src/i18n/ui.ts`, in both Chinese and English, never into markup or a script.
+- Every colour token of `apps/justsnap/src/styles/global.css` is declared in both the light and the dark block (`apps/justsnap/src/styles/palette.test.ts`).
+- The screenshots and the icon files under `apps/justsnap/public/` change only through the pull request that `node Scripts/site-assets.mjs` of JustSnap's repository opens (`docs/specs/app-sites.md`, app-sites::REQ-004/AC-01).
+
 ## Agent skills
 
 ### Issue tracker

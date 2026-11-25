@@ -4,7 +4,7 @@ A personal homepage with Apps, Agents, a Blog, an interactive golden retriever, 
 
 ## Develop and verify
 
-Use pnpm 9.12.3 and Node 26.7.0 or later. This repository is a pnpm workspace: the homepage is the package `@aloong-planet/home` in `apps/home/`, Agentshed's website is `@aloong-planet/agentshed` in `apps/agentshed/` (see its [README](apps/agentshed/README.md)), and shared parts go in `packages/`. Install once at the repository root, then run the homepage's scripts from `apps/home/` (from the root, `pnpm --filter @aloong-planet/home run <script>` runs the same script).
+Use pnpm 9.12.3 and Node 26.7.0 or later. This repository is a pnpm workspace: the homepage is the package `@aloong-planet/home` in `apps/home/`, Agentshed's website is `@aloong-planet/agentshed` in `apps/agentshed/` (see its [README](apps/agentshed/README.md)), JustSnap's website is `@aloong-planet/justsnap` in `apps/justsnap/` (see its [README](apps/justsnap/README.md)), and shared parts go in `packages/`. Install once at the repository root, then run the homepage's scripts from `apps/home/` (from the root, `pnpm --filter @aloong-planet/home run <script>` runs the same script).
 
 ```sh
 pnpm install --frozen-lockfile
@@ -61,6 +61,7 @@ No paid subscription is enabled. Free-plan exhaustion causes the counter to disa
 | docs/ | Accepted prototypes, specs, resource inventory and operations |
 | apps/home/tools/screenshots/ | Synthetic Transfer screenshot fixture |
 | apps/agentshed/ | Agentshed's website, the package `@aloong-planet/agentshed`: an Astro site in Chinese and English with its own unit tests, built-site check and browser cases. It is built, checked and deployed from here, to its own Cloudflare Pages project (see [deployment and CI](docs/ops/deployment.md)) |
+| apps/justsnap/ | JustSnap's website, the package `@aloong-planet/justsnap`: an Astro site in Chinese and English with its own unit tests and built-site checks. It is built and checked from here; it is not deployed from here yet, and its screenshots and icon arrive by pull request from JustSnap's repository (see [deployment and CI](docs/ops/deployment.md)) |
 | packages/site-check/ | The project's browser suite: the width check of every site and the homepage's focus test, with the tests of the check and each site's check settings |
 | packages/ | Other parts shared between apps; none yet |
 | .github/workflows/, .github/ci/ | Pull-request checks, the rules that choose which checks a change runs, and main deployment |
