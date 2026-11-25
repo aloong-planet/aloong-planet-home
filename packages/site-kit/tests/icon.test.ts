@@ -28,6 +28,14 @@ describe('the svg', () => {
     expect(svg.getAttribute('fill')).toBe('none')
     expect(svg.getAttribute('aria-hidden')).toBe('true')
   })
+
+  // Lucide's drawing: a 2-unit line with round ends and corners. Another width or cap redraws the icon on both sites.
+  test("its line is Lucide's: 2 units wide, with round caps and joins", async () => {
+    const svg = await render({ name: 'download', size: 18 })
+    expect(svg.getAttribute('stroke-width')).toBe('2')
+    expect(svg.getAttribute('stroke-linecap')).toBe('round')
+    expect(svg.getAttribute('stroke-linejoin')).toBe('round')
+  })
 })
 
 describe('the download icon', () => {

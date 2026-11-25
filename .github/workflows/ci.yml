@@ -118,10 +118,10 @@ jobs:
       - run: pnpm --filter @aloong-planet/justsnap run test
 
   # What the two sites share, packages/site-kit: listed under the `site_kit` scope in routing.json, which only a change
-  # under packages/ (or to the lockfile or another shared input) selects, and that change selects every other scope as
-  # well, so both sites' checks and the width check run beside this job. The type check, which also covers the component,
-  # and the package's own tests are its scripts. No browser is installed: the tests render the component and read
-  # stylesheets as files.
+  # that selects every scope selects (a change under packages/, to the lockfile or another shared input, under .github/,
+  # or to a path no rule lists), so both sites' checks and the width check run beside this job. The type check, which
+  # also covers the component, and the package's own tests are its scripts. No browser is installed: the tests render
+  # the component and read stylesheets as files.
   site-kit-checks:
     name: Site kit checks
     needs: changes
