@@ -124,3 +124,24 @@ for (const [lang, page, destination] of SWITCH) {
     }
   });
 }
+
+// What the dog says about itself, for assistive technology, on each language's homepage (homepage-dog::REQ-002); the dog script reads
+// these from the page, so it holds no sentence of its own.
+const DOG_LINES = {
+  'index.html': {resting: '静静陪着你', greeting: '很高兴见到你', wagging: '见到你，就忍不住摇尾巴', paused: '好啦，乖乖坐好', unavailable: '小狗先静静陪着你，刷新后再试试'},
+  'en/index.html': {resting: 'Sitting quietly beside you', greeting: 'Nice to see you', wagging: "Can't help wagging my tail when I see you", paused: 'All right, sitting nicely', unavailable: 'The dog is keeping you company quietly for now; refresh to try again'},
+};
+for (const [page, lines] of Object.entries(DOG_LINES)) {
+  test(`${page} carries the dog's five status lines for the dog script, and its button's name`, async () => {
+    const html = await read(page);
+    const status = html.match(/<span id="goldenStatus"([^>]*)>/)[1];
+    assert.deepEqual(Object.fromEntries([...status.matchAll(/\sdata-([a-z]+)="([^"]*)"/g)].map(([, name, value]) => [name, value])), lines);
+    const name = page === 'index.html' ? '小狗摇尾巴' : 'Dog wagging its tail';
+    assert.ok(html.includes(`<button class="golden-trigger" id="goldenTrigger" type="button" aria-label="${name}" aria-pressed="true">`), name);
+  });
+}
+
+test('the scripts the pages load hold no interface copy of their own: no Chinese character in any of them', async () => {
+  const scripts = ['public/navigation.js', 'public/visitor.js', 'public/article.js', 'assets/golden-interaction.js'];
+  for (const script of scripts) assert.doesNotMatch(await readFile(new URL(`../${script}`, import.meta.url), 'utf8'), /\p{Script=Han}/u, script);
+});

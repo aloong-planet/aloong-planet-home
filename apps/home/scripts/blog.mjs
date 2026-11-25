@@ -206,7 +206,7 @@ function renderPost(post, body, {stylesheet, script, earlier, later}) {
 </head>
 <body class="ap-site">
   <div data-site-navigation data-page="post"></div>
-  <main class="ap-article ap-article-page">
+  <main class="ap-article ap-article-page" data-dialog-label="${postUi.figure.dialog}" data-open-label="${postUi.figure.open}">
     <header class="ap-article-head">
     <h1>${title}</h1>
     ${markExternalLinks(`<p class="ap-byline"><b>Aloong</b> · ${timeTag(post.date, 'zh')}${source}</p>`)}${note}

@@ -1,3 +1,5 @@
+import {languageOf, ui} from './ui.js';
+
 /** Register only after the browser has accepted the identity cookie.
  * @param {typeof fetch} fetcher
  * @param {AbortSignal} signal
@@ -23,11 +25,14 @@ export async function readVisitorTotal(fetcher = fetch, signal = AbortSignal.tim
   return data.total;
 }
 
-/** Register every counted page; only the homepage owns a live display.
- * @param {{page?: Document, lifecycle?: Window, browser?: Navigator, fetcher?: typeof fetch}} options
+/** Register every counted page; only the homepage owns a live display. The line is worded in the page's document language
+ * (visitor-counter::REQ-001/AC-02), and its number is written in `locale`, which is the browser's own number format when left out,
+ * whatever the page's language.
+ * @param {{page?: Document, lifecycle?: Window, browser?: Navigator, fetcher?: typeof fetch, locale?: string}} options
  */
-export function startVisitorCounter({page = document, lifecycle = window, browser = navigator, fetcher = fetch} = {}) {
+export function startVisitorCounter({page = document, lifecycle = window, browser = navigator, fetcher = fetch, locale} = {}) {
   const element = page.querySelector('[data-visitor-counter]');
+  const {line} = ui[languageOf(page.documentElement.lang)].visitor;
   let registered = false;
   let suspended = false;
   let stopped = false;
@@ -61,7 +66,7 @@ export function startVisitorCounter({page = document, lifecycle = window, browse
         total = await readVisitorTotal(fetcher,signal);
         signal.throwIfAborted();
       }
-      if (element && visible()) element.textContent = `本站累计访客 ${total.toLocaleString('zh-CN')} 人`;
+      if (element && visible()) element.textContent = line(total, total.toLocaleString(locale));
     } catch {
       if (element && !stopped) element.textContent = '';
     } finally {

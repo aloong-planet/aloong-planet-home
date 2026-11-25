@@ -179,7 +179,8 @@ test('every post gets the shared look and no remote stylesheet', async () => {
   const sheets = [...page.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m => m[1]);
   assert.deepEqual(sheets, ['/site.css', '/article.css']);
   assert.match(page, /<script src="\/article\.js" defer><\/script>/);
-  assert.match(page, /<main class="ap-article ap-article-page">/);
+  // The larger view's two names for assistive technology are the page's, written where the shared script reads them (blog::US-004/AC-02).
+  assert.match(page, /<main class="ap-article ap-article-page" data-dialog-label="大图" data-open-label="查看大图">/);
   assert.match(page, /class="ap-article-body post-x"/);
 });
 

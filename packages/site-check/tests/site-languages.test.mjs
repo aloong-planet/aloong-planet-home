@@ -52,9 +52,23 @@ function measureHeader() {
 const overlap = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom
 const inside = (inner, outer) => inner.left >= outer.left && inner.right <= outer.right && inner.top >= outer.top && inner.bottom <= outer.bottom
 
-describe('site-languages::REQ-003/AC-05 on the built homepage site', { timeout: 300_000 }, () => {
+// Opens a page of the built site in a browser context, with only the local servers answering, and hands the page to the check.
+async function withPage(browser, origins, path, check, { width = 1280, ...context } = {}) {
+  const browserContext = await browser.newContext({ viewport: { width, height: WINDOW_HEIGHT }, ...context })
+  try {
+    const page = await browserContext.newPage()
+    await page.route('**/*', (route) => (origins.includes(new URL(route.request().url()).origin) ? route.continue() : route.abort()))
+    await page.goto(path, { waitUntil: 'networkidle' })
+    return await check(page)
+  } finally {
+    await browserContext.close()
+  }
+}
+
+describe('site-languages in a real browser on the built homepage site', { timeout: 300_000 }, () => {
   let browser
   let server
+  let single
   let post
 
   before(
@@ -62,20 +76,22 @@ describe('site-languages::REQ-003/AC-05 on the built homepage site', { timeout: 
       await promisify(execFile)('pnpm', ['run', 'build'], { cwd: home, timeout: 120_000 })
       post = JSON.parse(await readFile(join(home, 'content/posts.json'), 'utf8'))[0].slug
       server = await startServer({ dist: join(home, 'dist'), fixtures: [{ path: '/api/visitor', json: { total: 1234 } }] })
+      // The same build, whose visitor total is 1.
+      single = await startServer({ dist: join(home, 'dist'), fixtures: [{ path: '/api/visitor', json: { total: 1 } }] })
       browser = await chromium.launch()
     },
     { timeout: 180_000 },
   )
 
   after(async () => {
-    await Promise.allSettled([browser?.close(), server?.close()])
+    await Promise.allSettled([browser?.close(), server?.close(), single?.close()])
   })
 
   // Every kind of page in each language: the homepage, the Blog page, the not-found page, and a post page, which has no English version.
   const pages = () => ['/', '/en/', '/blog', '/en/blog', '/404', '/en/404', `/blog/${post}`]
 
   for (const width of WIDTHS) {
-    test(`the switch shows inside the header, clear of the other items, at ${width}px on every page`, { timeout: TEST_LIMIT }, async () => {
+    test(`site-languages::REQ-003/AC-05: the switch shows inside the header, clear of the other items, at ${width}px on every page`, { timeout: TEST_LIMIT }, async () => {
       const checked = []
       for (const path of pages()) {
         const page = await browser.newPage({ viewport: { width, height: WINDOW_HEIGHT } })
@@ -106,6 +122,37 @@ describe('site-languages::REQ-003/AC-05 on the built homepage site', { timeout: 
         }
       }
       assert.deepEqual(checked, pages())
+    })
+  }
+
+  // visitor-counter::REQ-001/AC-02. The expected texts are written out: the format of 1234 for a German browser is 1.234.
+  const counter = (page) => page.waitForFunction(() => document.querySelector('[data-visitor-counter]')?.textContent, null, { timeout: 15_000 }).then(() => page.textContent('[data-visitor-counter]'))
+  for (const [path, locale, expected] of [
+    ['/', 'de-DE', '本站累计访客 1.234 人'],
+    ['/en/', 'de-DE', '1.234 visitors so far'],
+    ['/', 'en-US', '本站累计访客 1,234 人'],
+    ['/en/', 'en-US', '1,234 visitors so far'],
+  ]) {
+    test(`visitor-counter::REQ-001/AC-02: ${path} in a browser whose number format is ${locale} reads "${expected}"`, { timeout: TEST_LIMIT }, async () => {
+      assert.equal(await withPage(browser, [server.origin], server.origin + path, counter, { locale }), expected)
+    })
+  }
+
+  test('visitor-counter::REQ-001/AC-02: the English homepage reads "1 visitor so far" for a total of 1', { timeout: TEST_LIMIT }, async () => {
+    assert.equal(await withPage(browser, [single.origin], single.origin + '/en/', counter, { locale: 'en-US' }), '1 visitor so far')
+  })
+
+  // homepage-dog::REQ-002: the dog says what its page words, in the page's language. Once its motion images are ready it wags, and
+  // with reduced motion requested it greets with a still frame.
+  const status = (page, line) => page.waitForFunction((wanted) => document.getElementById('goldenStatus')?.textContent === wanted, line, { timeout: 15_000 }).then(() => page.textContent('#goldenStatus'))
+  for (const [path, reducedMotion, line] of [
+    ['/', 'no-preference', '见到你，就忍不住摇尾巴'],
+    ['/en/', 'no-preference', "Can't help wagging my tail when I see you"],
+    ['/', 'reduce', '很高兴见到你'],
+    ['/en/', 'reduce', 'Nice to see you'],
+  ]) {
+    test(`homepage-dog::REQ-002: ${path} says "${line}" when its dog ${reducedMotion === 'reduce' ? 'greets with reduced motion' : 'wags'}`, { timeout: TEST_LIMIT }, async () => {
+      assert.equal(await withPage(browser, [server.origin], server.origin + path, (page) => status(page, line), { reducedMotion }), line)
     })
   }
 })
