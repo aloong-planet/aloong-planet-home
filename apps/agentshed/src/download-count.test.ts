@@ -90,17 +90,28 @@ describe('every read', () => {
     vi.useRealTimers()
   })
 
-  test('the count is given up after five seconds', async () => {
+  // agentshed-site::CON-004/AC-01, each read called without a limit of its own
+  const timed: [string, (fetch: Fetch) => Promise<unknown>, unknown][] = [
+    ['the pointer', (fetch) => readPointer(fetch), { kind: 'unreadable' }],
+    ['GitHub', (fetch) => readGitHub(fetch), { kind: 'unreadable' }],
+    ['the statistics file', (fetch) => readCount(fetch), null]
+  ]
+  test.each(timed)('%s is given up after five seconds', async (_, read, unreadable) => {
     vi.useFakeTimers()
     const hanging: Fetch = (_, init) =>
       new Promise((_, reject) => init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError'))))
-    let result: number | null | undefined
-    const read = readCount(hanging).then((count) => (result = count))
+    let settled = false
+    let result: unknown
+    const reading = read(hanging).then((answer) => {
+      settled = true
+      result = answer
+    })
     await vi.advanceTimersByTimeAsync(4999)
-    expect(result).toBeUndefined()
+    expect(settled).toBe(false)
     await vi.advanceTimersByTimeAsync(1)
-    await read
-    expect(result).toBeNull()
+    expect(settled).toBe(true)
+    await reading
+    expect(result).toEqual(unreadable)
   })
 
   // A header outside the CORS-safelisted set would make the browser send a preflight first

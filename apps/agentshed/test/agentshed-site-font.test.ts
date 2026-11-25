@@ -1,4 +1,4 @@
-// The page's font (agentshed-site::REQ-006, The palette: the text set in the system font stack, no web font loaded).
+// The page's font (agentshed-site::CON-005).
 // The stylesheet declares two families: the body's, which the page's text takes, and the feature steps' numbers'
 // (`.deck-n`). Each is read from the stylesheet's source, as its top-level rule declares it, and held to the system
 // stack it must begin with. In a browser, in the test state, the page must hold no @font-face rule and no face in
@@ -91,7 +91,7 @@ function declaredFamily(selector: string): string[] {
   return rules[0].family
 }
 
-// agentshed-site::REQ-006 (The palette: the text set in the system font stack)
+// agentshed-site::CON-005
 describe("the stylesheet's two families begin with the system stack", () => {
   const RULES = [
     { name: "the body's", selector: 'body', begins: ['-apple-system', 'system-ui'] },
@@ -168,8 +168,8 @@ function fonts(): Fonts {
   return seen
 }
 
-// agentshed-site::REQ-006 (The palette: the text set in the system font stack; the page loads no web font). Narrow as
-// well as wide: the rules only a narrow window takes, and the stacked feature steps, are read at 400px.
+// agentshed-site::CON-005. Narrow as well as wide: the rules only a narrow window takes, and the stacked feature
+// steps, are read at 400px.
 describe("in the test state the page loads no font, and its text is set in the stylesheet's two families", () => {
   const WIDTHS = [1280, 400]
   const cases = LOCALES.flatMap((locale) => WIDTHS.map((width) => ({ name: `${locale}/${width}`, locale, width })))

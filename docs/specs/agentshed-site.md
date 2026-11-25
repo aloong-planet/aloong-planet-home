@@ -103,6 +103,10 @@ notice does not alarm me.
   buttons. The download section reads "Version details can’t be loaded right now — download from
   GitHub", with one button, "Download from GitHub".
 - agentshed-site::REQ-002/AC-05: Links to GitHub open in a new tab. The R2 download starts in place.
+- agentshed-site::REQ-002/AC-06: The GitHub button of agentshed-site::REQ-002/AC-01 is a secondary button: the card
+  ground with the strong line, and the accent border on the soft accent ground on hover.
+- agentshed-site::REQ-002/AC-07: In the test state of agentshed-site::REQ-002/AC-03, the pill and the note use the
+  app's warning pair.
 
 ### agentshed-site::REQ-003 Page structure (direct acceptance)
 
@@ -214,6 +218,16 @@ In both languages, the footer's copyright line links the author name "aloongplan
 - agentshed-site::REQ-012/AC-03: In a window 400px wide or narrower, "aloong planet /" shrinks to 11px, with a
   line height 1.3 times that size, on its own line 1px above the brand's line; the header keeps its height
   and the language toggle stays at the right.
+- agentshed-site::REQ-012/AC-04: The trail is a navigation landmark named "Breadcrumb" in English and its Chinese
+  counterpart in Chinese. It holds "aloong planet" and the brand as an ordered list of two links, and the brand
+  is marked as the current page.
+
+### agentshed-site::REQ-013 The app icon, the tab and the description
+
+- agentshed-site::REQ-013/AC-01: The app icon is the production artwork with its transparent exterior.
+- agentshed-site::REQ-013/AC-02: In the hero the icon's shadow follows the icon's outline.
+- agentshed-site::REQ-013/AC-03: The browser tab shows the app icon and "Agentshed — " followed by the hero's title.
+- agentshed-site::REQ-013/AC-04: The page's description is the hero's paragraph.
 
 ## Quality Requirements
 
@@ -252,6 +266,10 @@ Applies to: every read of the pointer, of GitHub and of the statistics file (age
 
 - agentshed-site::CON-004/AC-01: A read gives up after five seconds (Failure A5).
 - agentshed-site::CON-004/AC-02: A read sends no header that needs a CORS preflight.
+
+### agentshed-site::CON-005 The page's font (direct acceptance)
+
+Applies to: the page's text. It is set in the system font stack; the page loads no web font.
 
 ## Failure modes and boundaries
 
@@ -339,36 +357,24 @@ Applies to: every read of the pointer, of GitHub and of the statistics file (age
 
 ## Implementation Decisions
 
-- **The hero video** uses a local 1600×900 poster and a progressively enhanced YouTube link.
-  Activation creates an iframe on `youtube-nocookie.com` with playback requested, inline playback
-  and fullscreen allowed, and the `strict-origin-when-cross-origin` referrer policy, which sends YouTube
-  the embedding origin. No YouTube API library is loaded.
+- **The hero video** uses a 1600×900 poster. Activation creates an iframe on `youtube-nocookie.com` with the
+  `strict-origin-when-cross-origin` referrer policy, which sends YouTube the embedding origin. No YouTube API
+  library is loaded.
 
 - **The pointer read** takes a pointer only when its version is a formal version and its files name the
-  arm64 DMG, by its packaged name, at exactly the URL the mirror's layout gives that version. Anything
-  else is unreadable; a 404 means there is no pointer yet.
+  arm64 DMG, by its packaged name, at exactly the URL the mirror's layout gives that version. A 404 means
+  there is no pointer yet.
 - **The GitHub read** uses the unauthenticated public REST API for this repository's releases, one request
   for the first hundred. A release counts when it is published (drafts are ignored) and its tag is `v`
   followed by a version of its kind: a suffix exactly when GitHub marks it a pre-release
-  ([mac-distribution][ag-mac-distribution] Failure A2); any other entry is passed over. The newest by publication date is taken,
-  the latest formal release first and the newest pre-release otherwise; the answer's order is not relied
-  on. A release's DMG counts only once its upload has finished.
+  ([mac-distribution][ag-mac-distribution] Failure A2); any other entry is passed over. "Latest" and "newest" in
+  agentshed-site::REQ-001/AC-02 go by publication date; the answer's order is not relied on. A release's DMG
+  counts only once its upload has finished.
 - **Every link** is built from the validated version, never taken from an answer (Failure E1).
-- **The palette** is the app's purple palette, with light and dark both declared and switched by the
-  system appearance. The pre-release version's pill and note use the app's warning pair. The GitHub
-  button beside Download is a secondary button: the card ground with the strong line, and the accent
-  border on the soft accent ground on hover. The text is set in the system font stack; the page
-  loads no web font.
-- **The app icon** is the production artwork with its transparent exterior. In the hero its shadow
-  follows the icon's outline. The browser tab shows the app icon and "Agentshed — " followed by the
-  hero title; the page's description is the hero paragraph.
-- **The language toggle** is a link to the other language's page, so it works without scripts. Before
-  leaving, a script notes the element in view, its distance from the top of the window and the current
-  step; the other page puts the same element back at the same distance and makes the same step current
-  (agentshed-site::REQ-004/AC-07). The pinned showcase is never that element (Failure C5).
-- **The header's trail** (agentshed-site::REQ-012) is a navigation landmark named "Breadcrumb" in English and
-  its Chinese counterpart in Chinese. It holds "aloong planet" and the brand as an ordered list of two links,
-  and the brand is marked as the current page.
+- **The language toggle** carries a script that, before leaving, notes the element in view, its distance from
+  the top of the window and the current step; the other page puts the same element back at the same distance
+  and makes the same step current (agentshed-site::REQ-004/AC-07). The pinned showcase is never that element
+  (Failure C5).
 - **The statistics file** is JSON at `stats/downloads.json` on the download host. The page reads these fields of it
   and no other:
 
