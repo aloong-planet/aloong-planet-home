@@ -33,6 +33,14 @@ Constraints on anyone changing `apps/justsnap`, one line each; the reason lives 
 - Every colour token of `apps/justsnap/src/styles/global.css` is declared in both the light and the dark block (`apps/justsnap/src/styles/palette.test.ts`).
 - The screenshots and the icon files under `apps/justsnap/public/` change only through the pull request that `node Scripts/site-assets.mjs` of JustSnap's repository opens (`docs/specs/app-sites.md`, app-sites::REQ-004/AC-01).
 
+## Transfer's site (`apps/transfer`)
+
+Constraints on anyone changing `apps/transfer`, one line each; the reason lives where the line points.
+
+- New visible copy goes into the site's dictionary, `apps/transfer/src/i18n/ui.ts`, in both Chinese and English, never into markup or a script.
+- Every colour token of `apps/transfer/src/styles/global.css` is declared in both the light and the dark block (`apps/transfer/src/styles/palette.test.ts`).
+- The screenshot and the icon under `apps/transfer/public/` change only through the pull request that `pnpm site:assets` of Transfer's repository opens (`docs/specs/app-sites.md`, app-sites::REQ-004/AC-01).
+
 ## Agent skills
 
 ### Issue tracker

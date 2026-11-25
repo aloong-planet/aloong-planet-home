@@ -15,3 +15,4 @@ Each spec is the current requirement picture for one feature, for people changin
 | [App sites](app-sites.md) | Where the homepage and the JustSnap, Agentshed and Transfer sites are built and deployed, and how app screenshots and icons reach them. |
 | [Agentshed's site](agentshed-site.md) | What Agentshed's page offers to download whichever release exists, its features walkthrough and install steps, in English and Chinese. |
 | [JustSnap's site](justsnap-site.md) | What JustSnap's page offers to download whichever formal release exists, its features walkthrough and install steps, in Chinese and English. |
+| [Transfer's site](transfer-site.md) | The link back to the aloong planet homepage in every page's header, which release the download section offers, and that every page fits a narrow window, in Chinese and English. |
