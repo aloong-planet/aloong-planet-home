@@ -257,6 +257,12 @@ const places = [
     /constructed style sheet/,
     /@media \(min-width: 1600px\)/,
   ],
+  [
+    'the media of a constructed style sheet',
+    { body: `<script>const sheet = new CSSStyleSheet({ media: '(min-width: 1600px)' }); sheet.replaceSync('p{margin:0}'); document.adoptedStyleSheets = [sheet]</script>` },
+    /constructed style sheet/,
+    /a style sheet with media "\(min-width: 1600px\)"/,
+  ],
 ]
 for (const [name, { head = '', body = '', files = {} }, sheet, rule] of places) {
   test(`${name} with a condition at 1600px fails the page, naming where it was found`, async (t) => {
@@ -270,20 +276,10 @@ for (const [name, { head = '', body = '', files = {} }, sheet, rule] of places) 
 }
 
 // A sheet that an @import brings in has the import rule's media as its own in Chromium 158 (Playwright 1.65) and none
-// in Chromium 151 (Playwright 1.62). The condition is reported once, at the @import, with the same verdict in both, and
-// what the imported sheet holds is still read.
-test('the media of an @import is reported once, at the @import, and the rules of the sheet it brings in are still read', async (t) => {
-  const head = '<style>@import url("/b.css") (min-width: 1600px);</style>'
-  const { pages } = await measure(t, { 'index.html': page(head, '<p>x</p>'), 'b.css': rule1600 })
-  assert.equal(pages[0].problems.length, 2, pages[0].problems.join('\n'))
-  assert.match(pages[0].problems[0], /<style> no\. 1 has @import \/b\.css \(min-width: 1600px\)/)
-  assert.match(pages[0].problems[1], /^\/b\.css has @media \(min-width: 1600px\)/)
-  assert.deepEqual(pages[0].violations, [])
-})
-
-// The imported sheet is told apart by where it came from, not by its media text, so the same condition written in
-// three places (the media of a link, the media of an @import in that file, a rule in the imported file) is three
-// failures, one for each place.
+// in Chromium 151 (Playwright 1.62); the condition is reported once, at the @import, with the same verdict in both. The
+// imported sheet is told apart by where it came from, not by its media text, so the same condition written in three
+// places (the media of a link, the media of an @import in that file, a rule in the imported file) is three failures,
+// one for each place, and the imported file's rules are still read.
 test('one condition at 1600px written in a link, in an @import and in a rule is reported in each of the three places', async (t) => {
   const head = '<link rel="stylesheet" href="/a.css" media="(min-width: 1600px)">'
   const files = { 'a.css': '@import url("/b.css") (min-width: 1600px);', 'b.css': rule1600 }
