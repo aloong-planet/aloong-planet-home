@@ -96,35 +96,55 @@ function sectionEntries(html) {
   return entries;
 }
 
-test('the top navigation reads Apps, Agents, Blog, About, with Apps and Agents leading to their homepage sections (nav-menus::REQ-001)', () => {
-  assert.deepEqual(tabs(navigationMarkup()), [['Apps', '/#apps'], ['Agents', '/#agents'], ['Blog', '/blog'], ['About', '/#about']]);
-});
+const markup = (lang, page = 'home') => navigationMarkup({lang, page});
+// The tabs of nav-menus::REQ-001 in each language, each leading to its page in that language (site-languages::REQ-005).
+const TABS = {
+  zh: [['Apps', '/#apps'], ['Agents', '/#agents'], ['Blog', '/blog'], ['About', '/#about']],
+  en: [['Apps', '/en/#apps'], ['Agents', '/en/#agents'], ['Blog', '/en/blog'], ['About', '/en/#about']],
+};
+const NAVIGATION_NAMES = {zh: '主要', en: 'Main'};
+const BRAND_ADDRESSES = {zh: '/', en: '/en/'};
 
-test('assistive technology knows the top navigation by its name (nav-menus::REQ-003)', () => {
-  const nav = navigationMarkup().match(/<nav\b[^>]*>/)[0];
-  assert.equal(nav.match(/\saria-label="([^"]*)"/)?.[1], '主要');
-});
+for (const lang of LANGUAGES) {
+  test(`the ${lang} top navigation reads Apps, Agents, Blog, About, each leading to its page or section in this language (nav-menus::REQ-001, site-languages::REQ-005)`, () => {
+    assert.deepEqual(tabs(markup(lang)), TABS[lang]);
+    assert.equal(markup(lang).match(/<a class="ap-brand" href="([^"]*)"/)[1], BRAND_ADDRESSES[lang]);
+  });
 
-test('the header ends with a GitHub link that opens the profile in a new tab (nav-menus::REQ-004)', () => {
-  // The link is not one of the navigation's tabs, so tabs() does not see it: it is the last element of the header.
-  const link = navigationMarkup().match(/<\/nav>\s*(<a\b[^>]*>)([^<]*)<\/a>\s*<\/header>/);
-  assert.ok(link, 'a link follows the navigation at the end of the header');
-  assert.equal(link[2], 'GitHub');
-  assert.equal(link[1].match(/\shref="([^"]*)"/)?.[1], 'https://github.com/aloong-planet');
-  assert.equal(linkTarget(link[1])[0], '_blank');
-});
+  test(`assistive technology knows the ${lang} top navigation by its name (nav-menus::REQ-003)`, () => {
+    const nav = markup(lang).match(/<nav\b[^>]*>/)[0];
+    assert.equal(nav.match(/\saria-label="([^"]*)"/)?.[1], NAVIGATION_NAMES[lang]);
+  });
 
-test('the menus list the works with their descriptions, in order (nav-menus::REQ-002)', () => {
-  const [apps, agents] = [WORKS.zh.filter(work => work[0] === 'Apps'), WORKS.zh.filter(work => work[0] !== 'Apps')];
-  assert.deepEqual(menuItems(navigationMarkup()), [
-    ...apps.map(([, name, address, text]) => ['apps', null, name, address, text]),
-    ...agents.map(([group, name, address, text]) => ['agents', group, name, address, text]),
-  ]);
-});
+  test(`the ${lang} header ends with a GitHub link that opens the profile in a new tab, just before the language switch (nav-menus::REQ-004)`, () => {
+    // The link is not one of the navigation's tabs, so tabs() does not see it: it opens the group at the right end of the header.
+    const link = markup(lang).match(/<div class="ap-header-end">(<a\b[^>]*>)([^<]*)<\/a><div class="ap-lang"/);
+    assert.ok(link, 'the right end of the header holds a link, and the language switch after it');
+    assert.equal(link[2], 'GitHub');
+    assert.equal(link[1].match(/\shref="([^"]*)"/)?.[1], 'https://github.com/aloong-planet');
+    assert.equal(linkTarget(link[1])[0], '_blank');
+  });
 
-test('an Apps menu item opens its website in the current tab; an Agents menu item opens a new tab (nav-menus::US-001/AC-03, nav-menus::US-001/AC-04)', () => {
-  const newTab = ['_blank', 'noreferrer'];
-  assert.deepEqual(menuItemTargets(navigationMarkup()), WORKS.zh.map(([group]) => group === 'Apps' ? ['apps', null, null] : ['agents', ...newTab]));
+  test(`the ${lang} menus list the works with their descriptions, in order, each opening the address for this language (nav-menus::REQ-002)`, () => {
+    const [apps, agents] = [WORKS[lang].filter(work => work[0] === 'Apps'), WORKS[lang].filter(work => work[0] !== 'Apps')];
+    assert.deepEqual(menuItems(markup(lang)), [
+      ...apps.map(([, name, address, text]) => ['apps', null, name, address, text]),
+      ...agents.map(([group, name, address, text]) => ['agents', group, name, address, text]),
+    ]);
+  });
+
+  test(`in the ${lang} menus an Apps item opens its website in the current tab and an Agents item opens a new tab (nav-menus::US-001/AC-03, nav-menus::US-001/AC-04)`, () => {
+    const newTab = ['_blank', 'noreferrer'];
+    assert.deepEqual(menuItemTargets(markup(lang)), WORKS[lang].map(([group]) => group === 'Apps' ? ['apps', null, null] : ['agents', ...newTab]));
+  });
+}
+
+test('the Blog tab is marked as the current page on the Blog page and as the current section on a post page, and nothing is marked on the other pages (blog::US-003/AC-01, not-found::US-001/AC-01)', () => {
+  const marked = html => [...html.match(/<nav\b[^>]*>([\s\S]*)<\/nav>/)[1].matchAll(/<a\b(?![^>]*\bap-menu-item\b)([^>]*)>/g)].map(([, attrs]) => attrs.match(/\saria-current="([^"]*)"/)?.[1] ?? null);
+  const expected = {home: [null, null, null, null], blog: [null, null, 'page', null], post: [null, null, 'true', null], 'not-found': [null, null, null, null]};
+  for (const [page, tabMarks] of Object.entries(expected)) {
+    for (const lang of page === 'post' ? ['zh'] : LANGUAGES) assert.deepEqual(marked(markup(lang, page)), tabMarks, `${lang} ${page}`);
+  }
 });
 
 for (const lang of LANGUAGES) {
@@ -142,12 +162,14 @@ test('the homepage, the Blog page, every post page and the not-found page load t
   const outDir = await realSite();
   const posts = await readManifest(new URL('../content', import.meta.url).pathname);
   assert.ok(posts.length > 0);
-  for (const page of ['index.html', 'blog.html', '404.html', 'en/index.html', 'en/blog.html', 'en/404.html', ...posts.map(post => `blog/${post.slug}.html`)]) {
+  // Each page's mount names the kind of page it is, which decides what the navigation marks and where its language switch leads.
+  const kinds = [['index.html', 'home'], ['blog.html', 'blog'], ['404.html', 'not-found'], ['en/index.html', 'home'], ['en/blog.html', 'blog'], ['en/404.html', 'not-found'], ...posts.map(post => [`blog/${post.slug}.html`, 'post'])];
+  for (const [page, kind] of kinds) {
     const html = await readFile(join(outDir, page), 'utf8');
     const scripts = [...html.matchAll(/<script\b[^>]*\ssrc="\/navigation\.js"[^>]*>/g)].map(match => match[0]);
     assert.equal(scripts.length, 1, page);
     assert.match(scripts[0], /\stype="module"/, page);
-    assert.match(html, /<div\b[^>]*\sdata-site-navigation[\s>]/, page);
+    assert.equal(html.match(/<div\b[^>]*\sdata-site-navigation(?:\s[^>]*)?>/)?.[0].match(/\sdata-page="([^"]*)"/)?.[1], kind, page);
   }
 });
 

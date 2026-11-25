@@ -1,11 +1,9 @@
-// Shared navigation for the homepage, the Blog, every post and the not-found page; all destinations work without prototype tooling.
+// Shared navigation for the homepage, the Blog, every post and the not-found page, in the language of the page it is on; all destinations work without prototype tooling.
+import {LANGUAGES, languageOf, ui} from './ui.js';
 
-import {ui} from './ui.js';
-
+/** @typedef {import('./ui.js').Language} Language */
 /** @typedef {{name: string, href: string, text: string}} Work */
-
-// Interim: the menus still read the Chinese works until the navigation takes the page's language.
-const SITE_WORKS = ui.zh.works;
+/** The kind of page the navigation sits on, which decides what it marks and where its language switch leads. @typedef {'home' | 'blog' | 'post' | 'not-found'} PageKind */
 
 /** @type {Record<string, string>} */
 const ENTITIES = {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'};
@@ -15,17 +13,46 @@ export const escapeHtml = text => text.replace(/[&<>"]/g, c => ENTITIES[c]);
 // App websites open in the current tab (nav-menus::US-001/AC-03), GitHub repositories in a new one (nav-menus::US-001/AC-04).
 /** @param {Work} work @param {boolean} newTab */
 const menuItem = (work, newTab) => `<a class="ap-menu-item" href="${escapeHtml(work.href)}"${newTab ? ' target="_blank" rel="noreferrer"' : ''}><strong>${escapeHtml(work.name)}</strong><span>${escapeHtml(work.text)}</span></a>`;
-/** @param {string} section @param {string} label @param {string} items */
-const menu = (section, label, items) => `<div class="ap-menu" data-menu="${section}"><a href="/#${section}">${label}</a><div class="ap-menu-panel"><div class="ap-menu-card">${items}</div></div></div>`;
-const appsMenu = () => menu('apps', 'Apps', SITE_WORKS.apps.map(work => menuItem(work, false)).join(''));
-const agentsMenu = () => menu('agents', 'Agents', SITE_WORKS.agents.map(({group, works}) => `<p class="ap-menu-group">${escapeHtml(group)}</p>${works.map(work => menuItem(work, true)).join('')}`).join(''));
+/** @param {Language} lang @param {string} section @param {string} label @param {string} items */
+const menu = (lang, section, label, items) => `<div class="ap-menu" data-menu="${section}"><a href="${LANGUAGES[lang].home}#${section}">${escapeHtml(label)}</a><div class="ap-menu-panel"><div class="ap-menu-card">${items}</div></div></div>`;
+/** @param {Language} lang */
+const appsMenu = lang => menu(lang, 'apps', ui[lang].nav.apps, ui[lang].works.apps.map(work => menuItem(work, false)).join(''));
+/** @param {Language} lang */
+const agentsMenu = lang => menu(lang, 'agents', ui[lang].nav.agents, ui[lang].works.agents.map(({group, works}) => `<p class="ap-menu-group">${escapeHtml(group)}</p>${works.map(work => menuItem(work, true)).join('')}`).join(''));
 
-/** The site header with its navigation, as markup. */
-export const navigationMarkup = () => `<header class="ap-header">
-    <a class="ap-brand" href="/">aloong planet <small>Build &amp; Share</small></a>
-    <nav class="ap-nav" aria-label="主要">${appsMenu()}${agentsMenu()}<a href="/blog">Blog</a><a href="/#about">About</a></nav>
-    <a class="ap-social" href="https://github.com/aloong-planet" target="_blank" rel="noreferrer">GitHub</a>
+/**
+ * The language switch (site-languages::REQ-003): the page's own language as marked text, the other as a link to the same page in
+ * that language. A post page has a Chinese version only, so its link to English leads to the English Blog page; a not-found
+ * page leads to the other language's homepage.
+ * @param {Language} lang @param {PageKind} page
+ */
+function languageSwitch(lang, page) {
+  const other = lang === 'zh' ? 'en' : 'zh';
+  const destination = page === 'blog' || page === 'post' ? LANGUAGES[other].blog : LANGUAGES[other].home;
+  const names = ui[lang].language;
+  /** @param {Language} target */
+  const item = target => target === lang
+    ? `<span lang="${LANGUAGES[target].tag}" aria-current="true">${escapeHtml(names[target])}</span>`
+    // The English link is named in full for assistive technology, whatever the page's own language.
+    : `<a lang="${LANGUAGES[target].tag}" hreflang="${LANGUAGES[target].tag}" rel="alternate" href="${destination}"${target === 'en' ? ` aria-label="${escapeHtml(names.enName)}"` : ''}>${escapeHtml(names[target])}</a>`;
+  return `<div class="ap-lang" role="group" aria-label="${escapeHtml(names.label)}">${item('zh')}${item('en')}</div>`;
+}
+
+/**
+ * The site header with its navigation, as markup, in a language and for a kind of page. Every address in it stays in that
+ * language (site-languages::REQ-005). The Blog tab is the current page on the Blog page and the current section on a post page.
+ * @param {{lang: Language, page: PageKind}} where
+ */
+export function navigationMarkup({lang, page}) {
+  const {nav, brand} = ui[lang];
+  const {home, blog} = LANGUAGES[lang];
+  const blogMark = page === 'blog' ? ' aria-current="page"' : page === 'post' ? ' aria-current="true"' : '';
+  return `<header class="ap-header">
+    <a class="ap-brand" href="${home}">${escapeHtml(brand.name)} <small>${escapeHtml(brand.tag)}</small></a>
+    <nav class="ap-nav" aria-label="${escapeHtml(nav.label)}">${appsMenu(lang)}${agentsMenu(lang)}<a href="${blog}"${blogMark}>${escapeHtml(nav.blog)}</a><a href="${home}#about">${escapeHtml(nav.about)}</a></nav>
+    <div class="ap-header-end"><a class="ap-social" href="https://github.com/aloong-planet" target="_blank" rel="noreferrer">${escapeHtml(nav.github)}</a>${languageSwitch(lang, page)}</div>
   </header>`;
+}
 
 /**
  * The stylesheet opens a menu while the pointer rests on it or it holds keyboard focus, which this marks with
@@ -69,17 +96,15 @@ function wireMenus(root) {
   });
 }
 
+/** The kind of page a mount names; a mount that names none is taken for a homepage. @param {string | null} value @returns {PageKind} */
+const pageKind = value => (value === 'blog' || value === 'post' || value === 'not-found' ? value : 'home');
+
 function mountNavigation() {
+  // The page's own document language decides the language, and its mount the kind of page (site-languages::REQ-002).
+  const lang = languageOf(document.documentElement.lang);
   for (const mount of document.querySelectorAll('[data-site-navigation]')) {
-    mount.innerHTML = navigationMarkup();
+    mount.innerHTML = navigationMarkup({lang, page: pageKind(mount.getAttribute('data-page'))});
     wireMenus(mount);
-    // The not-found page belongs to no section, even when it answers an address under /blog/.
-    if (mount.hasAttribute('data-no-section')) continue;
-    if (location.pathname === '/blog' || location.pathname === '/blog.html') {
-      mount.querySelector('a[href="/blog"]')?.setAttribute('aria-current','page');
-    } else if (location.pathname.startsWith('/blog/')) {
-      mount.querySelector('a[href="/blog"]')?.setAttribute('aria-current','true');
-    }
   }
 }
 

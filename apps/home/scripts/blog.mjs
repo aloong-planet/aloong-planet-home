@@ -205,7 +205,7 @@ function renderPost(post, body, {stylesheet, script, earlier, later}) {
   <script src="/article.js" defer></script>${script ? `\n  <script src="/blog/${post.slug}.js" defer></script>` : ''}
 </head>
 <body class="ap-site">
-  <div data-site-navigation></div>
+  <div data-site-navigation data-page="post"></div>
   <main class="ap-article ap-article-page">
     <header class="ap-article-head">
     <h1>${title}</h1>

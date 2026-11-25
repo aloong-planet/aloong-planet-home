@@ -6,6 +6,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readdir, readFile} from 'node:fs/promises';
 import {join, relative} from 'node:path';
+import {navigationMarkup} from '../public/navigation.js';
 import {realSite} from './helpers/built-site.mjs';
 
 /** Every built page, as a path under the built site, in a stable order. */
@@ -89,3 +90,37 @@ test('every link from a page to the homepage, a section of it or the Blog page o
   assert.deepEqual(links(await read('blog.html')).filter(href => href === '/'), ['/']);
   assert.deepEqual(links(await read('en/blog.html')).filter(href => href === '/en/'), ['/en/']);
 });
+
+// Where the link to the other language leads on each kind of page (site-languages::REQ-003/AC-03). A post page has a Chinese version only.
+const SWITCH = [
+  ['zh', 'home', '/en/'], ['zh', 'blog', '/en/blog'], ['zh', 'post', '/en/blog'], ['zh', 'not-found', '/en/'],
+  ['en', 'home', '/'], ['en', 'blog', '/blog'], ['en', 'not-found', '/'],
+];
+const GROUP_NAMES = {zh: '语言', en: 'Language'};
+/** The language switch of a navigation's markup: its group's name and each item as [tag, attributes, text]. */
+function languageSwitch(markup) {
+  const group = markup.match(/<div class="ap-lang"([^>]*)>(.*?)<\/div>/s);
+  assert.ok(group, 'the header holds a language switch');
+  const items = [...group[2].matchAll(/<(span|a)\b([^>]*)>([^<]*)<\/\1>/g)].map(([, tag, attrs, text]) => [tag, Object.fromEntries([...attrs.matchAll(/\s([\w-]+)="([^"]*)"/g)].map(([, name, value]) => [name, value])), text]);
+  return {group: Object.fromEntries([...group[1].matchAll(/\s([\w-]+)="([^"]*)"/g)].map(([, name, value]) => [name, value])), items};
+}
+
+for (const [lang, page, destination] of SWITCH) {
+  test(`the ${lang} ${page} page shows 中文 and EN as the last item of its header, its own language as marked text and the other as a link to ${destination} (site-languages::REQ-003)`, () => {
+    const markup = navigationMarkup({lang, page});
+    // The last item of the header, after the GitHub link (nav-menus::REQ-004).
+    assert.match(markup, /<div class="ap-header-end"><a\b[^>]*>GitHub<\/a><div class="ap-lang"[^>]*>.*<\/div><\/div>\s*<\/header>$/s);
+    const {group, items} = languageSwitch(markup);
+    assert.equal(group['aria-label'], GROUP_NAMES[lang]);
+    assert.equal(group.role, 'group');
+    assert.deepEqual(items.map(([, , text]) => text), ['中文', 'EN']);
+    const [chinese, english] = items;
+    if (lang === 'zh') {
+      assert.deepEqual(chinese.slice(0, 2), ['span', {lang: 'zh-CN', 'aria-current': 'true'}]);
+      assert.deepEqual(english.slice(0, 2), ['a', {lang: 'en', hreflang: 'en', rel: 'alternate', href: destination, 'aria-label': 'English'}]);
+    } else {
+      assert.deepEqual(chinese.slice(0, 2), ['a', {lang: 'zh-CN', hreflang: 'zh-CN', rel: 'alternate', href: destination}]);
+      assert.deepEqual(english.slice(0, 2), ['span', {lang: 'en', 'aria-current': 'true'}]);
+    }
+  });
+}
