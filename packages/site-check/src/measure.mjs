@@ -66,7 +66,12 @@ const readConditions = () => {
       throw error
     }
     const name = nameOf(sheet)
-    const media = sheet.media.mediaText
+    // A sheet that an @import brought in reports no media of its own: the import rule holds the condition as it was
+    // written and reports it (in readRules). Chromium 151 (Playwright 1.62) shows the imported sheet's media empty;
+    // Chromium 158 (Playwright 1.65) shows it as the very same media as the rule's, so reading it here would report one
+    // condition twice. The sheet is told apart by where it came from, not by what its media says, so that two places
+    // that hold the same condition are still each reported.
+    const media = sheet.ownerRule instanceof CSSImportRule ? '' : sheet.media.mediaText
     if (media) {
       const element = sheet.ownerNode?.localName
       const rule = element === 'link' || element === 'style' ? `<${element} media="${media}">` : `a style sheet with media "${media}"`

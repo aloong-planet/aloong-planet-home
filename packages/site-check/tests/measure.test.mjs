@@ -269,6 +269,32 @@ for (const [name, { head = '', body = '', files = {} }, sheet, rule] of places) 
   })
 }
 
+// A sheet that an @import brings in has the import rule's media as its own in Chromium 158 (Playwright 1.65) and none
+// in Chromium 151 (Playwright 1.62). The condition is reported once, at the @import, with the same verdict in both, and
+// what the imported sheet holds is still read.
+test('the media of an @import is reported once, at the @import, and the rules of the sheet it brings in are still read', async (t) => {
+  const head = '<style>@import url("/b.css") (min-width: 1600px);</style>'
+  const { pages } = await measure(t, { 'index.html': page(head, '<p>x</p>'), 'b.css': rule1600 })
+  assert.equal(pages[0].problems.length, 2, pages[0].problems.join('\n'))
+  assert.match(pages[0].problems[0], /<style> no\. 1 has @import \/b\.css \(min-width: 1600px\)/)
+  assert.match(pages[0].problems[1], /^\/b\.css has @media \(min-width: 1600px\)/)
+  assert.deepEqual(pages[0].violations, [])
+})
+
+// The imported sheet is told apart by where it came from, not by its media text, so the same condition written in
+// three places (the media of a link, the media of an @import in that file, a rule in the imported file) is three
+// failures, one for each place.
+test('one condition at 1600px written in a link, in an @import and in a rule is reported in each of the three places', async (t) => {
+  const head = '<link rel="stylesheet" href="/a.css" media="(min-width: 1600px)">'
+  const files = { 'a.css': '@import url("/b.css") (min-width: 1600px);', 'b.css': rule1600 }
+  const { pages } = await measure(t, { 'index.html': page(head, '<p>x</p>'), ...files })
+  assert.equal(pages[0].problems.length, 3, pages[0].problems.join('\n'))
+  assert.match(pages[0].problems[0], /^\/a\.css has <link media="\(min-width: 1600px\)">/)
+  assert.match(pages[0].problems[1], /^\/a\.css has @import \/b\.css \(min-width: 1600px\)/)
+  assert.match(pages[0].problems[2], /^\/b\.css has @media \(min-width: 1600px\)/)
+  assert.deepEqual(pages[0].violations, [])
+})
+
 test('an @supports test on a property that is called min-width is not a condition on the window', async (t) => {
   const { pages } = await measure(t, { 'index.html': page('<style>@supports (min-width: 1700px){p{margin:0}}</style>', '<p>x</p>') })
   assert.deepEqual(pages[0].problems, [])
