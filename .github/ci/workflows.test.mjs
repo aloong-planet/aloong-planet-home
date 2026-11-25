@@ -194,7 +194,7 @@ test('transfer-checks ends at a time limit of 10 minutes', () => {
   assert.match(jobs(ci).get('transfer-checks').join('\n'), /^ {4}timeout-minutes: 10\s*$/m)
 })
 
-// The package's tests build the site themselves (src/landing-page.test.ts), so no build step comes before them, and no
+// The package's tests build the site themselves (test/build-site.ts), so no build step comes before them, and no
 // browser is installed. The type check is the one the ticket's acceptance names: the gate must route apps/transfer to it
 test('transfer-checks runs the type check and the tests of @aloong-planet/transfer', () => {
   assert.deepEqual(runCommands('transfer-checks'), [

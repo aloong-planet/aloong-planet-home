@@ -63,7 +63,11 @@ command fails (`src/check-script.test.ts` has the details).
 - Unit tests sit next to the modules they test (`src/**/*.test.ts`), run on the site's own Astro configuration so that
   they can render the `.astro` pages through Astro's Container API.
 - `test/build-site.ts` builds the site once per test run, into a new directory under `node_modules/.cache/` of this
-  package, for the tests that read what the build wrote, so that none of them reads an old `dist/`.
+  package, for the tests that read what the build wrote, so that none of them reads an old `dist/`. It builds as
+  production, as `astro build` does: the tests run with `NODE_ENV=test`, under which the build would otherwise keep the
+  dev server's choices, and the page reads one of them (`import.meta.env.DEV`, for the download statistics' address).
+  The Deploy run builds the site again and runs none of the checks, so `test/build-site.test.ts` builds it as the build
+  script does, in a process with none of Vitest's environment, and compares every file with the build the checks read.
 - `src/landing-page.test.ts` renders each page as delivered and reads that build to see the download section as the
   built stylesheets lay it out.
 - `test/deploy-config.test.ts` checks this site's side of its publishing: `deployment.config.json` names this site's
