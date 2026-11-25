@@ -45,7 +45,7 @@ html { scroll-behavior:auto; }
 @media(min-width:1280px) {
   .ap-article-page { max-width:none; grid-template-columns:190px var(--measure) minmax(0,190px); grid-template-rows:auto 1fr; gap:24px 48px; justify-content:center; }
   .ap-article-head { grid-column:2; grid-row:1; }
-  .ap-toc { grid-column:1; grid-row:1 / span 2; position:sticky; top:108px; align-self:start; max-height:calc(100svh - 124px); overflow-y:auto; }
+  .ap-toc { grid-column:1; grid-row:1 / span 2; position:sticky; top:calc(var(--ap-header-height) + 32px); align-self:start; max-height:calc(100svh - var(--ap-header-height) - 48px); overflow-y:auto; }
   .ap-toc ol { columns:auto; }
   .ap-article-col { grid-column:2; grid-row:2; }
 }

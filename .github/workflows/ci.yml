@@ -96,6 +96,8 @@ jobs:
   # site under apps/ itself, so a site added later is covered without a change here. Listed under the scope of every
   # site, because the check opens all sites: a change to one site's pages runs it, and so does a change to a
   # site's settings under packages/site-check.
+  # The package's tests run in the same job and include a browser test of the homepage (nav-menus::US-004/AC-03), which
+  # builds apps/home itself.
   # The browser is Playwright's headless shell, downloaded on every run: there is no cache yet, so read this step's
   # time in a run before adding one.
   width-check:
