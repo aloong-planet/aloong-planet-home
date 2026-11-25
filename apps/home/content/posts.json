@@ -40,7 +40,7 @@
     "date": "2026-10-30",
     "summary": "把测试审查换成独立子 agent 做对抗性测试后，一个需求跑一晚上用掉 18 亿 token。拆开会话记录才发现，2.6 亿（14.4%）花在了「等」上：一个子 agent 每 4 秒查一次进度。这篇讲怎么查出来、怎么用一条规则解决。",
     "en": {
-      "title": "A painful lesson: a postmortem on spending 260 million extra tokens in one night after moving to subagent adversarial testing",
+      "title": "A painful lesson: subagent adversarial testing burned 260 million extra tokens in one night, a postmortem",
       "summary": "After I replaced test review with independent subagents doing adversarial testing, one requirement used 1.8 billion tokens in a single night. Taking the session records apart showed that 260 million of them (14.4%) went on waiting: one subagent checked progress every 4 seconds. This post covers how I found it and how one rule fixed it."
     }
   },
