@@ -50,8 +50,8 @@ every window width (see the [README](../../README.md)). Both run when a pull req
   of JustSnap's repository opens into this one (app-sites::REQ-004/AC-01). The screenshots are the hero's and the six
   features', all 1840×1035 (16:9), light appearance, over made-up content; see "Screenshots" below.
 - `deployment.config.json`: what the shared publish command (`pages-deploy` of `packages/pages-deploy/`, run by the
-  `cf:deploy` script; see Deploying) needs of this site: the Cloudflare account and Pages project it publishes to, and
-  the files the build must hold before anything is uploaded.
+  `cf:deploy` script; see Deploying) needs of this site: the Cloudflare account and Pages project it publishes to, the
+  files the build must hold before anything is uploaded, and the project's production branch.
 
 ## Screenshots
 

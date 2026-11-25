@@ -33,8 +33,8 @@ anything under `apps/agentshed/` (see [deployment and CI](../../docs/ops/deploym
 
 - `src/pages/index.astro`, `src/pages/zh/index.astro`: the two pages, the same sections in the same order.
 - `deployment.config.json`: what the shared publish command (`pages-deploy` of `packages/pages-deploy/`, run by the
-  `cf:deploy` script; see Deploying) needs of this site: the Cloudflare account and Pages project it publishes to, and
-  the files the build must hold before anything is uploaded.
+  `cf:deploy` script; see Deploying) needs of this site: the Cloudflare account and Pages project it publishes to, the
+  files the build must hold before anything is uploaded, and the project's production branch.
 - `public/_redirects`: permanent Cloudflare Pages redirects from `/en` and `/en/` to `/`.
   The Astro redirect also emits a static fallback for local previews.
 - `src/layouts/Base.astro`: the head, the sticky header (the trail back to the author's homepage ending in the brand,
