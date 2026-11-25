@@ -17,7 +17,7 @@ import { afterAll, beforeAll, describe, inject, test, vi } from 'vitest'
 import { LOCALES, PAGE_PATH, ui, type Locale } from '../src/i18n/ui'
 import { FEATURE_SHOTS } from '../src/shots'
 import { launch, ORIGIN, visit, type Answer, type Browser, type Page, type Visit } from './support/browser'
-import { palette } from './support/palette'
+import { palette } from '@aloong-planet/site-kit/testing/palette'
 import { COUNT_URL, POINTER, POINTER_URL, RELEASES, RELEASES_API, statistics } from './support/stand-ins'
 
 let browser: Browser

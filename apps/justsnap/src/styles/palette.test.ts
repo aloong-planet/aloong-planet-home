@@ -5,30 +5,13 @@
 // Not covered: that the page's ground and text colours are the values of the app's history page (justsnap-site::REQ-010),
 // which the app's code holds, and that the interface icons are Lucide's: both were checked by comparing with the source.
 import { readFileSync } from 'node:fs'
+import { palette } from '@aloong-planet/site-kit/testing/palette'
 import postcss, { type Root } from 'postcss'
 import { describe, expect, test } from 'vitest'
 
-const root: Root = postcss.parse(readFileSync(new URL('./global.css', import.meta.url), 'utf8'))
-
-/** The custom properties of the top-level `:root`, and of the `:root` under the dark media query */
-function palette(): { light: Map<string, string>; dark: Map<string, string> } {
-  const light = new Map<string, string>()
-  const dark = new Map<string, string>()
-  root.walkRules(':root', (rule) => {
-    const parent = rule.parent
-    const target =
-      parent?.type === 'root'
-        ? light
-        : parent?.type === 'atrule' && parent.name === 'media' && /prefers-color-scheme:\s*dark/.test(parent.params)
-          ? dark
-          : null
-    rule.walkDecls(/^--/, (d) => {
-      target?.set(d.prop, d.value.replace(/\s+/g, ' ').toLowerCase())
-    })
-  })
-  return { light, dark }
-}
-const { light, dark } = palette()
+const sheet = new URL('./global.css', import.meta.url)
+const root: Root = postcss.parse(readFileSync(sheet, 'utf8'))
+const { light, dark } = palette(sheet)
 
 /** WCAG relative luminance of a #rrggbb colour */
 function luminance(hex: string): number {
