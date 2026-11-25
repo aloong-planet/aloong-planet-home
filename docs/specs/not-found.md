@@ -3,7 +3,7 @@
 > Related: [blog](blog.md) · [visitor total](visitor-counter.md) · [site languages](site-languages.md) · [site appearance](site-appearance.md)
 
 ## Problem Statement
-A visitor who opens a mistyped link, or the address of a post that has been removed, sees the homepage with no sign that the page does not exist. Every address on the site answers with status 200, so nothing tells the visitor, a search engine, or a check that the page is missing.
+A visitor who opens a mistyped link, or the address of a post that has been removed, should be told that the page is not there, not shown the homepage as if it were. A search engine or a check should get the answer that the page is missing, not a copy of the homepage with status 200.
 
 ## Solution
 Any address the site does not have shows a not-found page with status 404. The page keeps the site's top navigation and shows the homepage's golden retriever with a puzzled, searching face, a large "404", a short explanation, and two buttons back to the homepage and the Blog.
@@ -60,12 +60,6 @@ Visitor registration follows not-found::CON-001 on the not-found page and [visit
 - Every style, script, image and link on the page is addressed from the site root.
 - The dog is a puzzled version of the homepage's sitting dog, shipped at 480px, three times its displayed size.
 - Deployment checks request an address the site does not have, and one under `/en/`, on every public host, and require status 404 with the heading of the page in that language. The checks for blog pages, images and the dog's motion sheets read text and content types, so they tell a missing file from the not-found page.
-
-## Testing Decisions
-
-Tests stay at the seams the site already uses. The build script and the deployment-check script run as processes in a temporary folder. The deployment check runs against local servers that answer an address the site does not have the way the host does: with the not-found page and status 404. A case where a host still answers such an address with the homepage and status 200 must fail the check. Rules that read page markup are unit-tested on the real page, as the homepage image list is.
-
-Layout, hover, focus and the two buttons are checked in a real browser at 1440×900 and 390×844. The project's browser suite does not check layout beyond a page's width, hover, focus or the buttons, so these are recorded runs. Status 404 for unknown and nested addresses is checked on the local Pages emulator before deployment and by the deployment checks on production.
 
 ## Out of Scope
 

@@ -1,5 +1,5 @@
 // These have no DOM or host here and are checked by recorded runs in a real browser and on the local Pages emulator,
-// because the project's browser suite, packages/site-check, covers only page widths and where focus lands under the pinned header: the centered layout and the whole page fitting the first screen at
+// because the project's browser suite, packages/site-check, covers only page widths, where focus lands under the pinned header, and the colours of the menus, the not-found buttons and a failed cover in each appearance: the centered layout and the whole page fitting the first screen at
 // 1440×900 and 390×844; the buttons' solid dark and outlined looks, size, corners, hover states and focus ring; the
 // keyboard order of the brand, navigation, language switch and buttons; the page at a nested address; no section marked in the
 // navigation at an address under /blog/; with scripting unavailable, the dog, text and buttons working without the
@@ -8,7 +8,8 @@
 // status 404 for addresses the site does not have; an existing address written with a trailing slash or `.html`
 // still redirecting to its plain address; the page's own address /404 (/en/404 for the English page) answering 200 and
 // /404.html redirecting there; an existing page with a query string unchanged (a hash never reaches the host, so it needs no
-// run); and no visitor request. Test them in the browser suite once it covers them.
+// run); and no visitor request. The buttons' colours in each appearance, and the outlined one's fill on hover, are read by
+// packages/site-check/tests/not-found.test.mjs. Test them in the browser suite once it covers them.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {pageImages} from '../scripts/image-checks.mjs';

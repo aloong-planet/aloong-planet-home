@@ -1,13 +1,14 @@
-// The built homepage site in a real browser, for the browser cases of this package that open apps/home: it builds apps/home, serves the build the way
-// the width check does (src/server.mjs, with an answer for the visitor request) and launches headless Chromium. It rebuilds apps/home/dist,
-// so those cases run when no dev server is serving that folder, and this package's `test` script runs its files one at a time.
-import { execFile } from 'node:child_process'
+// The built homepage site in a real browser, for the browser cases of this package that open apps/home: it builds apps/home (through
+// buildHome() of built-home.mjs, so the build the package's global setup has made is not made again), serves the build the way the
+// width check does (src/server.mjs, with an answer for the visitor request) and launches headless Chromium. A case run on its own
+// builds apps/home/dist itself, so it runs when no dev server is serving that folder, and this package's `test` script runs its files
+// one at a time.
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { promisify } from 'node:util'
 import { chromium } from 'playwright'
 import { startServer } from '../../src/server.mjs'
+import { buildHome } from './built-home.mjs'
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url))
 export const home = join(root, 'apps/home')
@@ -17,7 +18,7 @@ export const home = join(root, 'apps/home')
  * `post` is the slug of the newest post, whose page the cases open as the page kind that has no English version.
  */
 export async function startHomeSite() {
-  await promisify(execFile)('pnpm', ['run', 'build'], { cwd: home, timeout: 120_000 })
+  await buildHome()
   const post = JSON.parse(await readFile(join(home, 'content/posts.json'), 'utf8'))[0].slug
   const server = await startServer({ dist: join(home, 'dist'), fixtures: [{ path: '/api/visitor', json: { total: 1234 } }] })
   const single = await startServer({ dist: join(home, 'dist'), fixtures: [{ path: '/api/visitor', json: { total: 1 } }] })

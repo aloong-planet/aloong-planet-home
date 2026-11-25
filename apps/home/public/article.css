@@ -4,12 +4,14 @@
 /* Overrides the site's smooth scrolling: on a page this long the animation delays every jump, and browsers offer no way to shorten it. */
 html { scroll-behavior:auto; }
 
-/* Tokens. Neutrals follow the site; green is the article's one accent, used on post pages only.
-   Both text greens keep 4.5:1 on the page and on the green wash: #1f7a4d is 5.1:1 and 4.8:1, #155c39 7.7:1 and 7.3:1. */
+/* Tokens. Neutrals follow the site; green is the article's one accent, used on post pages only. Both text greens keep 5:1 on the
+   page and on the green wash in both appearances; apps/home/tests/palette.test.mjs holds every pair of text and ground to its contrast.
+   Each token has a value in the light appearance and again, in the dark block under it, in the dark one (equal or not); a token added
+   here is added in both, and to the diagram sheet's pins below. */
 .ap-article {
   --ink-soft:#3a3d38; --bg:var(--paper); --panel:#fff; --band:var(--tag); --lit:#e7e7e1;
   --muted:#62645d; --line:#e1e2dc; --edge:#787a72; --mark:#b4b7b0;
-  --green:#1f7a4d; --green-deep:#155c39; --green-line:#a9d2b9; --green-wash:#eef6f1; --code-bg:#f4f5f1;
+  --green:#1e764b; --green-deep:#155c39; --green-line:#a9d2b9; --green-wash:#eef6f1; --code-bg:#f4f5f1;
   --scrim:rgb(17 19 17 / .4);
   --sans:Arial,"PingFang SC",sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,"PingFang SC",monospace;
@@ -17,6 +19,14 @@ html { scroll-behavior:auto; }
   --measure:820px;
   font:400 15px/1.75 var(--sans);
   color:var(--ink-soft);
+}
+@media (prefers-color-scheme: dark) {
+  .ap-article {
+    --ink-soft:#d2d3cc; --bg:var(--paper); --panel:#1e201d; --band:var(--tag); --lit:#2c2e29;
+    --muted:#a3a59d; --line:#33352f; --edge:#8a8c84; --mark:#54564f;
+    --green:#46b57f; --green-deep:#72d3a0; --green-line:#2f5a43; --green-wash:#1a2b21; --code-bg:#20221f;
+    --scrim:rgb(0 0 0 / .62);
+  }
 }
 
 /* Page layout: title block, contents, then the article column. */
@@ -90,6 +100,28 @@ html { scroll-behavior:auto; }
 .ap-article svg { display:block; width:100%; height:auto; }
 .ap-article .fig svg, .ap-article .lb-figure svg { min-width:0 !important; }
 .ap-article svg text { font-family:var(--sans); fill:var(--ink); }
+/* The dark appearance's one exception to the paragraph above: a diagram is drawn for a light ground, so in the dark appearance its
+   drawing area sits on a light sheet, in the page and in the larger view. The sheet takes back every colour token's light value
+   (the post's own diagram colours are built from them) and the light text colour, so the drawing, and any text inside its area,
+   is exactly what it is in the light appearance. The selectors are article.js's drawing area: a figure's .ground, or, in a figure
+   with none, its block of drawings or the drawing itself; a .ground holding only an image gets no sheet, since images stay as they are.
+   The selectors sit in :where(), which adds no specificity: a block that already has a ground and a frame of its own (a post's grid
+   of cells with hairlines between them, say) keeps them, in the same light colours, and only a drawing area with none gets the sheet.
+   The page's colours are tokens, and a token added in site.css or here must also be pinned here; the palette test fails until it is. */
+@media (prefers-color-scheme: dark) {
+  :where(
+    .ap-article .fig > .ground:has(svg),
+    .ap-article .fig:not(:has(> .ground)) > :not(figcaption):has(svg),
+    .ap-article .fig:not(:has(> .ground)) > svg,
+    .ap-article .lb-sheet
+  ) {
+    color-scheme:light; background:var(--panel); color:var(--ink-soft); border-radius:8px;
+    --paper:#fafaf9; --ink:#20211f; --muted:#62645d; --line:#e1e2dc; --accent:#335bc7; --tag:#efefeb; --card:#fff; --shadow:#20211f1a; --floor:#28261c14; --shot-ground:#868892;
+    --ink-soft:#3a3d38; --bg:var(--paper); --panel:#fff; --band:var(--tag); --lit:#e7e7e1; --edge:#787a72; --mark:#b4b7b0;
+    --green:#1e764b; --green-deep:#155c39; --green-line:#a9d2b9; --green-wash:#eef6f1; --code-bg:#f4f5f1;
+    --scrim:rgb(17 19 17 / .4);
+  }
+}
 
 /* Tables fill the column; a wide one keeps its minimum width and scrolls inside its own box. */
 .ap-article table { border-collapse:collapse; width:100%; font-size:13.5px; line-height:1.6; }

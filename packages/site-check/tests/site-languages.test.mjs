@@ -1,5 +1,6 @@
-// site-languages in a real browser, on the built homepage site (helpers/home-site.mjs builds apps/home and serves it, so this rebuilds apps/home/dist:
-// run it when no dev server is serving that folder; this package's `test` script runs its files one at a time).
+// site-languages in a real browser, on the built homepage site (helpers/home-site.mjs serves the build of apps/home, which this package's `test` script
+// makes once before any file (tests/global-setup.mjs) and runs the files one at a time; run on its own, a file builds it itself, so run it
+// when no dev server is serving apps/home/dist).
 //
 // What it covers: site-languages::REQ-003/AC-05, the language switch showing in the header at every window width, on every kind of
 // page in each language; and site-languages::REQ-003/AC-03 with blog::US-003/AC-01, the navigation script reading its page's kind

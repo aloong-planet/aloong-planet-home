@@ -1,5 +1,6 @@
-// visitor-counter::REQ-001/AC-02 in a real browser, on the built homepage site (helpers/home-site.mjs builds apps/home and serves it, so this
-// rebuilds apps/home/dist: run it when no dev server is serving that folder; this package's `test` script runs its files one at a time).
+// visitor-counter::REQ-001/AC-02 in a real browser, on the built homepage site (helpers/home-site.mjs serves the build of apps/home, which this package's `test` script
+// makes once before any file (tests/global-setup.mjs) and runs the files one at a time; run on its own, a file builds it itself, so run it
+// when no dev server is serving apps/home/dist).
 //
 // What it covers: the line each homepage shows for a total, with the number in the browser's own number format, which a browser whose format
 // matches neither page's language (German) tells from the page's language. What it does not: the wording and plural of the line for other totals

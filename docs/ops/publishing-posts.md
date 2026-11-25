@@ -31,7 +31,7 @@ A post is an entry in `apps/home/content/posts.json` plus an HTML body and a cov
 
 ## What a post gets without any styles of its own
 
-Page layout, type sizes, contents, immediate section jumps, new-tab external links, and these elements: `h2`, `h3`, `p`, `a`, `code`, `table`, `.lead` (the opening sentence), `.note`, `ul.plain`, `ol`, `.quote`, `.codeblock`, `figure.fig` with `figcaption`, `.scroll` (sideways scrolling for a wide table), `.ground` (marks a figure's drawing area, which has no panel or frame around it), `.mid` and `.wide` (table minimum widths), `.num`, `.src`, and `.foot` (the sources block). These live in `apps/home/public/article.css`, so changing that file changes every post. Every figure fills the article's 820px width at every window size and opens in a larger view from `apps/home/public/article.js`; a minimum width set on a drawing is overridden, so draw figures to be read whole at that width and in detail in the larger view. The end of each post links to the posts published just before and after it, written by the build.
+Page layout, type sizes, contents, immediate section jumps, new-tab external links, and these elements: `h2`, `h3`, `p`, `a`, `code`, `table`, `.lead` (the opening sentence), `.note`, `ul.plain`, `ol`, `.quote`, `.codeblock`, `figure.fig` with `figcaption`, `.scroll` (sideways scrolling for a wide table), `.ground` (marks a figure's drawing area, which has no panel or frame around it; in the dark appearance a `.ground` that holds a drawing sits on a light sheet, and one that holds only an image is left as it is), `.mid` and `.wide` (table minimum widths), `.num`, `.src`, and `.foot` (the sources block). These live in `apps/home/public/article.css`, so changing that file changes every post. Every figure fills the article's 820px width at every window size and opens in a larger view from `apps/home/public/article.js`; a minimum width set on a drawing is overridden, so draw figures to be read whole at that width and in detail in the larger view. The end of each post links to the posts published just before and after it, written by the build.
 
 ## A post's own figures
 
@@ -43,7 +43,9 @@ The build refuses a stylesheet that would break the shared look. Every selector 
 - A selector must target something of the post's own, such as `.post-<slug> .my-figure p`, not a base element like `.post-<slug> p`. Write selectors out: no `:is()`, `:where()`, or nested rules.
 - At-rules are limited to `@media`, `@supports`, `@container`, and `@keyframes`.
 - Fonts use one of `var(--sans)` or `var(--mono)`, with no other family beside it. No `@import`, `@font-face`, or remote files.
-- No dark appearance: no `prefers-color-scheme`, `color-scheme`, `light-dark()`, or `data-theme`.
+- Dark values: a post may give its own custom properties values for the dark appearance, in `@media (prefers-color-scheme: dark)` blocks at the top level of the stylesheet, not inside another at-rule. Each block holds rules on `.post-<slug>` itself that set only custom properties, none a shared token. Give dark values to the colours the post uses outside its diagrams, such as the text colour of a status mark; a colour drawn inside a diagram keeps its light value, because a diagram sits on a light sheet in the dark appearance. No other `prefers-color-scheme` condition, and no `color-scheme`, `light-dark()`, or `data-theme`.
+
+A colour written in the body itself, in a `style` or SVG attribute, has no dark value, so write colours there only inside a diagram; text outside a diagram takes the shared tokens.
 
 The body may not contain `style` or `script` elements or a whole page's shell. A complete page exported from elsewhere must be split into these parts first. Requirements and boundaries are in the [blog spec](../specs/blog.md).
 
