@@ -1,5 +1,6 @@
-// A state's view applied to the page as served (agentshed-site::REQ-002, US-001/AC-02, AC-03, Failures A7, E1): the
-// pages come from the run's fresh build, and each case gets its own DOM, since applying a view writes to it.
+// A state's view applied to the page as served (agentshed-site::REQ-002/AC-01, agentshed-site::REQ-002/AC-02,
+// agentshed-site::REQ-002/AC-03, agentshed-site::REQ-002/AC-05, Failures A7, E1): the pages come from the run's fresh
+// build, and each case gets its own DOM, since applying a view writes to it.
 //
 // Not covered here: whether the page keeps the visitor's place when a state lands while they are scrolled down
 // (jsdom has no layout); that is checked in a browser, in `test/agentshed-site-late-content.test.ts`.

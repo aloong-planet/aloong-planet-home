@@ -30,17 +30,11 @@ how many times the app has been downloaded. The screenshots are real app screens
 ### agentshed-site::US-001 Understand what Agentshed is and download it
 
 As a visitor, I want to see at a glance what Agentshed does and get it in one click, so that I can try
-it without reading the repository.
+it without reading the repository. What the download button offers is defined by agentshed-site::REQ-001 and
+agentshed-site::REQ-002.
 
 - agentshed-site::US-001/AC-01: The hero shows the app icon, the title, a one-paragraph description, the
   download button with the platform line "macOS 12 or later · Apple Silicon", and a walkthrough with captions in the page language.
-- agentshed-site::US-001/AC-02: When a formal release exists, the hero button downloads that release's
-  DMG directly.
-- agentshed-site::US-001/AC-03: When only pre-releases exist, the hero button leads to the newest
-  pre-release on GitHub, and the page says plainly that it is a pre-release version and that no stable release
-  exists yet.
-- agentshed-site::US-001/AC-04: When the page cannot tell what exists, the button still leads to the
-  downloads: GitHub's release list.
 
 ### agentshed-site::US-002 Read the page in my language
 
@@ -252,6 +246,13 @@ the download count (agentshed-site::REQ-011). The walkthrough additionally loads
 visitor activates its poster (REQ-009). Pre-releases are never looked for on R2
 ([mac-distribution::CON-004][ag-mac-distribution]).
 
+### agentshed-site::CON-004 How a read is made
+
+Applies to: every read of the pointer, of GitHub and of the statistics file (agentshed-site::CON-003).
+
+- agentshed-site::CON-004/AC-01: A read gives up after five seconds (Failure A5).
+- agentshed-site::CON-004/AC-02: A read sends no header that needs a CORS preflight.
+
 ## Failure modes and boundaries
 
 **Sequence A: deciding the download**
@@ -352,9 +353,7 @@ visitor activates its poster (REQ-009). Pre-releases are never looked for on R2
   ([mac-distribution][ag-mac-distribution] Failure A2); any other entry is passed over. The newest by publication date is taken,
   the latest formal release first and the newest pre-release otherwise; the answer's order is not relied
   on. A release's DMG counts only once its upload has finished.
-- **Every read** (the pointer, GitHub and the statistics file) gives up after five seconds (Failure A5) and
-  sends no header that needs a CORS preflight.
-  Every link is built from the validated version, never taken from an answer (Failure E1).
+- **Every link** is built from the validated version, never taken from an answer (Failure E1).
 - **The palette** is the app's purple palette, with light and dark both declared and switched by the
   system appearance. The pre-release version's pill and note use the app's warning pair. The GitHub
   button beside Download is a secondary button: the card ground with the strong line, and the accent

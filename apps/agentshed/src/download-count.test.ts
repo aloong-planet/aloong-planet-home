@@ -1,6 +1,7 @@
-// The download count's read (agentshed-site::REQ-011/AC-01, AC-05, Failure E3, Implementation Decisions "Every read"),
-// through an injected fetch: no case reaches the network. The file is shaped as the collection writes it
-// (scripts/download-count.mjs in Agentshed's repository); the page reads its schemaVersion and summary only.
+// The download count's read (agentshed-site::REQ-011/AC-01, AC-05, Failure E3, agentshed-site::CON-004/AC-01,
+// agentshed-site::CON-004/AC-02), through an injected fetch: no case reaches the network. The file is shaped as the
+// collection writes it (scripts/download-count.mjs in Agentshed's repository); the page reads its schemaVersion and
+// summary only.
 //
 // Not covered here: what a browser does with CORS (Failure G7). A rejected fetch stands for it; the download host's
 // answer to the landing page's origin and to another one is measured in docs/ops/r2-setup.md of Agentshed's repository.
