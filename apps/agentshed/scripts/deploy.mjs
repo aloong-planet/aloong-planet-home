@@ -90,7 +90,8 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
         if (result.error || result.status !== 0) {
           // Captured output contains resource metadata only; never print authentication env values.
           if (capture && result.stderr) process.stderr.write(result.stderr);
-          throw new Error(`${command} ${args.join(' ')} failed (exit ${result.status ?? 'unavailable'}). Check that CLOUDFLARE_API_TOKEN is set and may edit the Pages project.`);
+          const hint = args.includes('wrangler') ? ' Check that CLOUDFLARE_API_TOKEN is set and may edit the Pages project.' : '';
+          throw new Error(`${command} ${args.join(' ')} failed (exit ${result.status ?? 'unavailable'}).${hint}`);
         }
         return result.stdout || '';
       }}));

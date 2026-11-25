@@ -1,8 +1,10 @@
 // The links between this repository's workflow files that no run reports when they break: a job the gate does
 // not wait on, a Deploy trigger that names no workflow, and a pnpm --filter command that names no package or
 // script (pnpm answers a filter that matches nothing with success). Run: node --test .github/ci/*.test.mjs
-// Gap: Deploy's job condition and steps run only on the hosted runner, from the default branch's copy of
-// deploy.yml; they are checked in the Deploy run of the first push to main after a change to deploy.yml.
+// Gap: Deploy's jobs run only on the hosted runner, from the default branch's copy of deploy.yml. The text of what
+// guards each job is pinned below; that GitHub evaluates it as written, and the credential step with the secret itself,
+// show only in the Deploy run of the first push to main after a change to deploy.yml. A push never takes the false
+// branch of a guard, so a guard that is gone would not show there.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
@@ -101,6 +103,31 @@ test('each Deploy job has its own concurrency group and does not cancel a runnin
     return group[1]
   })
   assert.equal(new Set(groups).size, groups.length, `the jobs share a concurrency group: ${groups}`)
+})
+
+// What guards a Deploy job, for each job of deploy.yml. A pull request from a fork whose branch is named main also
+// completes a CI run on `branches: [main]`, and the job holds the Cloudflare token, so the condition must name the
+// event and the repository; the job builds the revision CI checked, and does not upload while a newer one is the tip.
+test('each Deploy job runs for a successful push to this repository, builds the checked revision, and uploads only while it is the tip of main', () => {
+  const all = jobs(deploy)
+  assert.ok(all.size > 1)
+  for (const [id, lines] of all) {
+    const text = lines.join('\n')
+    const condition = text.match(/^ {4}if: >-\n((?: {6}\S.*\n)+)/m)?.[1] ?? assert.fail(`${id} has no multi-line if`)
+    for (const clause of [
+      "github.event.workflow_run.conclusion == 'success'",
+      "github.event.workflow_run.event == 'push'",
+      'github.event.workflow_run.head_repository.full_name == github.repository'
+    ]) {
+      assert.ok(condition.includes(clause), `${id}: the condition lacks ${clause}`)
+    }
+    assert.match(text, /uses: actions\/checkout@\S+.*\n {8}with:\n {10}ref: \$\{\{ github\.event\.workflow_run\.head_sha \}\}\s*\n/, `${id} checks out the checked revision`)
+    const superseded = text.search(/^ {8}run: \|\n {10}git fetch origin main\n {10}test "\$\(git rev-parse origin\/main\)" = "\$CHECKED_SHA"\s*$/m)
+    assert.ok(superseded > 0, `${id} compares origin/main with the checked revision`)
+    assert.match(text, /^ {6}- name: Reject superseded revisions\n {8}env:\n {10}CHECKED_SHA: \$\{\{ github\.event\.workflow_run\.head_sha \}\}\n/m, `${id} gives the superseded-revision step the checked revision`)
+    const upload = text.search(/^ {8}run: pnpm --filter \S+ run cf:deploy\s*$/m)
+    assert.ok(upload > superseded, `${id} uploads only after the superseded-revision step`)
+  }
 })
 
 // Its commands, in order. The browser is installed with `exec`, which the test above does not see, and pnpm answers a

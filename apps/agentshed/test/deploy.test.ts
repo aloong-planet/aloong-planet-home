@@ -7,6 +7,9 @@
 // by the `agentshed` project and that the token may use it. The first deploy run after the project's Git builds are
 // turned off is that check; a failure of either shows as a failed run.
 import { spawnSync } from 'node:child_process'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
 import { deploy } from '../scripts/deploy.mjs'
@@ -148,6 +151,7 @@ describe('publishing the site', () => {
 
   test.each([
     ['is not in the list', [older]],
+    ['is not the one listed, though the list holds another production deployment of the commit', [row({ Id: 'c0ffee00-0000-4000-8000-000000000000' }), older]],
     ['is a preview deployment', [row({ Environment: 'Preview' }), older]],
     ['is on another branch', [row({ Branch: 'feature' }), older]],
     ['is of another commit', [row({ Source: 'ba48d34' }), older]]
@@ -176,10 +180,12 @@ const runScript = (args: string[], env: Record<string, string> = {}) =>
   spawnSync(process.execPath, [script, ...args], { cwd: root, encoding: 'utf8', env: { ...process.env, ...env } })
 
 describe('the deploy script as a command', () => {
-  test('its usage line names a command that works from the repository root', () => {
+  test("its usage line names this package's cf:deploy script, as pnpm runs it from the repository root", () => {
+    const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { name: string; scripts: Record<string, string> }
+    expect(Object.keys(pkg.scripts)).toContain('cf:deploy')
     const run = runScript(['--no-such-flag'])
     expect(run.status).toBe(1)
-    expect(run.stderr.trim()).toBe('Usage: pnpm --filter @aloong-planet/agentshed run cf:deploy [--dry-run]')
+    expect(run.stderr.trim()).toBe(`Usage: pnpm --filter ${pkg.name} run cf:deploy [--dry-run]`)
   })
 
   test('an account in the environment other than the one in deployment.config.json stops it before any command', () => {
@@ -187,5 +193,111 @@ describe('the deploy script as a command', () => {
     expect(run.status).toBe(1)
     expect(run.stdout).toBe('')
     expect(run.stderr.trim()).toBe('CLOUDFLARE_ACCOUNT_ID differs from deployment.config.json.')
+  })
+})
+
+// The whole command with `git` and `pnpm` replaced by two small shell programs placed first on PATH: the real process
+// runner, the environment it hands Wrangler, the output file, and the temporary directory the script makes and removes.
+// The fake pnpm writes the output file Wrangler would write only when it is told where, as Wrangler is.
+const shell = (lines: string[]) => `#!/bin/sh\n${lines.join('\n')}\n`
+
+function inFakeCheckout() {
+  const work = mkdtempSync(join(tmpdir(), 'agentshed-deploy-test-'))
+  const bin = join(work, 'bin')
+  const scratch = join(work, 'scratch')
+  mkdirSync(bin)
+  mkdirSync(scratch)
+  const log = join(work, 'calls.log')
+  const write = (path: string, text: string, mode = 0o644) => writeFileSync(path, text, { mode })
+  write(join(work, 'deployment.config.json'), JSON.stringify(config))
+  write(
+    join(bin, 'git'),
+    shell([
+      'case "$*" in',
+      '  "status --porcelain") ;;',
+      `  "rev-parse HEAD") echo ${REV} ;;`,
+      '  *) echo "unexpected git $*" >&2; exit 2 ;;',
+      'esac'
+    ]),
+    0o755
+  )
+  write(
+    join(bin, 'pnpm'),
+    shell([
+      'echo "$*" >> "$FAKE_LOG"',
+      'case "$*" in',
+      '  "run build")',
+      '    [ "$FAKE_FAIL" = build ] && exit 1',
+      '    mkdir -p dist/zh && : > dist/index.html && : > dist/zh/index.html ;;',
+      '  "exec wrangler pages deploy "*)',
+      '    [ "$FAKE_FAIL" = upload ] && exit 1',
+      '    [ -n "$WRANGLER_OUTPUT_FILE_PATH" ] || { echo "Wrangler was not told where to write its output" >&2; exit 3; }',
+      '    echo "env account=$CLOUDFLARE_ACCOUNT_ID ci=$CI logs=$WRANGLER_LOG_PATH output=$WRANGLER_OUTPUT_FILE_PATH" >> "$FAKE_LOG"',
+      `    printf '%s\\n' '{"type":"pages-deploy-detailed","deployment_id":"${ID}"}' > "$WRANGLER_OUTPUT_FILE_PATH" ;;`,
+      '  "exec wrangler pages deployment list "*)',
+      `    printf '%s' '${JSON.stringify([row()])}' ;;`,
+      '  *) echo "unexpected pnpm $*" >&2; exit 2 ;;',
+      'esac'
+    ]),
+    0o755
+  )
+  return {
+    scratch,
+    calls: () => (existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n') : []),
+    run: (args: string[] = [], fail = '') =>
+      spawnSync(process.execPath, [script, ...args], {
+        cwd: work,
+        encoding: 'utf8',
+        env: { ...process.env, PATH: `${bin}:${process.env.PATH ?? ''}`, TMPDIR: scratch, FAKE_LOG: log, FAKE_FAIL: fail, CLOUDFLARE_ACCOUNT_ID: '' }
+      }),
+    remove: () => rmSync(work, { recursive: true, force: true })
+  }
+}
+
+describe('the deploy script run against a stand-in git and pnpm', () => {
+  test('builds, uploads with the account, the output file and the CI setting Wrangler needs, and removes its temporary directory', () => {
+    const checkout = inFakeCheckout()
+    try {
+      const run = checkout.run()
+      expect(run.stderr).toBe('')
+      expect(run.status).toBe(0)
+      expect(run.stdout.trim()).toBe(`Deployed ${ID} (Production, ${REV.slice(0, 7)}) ${URL_OF_DEPLOYMENT}`)
+      const calls = checkout.calls()
+      expect(calls.filter((call) => !call.startsWith('env '))).toEqual([BUILD.slice(5), UPLOAD.slice(5), LIST.slice(5)])
+      const given = calls.find((call) => call.startsWith('env ')) ?? ''
+      expect(given).toMatch(/^env account=test-account ci=true logs=\.wrangler\/logs output=\S+wrangler-output\.ndjson$/)
+      expect(existsSync(dirname(given.split('output=')[1]))).toBe(false)
+      expect(readdirSync(checkout.scratch)).toEqual([])
+    } finally {
+      checkout.remove()
+    }
+  })
+
+  test('a failed build ends the run without uploading, and without a hint about the Cloudflare token', () => {
+    const checkout = inFakeCheckout()
+    try {
+      const run = checkout.run([], 'build')
+      expect(run.status).toBe(1)
+      expect(run.stderr).toContain('pnpm run build failed (exit 1)')
+      expect(run.stderr).not.toContain('CLOUDFLARE_API_TOKEN')
+      expect(checkout.calls()).toEqual(['run build'])
+      expect(readdirSync(checkout.scratch)).toEqual([])
+    } finally {
+      checkout.remove()
+    }
+  })
+
+  test('a refused upload ends the run, names the token to check, and removes its temporary directory', () => {
+    const checkout = inFakeCheckout()
+    try {
+      const run = checkout.run([], 'upload')
+      expect(run.status).toBe(1)
+      expect(run.stderr).toContain('pnpm exec wrangler pages deploy dist')
+      expect(run.stderr).toContain('CLOUDFLARE_API_TOKEN')
+      expect(checkout.calls().at(-1)).toBe(UPLOAD.slice(5))
+      expect(readdirSync(checkout.scratch)).toEqual([])
+    } finally {
+      checkout.remove()
+    }
   })
 })
