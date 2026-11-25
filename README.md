@@ -60,7 +60,7 @@ No paid subscription is enabled. Free-plan exhaustion causes the counter to disa
 | apps/home/scripts/, apps/home/tests/ | Build, validation, deployment and regression tests |
 | docs/ | Accepted prototypes, specs, resource inventory and operations |
 | apps/home/tools/screenshots/ | Synthetic Transfer screenshot fixture |
-| apps/agentshed/ | Agentshed's website, the package `@aloong-planet/agentshed`: an Astro site in Chinese and English with its own unit tests, built-site check and browser cases. It is built and checked here; nothing is deployed from here yet |
+| apps/agentshed/ | Agentshed's website, the package `@aloong-planet/agentshed`: an Astro site in Chinese and English with its own unit tests, built-site check and browser cases. It is built, checked and deployed from here, to its own Cloudflare Pages project (see [deployment and CI](docs/ops/deployment.md)) |
 | packages/site-check/ | The project's browser suite: the width check of every site and the homepage's focus test, with the tests of the check and each site's check settings |
 | packages/ | Other parts shared between apps; none yet |
 | .github/workflows/, .github/ci/ | Pull-request checks, the rules that choose which checks a change runs, and main deployment |

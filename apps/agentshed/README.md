@@ -19,6 +19,7 @@ pnpm --filter @aloong-planet/agentshed run check          # astro check: the Typ
 pnpm --filter @aloong-planet/agentshed run lint           # ESLint over the package, no warning allowed
 pnpm --filter @aloong-planet/agentshed run test:lint-rule # the lint rule that keeps browser cases on visit(), tested
 pnpm --filter @aloong-planet/agentshed run test           # unit tests, the built-site check and the browser cases
+pnpm --filter @aloong-planet/agentshed run cf:deploy      # publish the site to Cloudflare Pages (CI does this; see Deploying)
 ```
 
 Without the browser, every browser test file fails at launch, naming the missing executable. On Linux,
@@ -31,6 +32,8 @@ anything under `apps/agentshed/` (see [deployment and CI](../../docs/ops/deploym
 ## Where things are
 
 - `src/pages/index.astro`, `src/pages/zh/index.astro`: the two pages, the same sections in the same order.
+- `scripts/deploy.mjs`, `deployment.config.json`: the command that publishes the build (see Deploying) and the Cloudflare
+  account and Pages project it publishes to.
 - `public/_redirects`: permanent Cloudflare Pages redirects from `/en` and `/en/` to `/`.
   The Astro redirect also emits a static fallback for local previews.
 - `src/layouts/Base.astro`: the head, the sticky header (the trail back to the author's homepage ending in the brand,
@@ -104,10 +107,17 @@ anything under `apps/agentshed/` (see [deployment and CI](../../docs/ops/deploym
   pages, the second through the page's script with a fake network. The reads' tests answer through an injected
   fetch too, so no test reaches the network; `test/fixtures/` holds the answers they use: the pointer as the
   release script writes it, and a real releases answer from GitHub reshaped to the Agentshed repository.
+- `test/deploy.test.ts` runs the publish command with its process boundary replaced, so no test reaches Cloudflare:
+  what it refuses to upload, and what it requires of the deployment it made. It cannot show that Cloudflare accepts the
+  upload or that the token may make it; a Deploy run shows that.
 - `test/build-site.ts` builds as production, as `astro build` does: the tests run with `NODE_ENV=test`, under which
   the build would otherwise keep the dev server's choices, such as `import.meta.env.DEV` being true.
 
 ## Deploying
 
-Nothing is deployed from this repository yet. The Cloudflare Pages project behind `agentshed.aloongplanet.com` is
-still built from the `site/` folder of Agentshed's repository, so a change here does not reach visitors.
+The Deploy workflow (`.github/workflows/deploy.yml`) publishes the site after CI has passed on a push to main: its job
+`deploy-agentshed` runs `cf:deploy`, which builds the site, uploads `dist/` to the Cloudflare Pages project `agentshed`
+(the one behind `agentshed.aloongplanet.com`) as the production deployment of that commit, and then checks the
+project's deployment list for it. A push deploys both sites, whichever it changed. The project's Cloudflare Git builds
+are off, so nothing else publishes it. [Deployment and CI](../../docs/ops/deployment.md) has the command's details, the
+token and how to recover.
