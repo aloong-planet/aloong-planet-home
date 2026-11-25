@@ -23,13 +23,12 @@
 // first and latest.json last. It can be tested once a test can run that step against a stand-in
 // bucket and see that a failed installer upload leaves latest.json unwritten; this suite has no
 // such runner.
-import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { Window } from 'happy-dom'
-import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest'
+import { afterAll, beforeAll, describe, expect, inject, test, vi } from 'vitest'
 import { initDownload } from './download-section'
 import latestSample from './fixtures/latest.json'
 import releasesSample from './fixtures/github-releases.json'
@@ -340,31 +339,12 @@ describe('the download section once a read has given a release', () => {
 // Which parts of the download section a visitor gets a box for, on the page as `astro build` writes it. The delivered
 // markup and the states both rely on `hidden`, and the buttons and the rows' grid set their own display, which the
 // section's stylesheet has to override: a section that carries the right attributes but not the rule looks wrong
-// while every attribute test above stays green. The Container renders no stylesheets, so the site is built once, into
-// a temporary directory.
+// while every attribute test above stays green. The Container renders no stylesheets, so these read the site as built
+// once for the whole run (test/build-site.ts).
 describe('the download section as the built page lays it out', () => {
-  let builtSite = ''
-
-  beforeAll(() => {
-    const siteRoot = new URL('../', import.meta.url)
-    // Under the package's own node_modules/.cache, not the system's temporary directory: Astro moves the built assets
-    // into the output directory with a rename, which fails (EXDEV) when that directory is on another filesystem than
-    // the site, as the temporary directory is on GitHub's runners
-    const cache = join(fileURLToPath(siteRoot), 'node_modules', '.cache')
-    mkdirSync(cache, { recursive: true })
-    builtSite = mkdtempSync(join(cache, 'landing-page-test-'))
-    execFileSync(process.execPath, [fileURLToPath(new URL('node_modules/astro/bin/astro.mjs', siteRoot)), 'build', '--outDir', builtSite], {
-      cwd: fileURLToPath(siteRoot),
-      stdio: 'pipe',
-    })
-  }, 120_000)
-
-  afterAll(() => {
-    if (builtSite) rmSync(builtSite, { recursive: true, force: true })
-  })
-
   /** The built English landing page in a browser window that applies its stylesheets and runs none of its scripts */
   function openBuilt(): Document {
+    const builtSite = inject('builtSite')
     const html = readFileSync(join(builtSite, 'en', 'index.html'), 'utf8')
     const linked = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"[^>]*>/g)].map(([, href]) => readFileSync(join(builtSite, href), 'utf8'))
     const opened = new Window({ settings: { disableJavaScriptEvaluation: true, disableJavaScriptFileLoading: true, disableCSSFileLoading: true } })

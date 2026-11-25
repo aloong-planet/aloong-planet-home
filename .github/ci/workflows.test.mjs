@@ -80,7 +80,7 @@ test('the pnpm --filter commands of the workflows name a workspace package and a
   for (const script of ['typecheck', 'test', 'build']) {
     assert.ok(checks.some(([name, s]) => name === '@aloong-planet/home' && s === script), `home-checks runs ${script} of @aloong-planet/home`)
   }
-  for (const site of ['home', 'agentshed', 'justsnap']) {
+  for (const site of ['home', 'agentshed', 'justsnap', 'transfer']) {
     assert.ok(release.some(([name, script]) => name === `@aloong-planet/${site}` && script === 'cf:deploy'), `Deploy runs cf:deploy of @aloong-planet/${site}`)
   }
   for (const [name, script] of [...filterCommands(ci), ...release]) {
