@@ -172,6 +172,22 @@ test('agentshed-checks installs the browser, then runs the type check, the lint,
   ])
 })
 
+// justsnap-checks runs no browser (the site's tests are unit tests and a build read by jsdom; the page's width is the
+// width check's), so its limit is the homepage job's, not the browser jobs'
+test('justsnap-checks ends at a time limit of 10 minutes', () => {
+  assert.match(jobs(ci).get('justsnap-checks').join('\n'), /^ {4}timeout-minutes: 10\s*$/m)
+})
+
+// The package's tests build the site themselves (test/build-site.ts), so no build step comes before them, and no
+// browser is installed
+test('justsnap-checks runs the type check and the tests of @aloong-planet/justsnap', () => {
+  assert.deepEqual(runCommands('justsnap-checks'), [
+    'pnpm install --frozen-lockfile',
+    'pnpm --filter @aloong-planet/justsnap run check',
+    'pnpm --filter @aloong-planet/justsnap run test'
+  ])
+})
+
 // The gate fails a selected job that was skipped, so a job whose condition leaves out a scope that lists it fails every
 // run that selects only that scope; and the gate reads a scope's output that the `changes` job does not export as invalid.
 // Both fail loudly, but only after a pull request has been opened, so they are pinned here.

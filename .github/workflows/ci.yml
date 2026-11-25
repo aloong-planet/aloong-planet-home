@@ -24,6 +24,7 @@ jobs:
       # one line per scope of .github/ci/routing.json
       home: ${{ steps.scope.outputs.home }}
       agentshed: ${{ steps.scope.outputs.agentshed }}
+      justsnap: ${{ steps.scope.outputs.justsnap }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -93,6 +94,28 @@ jobs:
       - run: pnpm --filter @aloong-planet/agentshed run test:lint-rule
       - run: pnpm --filter @aloong-planet/agentshed run test
 
+  # JustSnap's site, apps/justsnap: listed under the `justsnap` scope in routing.json. The type check and the tests (unit,
+  # and the built site read as files) are the package's own scripts. The tests build the site themselves, into a fresh
+  # directory, so no build step precedes them. They run no browser, so none is installed: the page's width is the width
+  # check's.
+  justsnap-checks:
+    name: JustSnap site checks
+    needs: changes
+    if: needs.changes.outputs.justsnap == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # pnpm must come before setup-node: setup-node's cache: 'pnpm' calls pnpm to find the store path
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.7.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @aloong-planet/justsnap run check
+      - run: pnpm --filter @aloong-planet/justsnap run test
+
   # The width check of every site: opens each page of each site's build in a browser at every window width from
   # 320px to 1440px and fails when a page is wider than the window (app-sites::QR-001/AC-01). The check builds every
   # site under apps/ itself, so a site added later is covered without a change here. Listed under the scope of every
@@ -105,7 +128,7 @@ jobs:
   width-check:
     name: Site width check
     needs: changes
-    if: needs.changes.outputs.home == 'true' || needs.changes.outputs.agentshed == 'true'
+    if: needs.changes.outputs.home == 'true' || needs.changes.outputs.agentshed == 'true' || needs.changes.outputs.justsnap == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -125,7 +148,7 @@ jobs:
   # failure or a skip upstream, which the default `success()` would not: a skipped required check counts as passing.
   ci-gate:
     name: CI gate
-    needs: [changes, repo-policy, home-checks, agentshed-checks, width-check]
+    needs: [changes, repo-policy, home-checks, agentshed-checks, justsnap-checks, width-check]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
