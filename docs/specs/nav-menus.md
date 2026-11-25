@@ -16,7 +16,7 @@ As a visitor on any page of the site, I rest the pointer on Apps or Agents and c
 - nav-menus::US-001/AC-02: The menu stays open while the pointer moves from the tab down into the menu and while it rests on the menu. It closes once the pointer has left both the tab and the menu and keyboard focus is in neither.
 - nav-menus::US-001/AC-03: The Apps menu lists the apps of nav-menus::REQ-002 in order, each as its name with its description below. Choosing an item opens that app's website in the current tab.
 - nav-menus::US-001/AC-04: The Agents menu shows the heading 「Skills」 over its skills, then a divider and the heading 「Plugins」 over its plugins, with the works and order of nav-menus::REQ-002. Choosing an item opens its GitHub repository in a new tab.
-- nav-menus::US-001/AC-05: Each menu is a white card 400px wide with a 1px border in the site's line colour, 8px corners and a soft shadow, its left edge 20px left of the tab's and its top 20px below the tab. Each item is one link covering the name and description, with 10px by 12px padding: the name is 14px in ink, the description 12px in the muted grey, at most two lines. Hovering an item gives it the site's light grey ground. Group headings are 10px capitals with wide letter spacing in the muted grey.
+- nav-menus::US-001/AC-05: Each menu is a card in the site's card colour, 400px wide, with a 1px border in the site's line colour, 8px corners and a soft shadow, its left edge 20px left of the tab's and its top 20px below the tab. Each item is one link covering the name and description, with 10px by 12px padding: the name is 14px in ink, the description 12px in the muted grey, at most two lines. Hovering an item gives it the site's tag colour as its ground. Group headings are 10px capitals with wide letter spacing in the muted grey.
 - nav-menus::US-001/AC-06: With keyboard focus on a tab, Tab moves through that menu's items in order, each showing its focus ring inside its own box; Tab past the last item moves on to the next tab and the menu closes.
 - nav-menus::US-001/AC-07: Escape hides an open menu, whether the pointer or keyboard focus opened it. When focus was on one of its items, focus returns to the tab. The menu stays hidden until the pointer and focus have both left the tab and the menu; coming back opens it again.
 - nav-menus::US-001/AC-08: Following the tab's own link hides its menu under the same rule as Escape.
@@ -37,15 +37,15 @@ As a visitor following Agents, I land on a homepage section listing the skills a
 
 As a visitor on the homepage, I see each of Aloong's apps with what makes it worth trying, so I can open its website.
 
-- nav-menus::US-003/AC-01: The Apps section shows three cards in this order: Transfer, Agentshed, 随译. The 随译 card has the same form as the others: a screenshot area, the name, two lines of text and the link 「访问随译官网」. The screenshot and the link each open the app's website in a new tab.
-- nav-menus::US-003/AC-02: The 随译 screenshot is JustSnap's translation view: a selected passage of English with its Chinese translation in the result box beside it. It is shown whole within the screenshot area, on the grey `#868892`, and its alternative text is 「随译截图翻译：框选一段英文，右侧结果框显示中文译文」.
-- nav-menus::US-003/AC-03: The cards' text reads as follows, each line break as shown:
+- nav-menus::US-003/AC-01: The Apps section shows three cards in this order: Transfer, Agentshed, and JustSnap under the name of nav-menus::REQ-002. The JustSnap card has the same form as the others: a screenshot area, the name, two lines of text and the link 「访问随译官网」 on the Chinese homepage or "Visit the JustSnap website" on the English homepage. The screenshot and the link each open the app's website in a new tab, at the address of nav-menus::REQ-002.
+- nav-menus::US-003/AC-02: The JustSnap screenshot is JustSnap's translation view: a selected passage of English with its Chinese translation in the result box beside it. It is shown whole within the screenshot area, on the grey `#868892` in both appearances. Its alternative text is 「随译截图翻译：框选一段英文，右侧结果框显示中文译文」 on the Chinese homepage and "JustSnap screenshot translation: a selected passage of English, with its Chinese translation in the result box beside it" on the English homepage.
+- nav-menus::US-003/AC-03: The cards' text reads as follows, each line break as shown; on the English homepage a line longer than its card wraps within it:
 
-| Card | Text |
-|---|---|
-| Transfer | Mac 和 Windows 之间传文件，像聊天一样随手一发就到，<br>同一个 Wi-Fi 下打开即连，数据只在局域网里走。 |
-| Agentshed | Claude Code、Codex 等 agent 装了什么、烧了多少 token，<br>打开 Agentshed 一眼看清，旧会话按提问一跳直达。 |
-| 随译 | 全网响应最快的截图工具，按下快捷键瞬间进入选区，<br>框住的文字或对照译文边生成边出现。 |
+| Card | Chinese homepage | English homepage |
+|---|---|---|
+| Transfer | Mac 和 Windows 之间传文件，像聊天一样随手一发就到，<br>同一个 Wi-Fi 下打开即连，数据只在局域网里走。 | Send files between Mac and Windows as easily as sending a chat message;<br>on the same Wi-Fi it connects as soon as it opens, and your data stays on the local network. |
+| Agentshed | Claude Code、Codex 等 agent 装了什么、烧了多少 token，<br>打开 Agentshed 一眼看清，旧会话按提问一跳直达。 | See what Claude Code, Codex and other agents have installed and how many tokens they burn<br>at a glance in Agentshed, and jump straight to an old session by what you asked in it. |
+| JustSnap | 全网响应最快的截图工具，按下快捷键瞬间进入选区，<br>框住的文字或对照译文边生成边出现。 | The fastest screenshot tool around: press the shortcut and start selecting at once,<br>and the framed text or its side-by-side translation appears as it is generated. |
 
 ### nav-menus::US-004 Reach the navigation from anywhere on a page
 
@@ -59,28 +59,41 @@ As a visitor far down a long page, I find the top navigation still at the top of
 
 ### nav-menus::REQ-001 Navigation tabs (direct acceptance)
 
-The top navigation reads Apps · Agents · Blog · About. Apps leads to the homepage's Apps section (`/#apps`), Agents to its Agents section (`/#agents`), Blog to the Blog page (`/blog`) and About to the homepage's footer (`/#about`).
+The top navigation reads Apps · Agents · Blog · About. Apps leads to the homepage's Apps section (`#apps`), Agents to its Agents section (`#agents`), Blog to the Blog page and About to the homepage's footer (`#about`), each in the page's language (site-languages::REQ-005).
 
 ### nav-menus::REQ-002 The works and their descriptions (direct acceptance)
 
-The menus and the Agents section list these works, in this order. On the site's Chinese pages JustSnap is named 随译.
+The menus and the Agents section list these works, in this order. On Chinese pages and post pages JustSnap is named 随译; on English pages it is named JustSnap. A work opens the address for the page's language.
 
-| Group | Name | Opens | Description |
+| Group | Name | Opens from Chinese pages and post pages | Opens from English pages |
 |---|---|---|---|
-| Apps | Transfer | `https://transfer.aloongplanet.com/` | Mac 和 Windows 之间传文件，像聊天一样随手一发就到。同一个 Wi-Fi 下打开即连，多大的文件都能传，数据只在局域网里走。 |
-| Apps | Agentshed | `https://agentshed.aloongplanet.com/` | Claude Code、Codex 等 agent 装了什么、烧了多少 token，打开 Agentshed 一眼看清，旧会话按提问一跳直达。 |
-| Apps | 随译 | `https://justsnap.aloongplanet.com/` | 全网响应最快的截图工具，按下快捷键瞬间进入选区。框住哪里，你选的视觉模型就直接读图，文字或对照译文边生成边出现。 |
-| Skills | skillshed | `https://github.com/aloong-planet/skillshed` | 让 coding agent 像靠谱的资深工程师一样干活。先问清需求、写好 spec，再测试先行地实现，交来的 PR 已经过独立审查。 |
-| Skills | media-studio | `https://github.com/aloong-planet/media-studio` | 把一篇文章变成一支讲解视频，配音用的是你自己的声音，在本机生成，字幕和各平台封面也一并做好。 |
-| Plugins | cc-session-pool | `https://github.com/aloong-planet/claudecode-session-dispatcher` | 让 Claude Code 连轴转。会话自己压缩上下文、醒来接着干，不用你守着；一个调度会话还能指挥一池 worker 同时开工。 |
+| Apps | Transfer | `https://transfer.aloongplanet.com/` | `https://transfer.aloongplanet.com/en` |
+| Apps | Agentshed | `https://agentshed.aloongplanet.com/zh/` | `https://agentshed.aloongplanet.com/` |
+| Apps | JustSnap | `https://justsnap.aloongplanet.com/` | `https://justsnap.aloongplanet.com/en/` |
+| Skills | skillshed | `https://github.com/aloong-planet/skillshed` | `https://github.com/aloong-planet/skillshed` |
+| Skills | media-studio | `https://github.com/aloong-planet/media-studio` | `https://github.com/aloong-planet/media-studio` |
+| Plugins | cc-session-pool | `https://github.com/aloong-planet/claudecode-session-dispatcher` | `https://github.com/aloong-planet/claudecode-session-dispatcher` |
+
+> Pending: Agentshed opens `https://agentshed.aloongplanet.com/zh/` from Chinese pages and post pages.
+
+Each work's description:
+
+| Name | On Chinese pages and post pages | On English pages |
+|---|---|---|
+| Transfer | Mac 和 Windows 之间传文件，像聊天一样随手一发就到。同一个 Wi-Fi 下打开即连，多大的文件都能传，数据只在局域网里走。 | Send files between Mac and Windows as easily as a chat message. On the same Wi-Fi it connects as soon as it opens, takes files of any size, and your data never leaves the local network. |
+| Agentshed | Claude Code、Codex 等 agent 装了什么、烧了多少 token，打开 Agentshed 一眼看清，旧会话按提问一跳直达。 | See at a glance what Claude Code, Codex and other agents have installed and how many tokens they burn, and jump straight to an old session by what you asked in it. |
+| JustSnap | 全网响应最快的截图工具，按下快捷键瞬间进入选区。框住哪里，你选的视觉模型就直接读图，文字或对照译文边生成边出现。 | The fastest screenshot tool around: press the shortcut and start selecting at once. Whatever you frame, the vision model you chose reads the image directly, and the text or a side-by-side translation appears as it is generated. |
+| skillshed | 让 coding agent 像靠谱的资深工程师一样干活。先问清需求、写好 spec，再测试先行地实现，交来的 PR 已经过独立审查。 | Makes your coding agent work like a dependable senior engineer: it pins down the requirements and writes the spec, then implements test-first, and the PR it hands over has already had an independent review. |
+| media-studio | 把一篇文章变成一支讲解视频，配音用的是你自己的声音，在本机生成，字幕和各平台封面也一并做好。 | Turns an article into an explainer video narrated in your own voice, generated on your own machine, with subtitles and a cover for each platform made along the way. |
+| cc-session-pool | 让 Claude Code 连轴转。会话自己压缩上下文、醒来接着干，不用你守着；一个调度会话还能指挥一池 worker 同时开工。 | Keeps Claude Code working around the clock. Sessions compact their own context and wake up to carry on, without you watching over them; one dispatcher session can also run a whole pool of workers at once. |
 
 ### nav-menus::REQ-003 Navigation name (direct acceptance)
 
-The top navigation's accessible name is 「主要」.
+The top navigation's accessible name is 「主要」 on Chinese pages and post pages, and "Main" on English pages.
 
 ### nav-menus::REQ-004 GitHub link (direct acceptance)
 
-Every page that shows the top navigation also shows a link 「GitHub」 at the right end of its header. It opens `https://github.com/aloong-planet` in a new tab.
+Every page that shows the top navigation also shows a link 「GitHub」 at the right end of its header, just before the language switch of site-languages::REQ-003. It opens `https://github.com/aloong-planet` in a new tab.
 
 ## Constraints
 
@@ -99,4 +112,3 @@ Applies to: the homepage's Apps and Agents sections. Their cards and lists are p
 - Icons or screenshots in the menus: each item is a name and a description only.
 - A copy of these menus on the app websites: each app website's header, including any link back to the homepage, belongs to that website's own spec: Agentshed's is [Agentshed's site](agentshed-site.md) in this repository, and the other app websites' specs are in their own repositories.
 - openclaw-memory-core-plus and xnote-extension: they are not listed.
-- An English homepage: the site has one language, so the English name JustSnap has no place on it.

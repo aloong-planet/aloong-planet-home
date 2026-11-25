@@ -10,5 +10,7 @@ Each spec is the current requirement picture for one feature, for people changin
 | [Not-found page](not-found.md) | What an address the site does not have shows, and its status. |
 | [Homepage dog](homepage-dog.md) | Automatic tail wagging and pause/resume controls. |
 | [Apps and Agents menus](nav-menus.md) | Top-navigation menus that open each app, skill and plugin, the homepage's Agents section and its three app cards. |
+| [Site languages](site-languages.md) | The site's Chinese and English pages, their addresses, and the switch between them. |
+| [Site appearance](site-appearance.md) | Every page follows the system's light or dark appearance, and diagrams and pictures keep their light colours. |
 | [App sites](app-sites.md) | Where the homepage and the JustSnap, Agentshed and Transfer sites are built and deployed, and how app screenshots and icons reach them. |
 | [Agentshed's site](agentshed-site.md) | What Agentshed's page offers to download whichever release exists, its features walkthrough and install steps, in English and Chinese. |

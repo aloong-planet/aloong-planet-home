@@ -12,7 +12,7 @@ Play the dog's greeting automatically and let readers pause it.
 After the page and motion images finish loading, the visible homepage dog starts its entry animation and loops the wagging segment. Pointer proximity and pointer departure do not control playback.
 
 ### homepage-dog::REQ-002 Pause and resume (direct acceptance)
-The existing dog button is named “小狗摇尾巴”. Clicking it or activating it with Enter or Space toggles playback. Its pressed state reflects whether playback is requested. Pausing before the motion images load keeps the dog still when they arrive.
+The dog button is named “小狗摇尾巴” on the Chinese homepage and "Dog wagging its tail" on the English homepage. Clicking it or activating it with Enter or Space toggles playback. Its pressed state reflects whether playback is requested. Pausing before the motion images load keeps the dog still when they arrive.
 
 ### homepage-dog::REQ-003 Background pages (direct acceptance)
 A hidden page stops drawing animation frames. Returning to the visible page resumes the greeting if playback is requested, preserving a manual pause.
