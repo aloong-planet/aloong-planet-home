@@ -1,9 +1,13 @@
 * { box-sizing: border-box; }
 /* The pinned header's height, stated once per layout (the phone layout restates it below). Everything that has to clear the header reads it, so changing the height here changes them together: the header, the boxes that fill the window beneath it, and the top padding, which makes a jump to a section or a focused element land below the bar instead of under it. The browser test of that is packages/site-check/tests/nav-menus.test.mjs. */
-:root { --ap-header-height:76px; }
+:root { --ap-header-height:76px; color-scheme:light dark; }
 html { scroll-behavior: smooth; scroll-padding-top:var(--ap-header-height); }
 body { margin: 0; }
-.ap-site { --paper:#fafaf9; --ink:#20211f; --muted:#777971; --line:#e6e7e1; --accent:#335bc7; --tag:#efefeb; --card:#fff; --shadow:#20211f1a; background:var(--paper); color:var(--ink); font-family:Arial,"PingFang SC",sans-serif; min-height:100svh; -webkit-font-smoothing:antialiased; }
+/* The page's colours are these tokens and nothing else; every colour a rule uses reads one. The dark block under the light one gives each token its own value in the dark appearance, equal or not, so a page follows the system's setting from its first frame and live, with no script. color-scheme on :root makes what the browser draws itself (the canvas before the first paint, scroll bars, form controls) follow the same setting. A diagram in a post keeps its light colours: article.css pins these tokens back to their light values on the sheet it draws on. */
+.ap-site { --paper:#fafaf9; --ink:#20211f; --muted:#6b6c65; --line:#e6e7e1; --accent:#335bc7; --tag:#efefeb; --card:#fff; --shadow:#20211f1a; --floor:#28261c14; --shot-ground:#868892; background:var(--paper); color:var(--ink); font-family:Arial,"PingFang SC",sans-serif; min-height:100svh; -webkit-font-smoothing:antialiased; }
+@media (prefers-color-scheme: dark) {
+ .ap-site { --paper:#161715; --ink:#ecece8; --muted:#a3a59d; --line:#33352f; --accent:#8da8ee; --tag:#262824; --card:#1e201d; --shadow:#00000080; --floor:#00000059; --shot-ground:#868892; }
+}
 a { color:inherit; text-decoration:none; }
 button { font:inherit; }
 a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
@@ -42,7 +46,7 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 .ap-hero-profile { position:absolute; inset:0 0 0 40%; }
 .ap-scene { width:470px; height:430px; position:absolute; left:50%; top:38%; transform:translate(-50%,-50%); }
 .ap-person { position:absolute; height:390px; width:260px; object-fit:contain; left:175px; bottom:0; }
-.ap-floor { position:absolute; bottom:2px; left:40px; width:380px; height:18px; border-radius:50%; background:#28261c14; filter:blur(12px); }
+.ap-floor { position:absolute; bottom:2px; left:40px; width:380px; height:18px; border-radius:50%; background:var(--floor); filter:blur(12px); }
 .golden-trigger { position:absolute; left:32px; bottom:6px; width:210px; height:210px; padding:25px; display:grid; place-items:center; border:0; background:transparent; border-radius:50%; cursor:pointer; touch-action:none; outline-offset:-2px; }
 .golden-mascot { position:relative; display:block; width:160px; height:160px; pointer-events:none; }
 .golden-idle, .golden-canvas { position:absolute; inset:0; width:160px; height:160px; object-fit:contain; }
@@ -69,8 +73,8 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 .ap-grid { display:grid; grid-template-columns:1fr 1fr; gap:70px 18px; }
 .ap-art { display:block; aspect-ratio:55/36; border-radius:5px; overflow:hidden; transition:transform .3s; }
 .ap-art img { display:block; width:100%; height:100%; object-fit:cover; }
-/* The 随译 screenshot is wider than the frame, so it is shown whole on the grey of its own edges. */
-.ap-art-justsnap { background:#868892; }
+/* The 随译 screenshot is wider than the frame, so it is shown whole on the grey of its own edges, which is the same grey in both appearances. */
+.ap-art-justsnap { background:var(--shot-ground); }
 .ap-art-justsnap img { object-fit:contain; }
 .ap-project:hover .ap-art { transform:translateY(-4px); }
 .ap-project-info { margin-top:16px; }
