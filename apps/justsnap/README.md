@@ -28,9 +28,10 @@ every window width (see the [README](../../README.md)). Both run when a pull req
 - `src/pages/index.astro`, `src/pages/en/index.astro`: the two pages, the same sections in the same order.
 - `src/layouts/Base.astro`: the head, the sticky header (the breadcrumb back to the aloong planet homepage, ending on
   the brand; navigation; language toggle), the footer, and the page's one script.
-- `src/components/`: one component per section (`Hero`, `Features`, `Download`, which also holds the install steps),
-  and `Icon.astro`, the page's interface icons as inline SVG copied from Lucide. A new icon goes there, never a
-  character or an emoji. The app icon in the header is the one exception: it is an image, set in `Base.astro`.
+- `src/components/`: one component per section (`Hero`, `Features`, `Download`, which also holds the install steps).
+  The page's interface icons are `Icon.astro` of `@aloong-planet/site-kit` (`packages/site-kit/`, shared with
+  Agentshed's site): inline SVG copied from Lucide. A new icon goes there, never a character or an emoji. The app
+  icon in the header is the one exception: it is an image, set in `Base.astro`.
 - `src/i18n/ui.ts`: every string of the page, in both languages. This dictionary is the site's own, separate from the
   app's. New copy goes here, in both languages.
 - `src/styles/global.css`: the palette (light and dark, by the visitor's system appearance; the site owns its

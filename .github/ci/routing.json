@@ -2,7 +2,8 @@
   "scopes": {
     "home": ["home-checks", "width-check"],
     "agentshed": ["agentshed-checks", "width-check"],
-    "justsnap": ["justsnap-checks", "width-check"]
+    "justsnap": ["justsnap-checks", "width-check"],
+    "site_kit": ["site-kit-checks"]
   },
   "rules": [
     {

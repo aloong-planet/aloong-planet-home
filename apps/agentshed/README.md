@@ -38,8 +38,9 @@ anything under `apps/agentshed/` (see [deployment and CI](../../docs/ops/deploym
   The Astro redirect also emits a static fallback for local previews.
 - `src/layouts/Base.astro`: the head, the sticky header (the trail back to the author's homepage ending in the brand,
   navigation, language toggle), the footer, and the page's one script.
-- `src/components/`: one component per section (`Hero`, `Features`, `Install`, `Download`), and `Icon.astro`,
-  the page's icons as inline SVG copied from Lucide. A new icon goes there, never a character or an emoji.
+- `src/components/`: one component per section (`Hero`, `Features`, `Install`, `Download`). The page's icons are
+  `Icon.astro` of `@aloong-planet/site-kit` (`packages/site-kit/`, shared with JustSnap's site): inline SVG copied
+  from Lucide. A new icon goes there, never a character or an emoji.
 - `src/i18n/ui.ts`: every string of the page, in both languages. This dictionary is the site's own. New copy goes
   here, in both languages.
 - `src/styles/global.css`: the palette (purple, light and dark, by the visitor's system appearance; the site owns its
