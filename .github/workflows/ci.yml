@@ -68,8 +68,10 @@ jobs:
   # Agentshed's site, apps/agentshed: listed under the `agentshed` scope in routing.json. The type check, the lint,
   # the lint rule's own test and the tests (unit, the built site, the browser cases) are the package's own scripts.
   # The tests build the site themselves, into a fresh directory, so no build step precedes them. The browser cases run
-  # the headless Chromium of the package's Playwright, with the system libraries and fonts it needs on this runner;
-  # nothing is cached: restoring a cache takes about as long as the download, and the libraries cannot be cached.
+  # the headless Chromium of the package's Playwright, with the system libraries and fonts it needs on this runner.
+  # Nothing is cached yet. Playwright's CI guide advises against caching its browsers (restoring a cache takes about as
+  # long as the download, and the system libraries cannot be cached); read this install step's time in a run before
+  # adding one, as the width-check job's comment says.
   agentshed-checks:
     name: Agentshed site checks
     needs: changes

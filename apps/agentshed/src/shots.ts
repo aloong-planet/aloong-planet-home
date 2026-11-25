@@ -1,5 +1,5 @@
 // The landing page's screenshots (agentshed-site::REQ-005), the files under public/shots/. Where each cut's data
-// comes from, and when it was approved or retaken, is in site/README.md.
+// comes from, and when it was approved or retaken, is in apps/agentshed/README.md.
 import type { Locale } from './i18n/ui'
 
 /** The features section's views, in the order of its steps (agentshed-site::US-003/AC-01) */
