@@ -154,3 +154,25 @@ test('the English copy holds no Chinese, except the language switch\'s name for 
   const chinese = strings(ui.en).filter(([, text]) => /\p{Script=Han}/u.test(text)).map(([where]) => where);
   assert.deepEqual(chinese, ['language.zh']);
 });
+
+// The reverse of the Han guards above. English copy written straight into a template that both languages share would show on the
+// Chinese pages and pass every other test here, as the English pages would read it as their own. So what a delivered Chinese page shows
+// (its text, its text alternatives, its description) without a Chinese character in it must be in the Chinese copy, as the English names
+// the Chinese pages keep are (「Apps.」, the works' names), or be a lowercase identifier such as the value of data-page. It does not see
+// text a script writes into the page, which the browser tests read in each language, nor one lowercase word written into an attribute.
+test('the Chinese pages show no English text of their own: what they show without a Chinese character is in the Chinese copy', async () => {
+  const copy = strings(ui.zh).map(([, text]) => text);
+  let found = 0;
+  for (const page of PAIRS.map(([chinese]) => chinese)) {
+    const html = (await read(page)).replace(/<(script|style)\b[\s\S]*?<\/\1>/g, '');
+    const latinOnly = [
+      ...html.matchAll(/>([^<>]+)</g),
+      ...html.matchAll(/\s(?:alt|title|aria-label|data-[a-z-]+)="([^"]*)"/g),
+      ...html.matchAll(/<meta\s+name="description"\s+content="([^"]*)"/g),
+    ].map(match => match[1].trim()).filter(text => /[A-Za-z]{2}/.test(text) && !/\p{Script=Han}/u.test(text));
+    found += latinOnly.length;
+    for (const text of latinOnly) assert.ok(/^[a-z]+(-[a-z]+)*$/.test(text) || copy.some(entry => entry.includes(text)), `${page} shows "${text}", which is not in the Chinese copy`);
+  }
+  // 19 found on this site: a floor that tells a scan that read the pages from one that found nothing.
+  assert.ok(found >= 10, `the scan found ${found} English strings on the Chinese pages`);
+});
