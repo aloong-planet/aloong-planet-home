@@ -7,8 +7,8 @@ import {isNotFoundAnswer, notFoundHeading} from './not-found-check.mjs';
 const expected=JSON.parse(readFileSync('dist/deployment.json','utf8')).revision;
 const {origins}=JSON.parse(readFileSync('deployment.config.json','utf8'));
 const posts=await readManifest('content');
-// The not-found page this build deploys, known by its heading.
-const heading=notFoundHeading(readFileSync('dist/404.html','utf8'));
+// The not-found page of each language this build deploys, known by its heading: the Chinese one answers outside /en/, the English one under it.
+const headings={zh:notFoundHeading(readFileSync('dist/404.html','utf8')),en:notFoundHeading(readFileSync('dist/en/404.html','utf8'))};
 async function request(url, options={}) {
   return fetch(url,{...options,signal:AbortSignal.timeout(5000),cache:'no-store'});
 }
@@ -35,16 +35,25 @@ do {
       const blogFile=await request(origin+'/blog.html');
       assert.equal(blogFile.status,200,`${origin}/blog.html answered ${blogFile.status}`);
       await blogFile.body?.cancel();
+      // /en leads to /en/, and the English Blog page's address with a trailing slash or .html leads to its plain address (site-languages::REQ-001/AC-03).
+      for(const [from,to] of [['/en','/en/'],['/en/blog/','/en/blog'],['/en/blog.html','/en/blog']]) {
+        const moved=await request(origin+from);
+        assert.equal(moved.status,200,`${origin}${from} answered ${moved.status}`);
+        assert.ok(moved.redirected&&new URL(moved.url).pathname===to,`${origin}${from} did not redirect to ${to}`);
+        await moved.body?.cancel();
+      }
       // A missing file gets the not-found page with status 404. Content types are checked as well, because a host
       // without the not-found page answers a missing file with the homepage and status 200.
       const dogScript=await request(origin+'/assets/golden-interaction.js');
       assert.match(dogScript.headers.get('content-type') || '',/javascript/,`${origin}/assets/golden-interaction.js is not a script`);
-      for(const path of [...pageImages(await (await request(origin+'/')).text()),...motionSheets(await dogScript.text()),...pageImages(await (await request(origin+'/blog')).text())]) await checkImage(origin,path);
-      const missingPath=`/deployment-check-missing-${expected}`;
-      const notFound=await request(origin+missingPath);
-      const notFoundPage=await notFound.text();
-      assert.ok(isNotFoundAnswer(notFound.status,notFoundPage,heading),`${origin}${missingPath} is not the not-found page`);
-      for(const path of pageImages(notFoundPage)) await checkImage(origin,path);
+      for(const path of [...pageImages(await (await request(origin+'/')).text()),...motionSheets(await dogScript.text()),...pageImages(await (await request(origin+'/blog')).text()),...pageImages(await (await request(origin+'/en/')).text()),...pageImages(await (await request(origin+'/en/blog')).text())]) await checkImage(origin,path);
+      // An address the site does not have answers 404 with its language's not-found page: under /en/ that is the English page, and a post's address under /en/ is such an address too, because posts have no English version (site-languages::REQ-001/AC-04).
+      for(const [language,path] of [['zh',`/deployment-check-missing-${expected}`],['en',`/en/deployment-check-missing-${expected}`],['en',`/en/blog/${posts[0].slug}`]]) {
+        const notFound=await request(origin+path);
+        const notFoundPage=await notFound.text();
+        assert.ok(isNotFoundAnswer(notFound.status,notFoundPage,headings[language]),`${origin}${path} is not the ${language==='en'?'English ':''}not-found page`);
+        for(const image of pageImages(notFoundPage)) await checkImage(origin,image);
+      }
       const bootstrap=await request(origin+'/api/visitor');
       assert.equal(bootstrap.status,200);
       assert.deepEqual(await bootstrap.json(),{ready:true});

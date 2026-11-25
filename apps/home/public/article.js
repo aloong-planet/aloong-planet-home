@@ -52,6 +52,9 @@
   const icon = (name, size) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
 
   const article = document.querySelector('.ap-article');
+  // The two names the larger view gives assistive technology are the page's own words, written where the page template puts them.
+  /** @param {'dialog' | 'open'} name */
+  const label = name => article?.getAttribute(`data-${name}-label`) ?? '';
   // A figure's drawing area: its .ground block, or its block of drawings when it has none. Its own controls sit outside
   // this area.
   /** @param {Element} figure */
@@ -65,7 +68,7 @@
     box.className = 'lightbox';
     box.setAttribute('role', 'dialog');
     box.setAttribute('aria-modal', 'true');
-    box.setAttribute('aria-label', '大图');
+    box.setAttribute('aria-label', label('dialog'));
     box.hidden = true;
     // The stage takes focus on opening, so the view is announced and keys scroll it.
     box.innerHTML = '<div class="lb-stage" tabindex="-1"><div class="lb-sheet"><div class="lb-figure"></div><p class="lb-caption"></p></div></div>';
@@ -142,7 +145,7 @@
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'zoom-btn';
-      button.setAttribute('aria-label', '查看大图');
+      button.setAttribute('aria-label', label('open'));
       button.innerHTML = icon('maximize-2', 16);
       figure.append(button);
       area.classList.add('zoomable');

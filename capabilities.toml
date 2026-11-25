@@ -1,12 +1,16 @@
 client-framework = "none"
 working-language = "en"
 
-# i18n and theming stay off: they are repository-wide claims about the product interface, and apps/home has no dictionary
-# and one appearance. AGENTS.md holds apps/agentshed and apps/justsnap each to its own dictionary and its light and dark
-# tokens, and their tests check both.
+# Each site that has pages of its own keeps its interface copy in a dictionary with a Chinese and an English version, and
+# AGENTS.md holds each of the three to its own. The homepage dictionary's two languages are held to one shape by its
+# typecheck; the other two are held by their own tests.
 [i18n]
-enabled = false
+enabled = true
+source = ["apps/home/public/ui.js", "apps/agentshed/src/i18n/ui.ts", "apps/justsnap/src/i18n/ui.ts"]
+enforced-by = ["pnpm --filter @aloong-planet/home run typecheck", "pnpm --filter @aloong-planet/home run test", "pnpm --filter @aloong-planet/agentshed run check", "pnpm --filter @aloong-planet/agentshed run test", "pnpm --filter @aloong-planet/justsnap run check", "pnpm --filter @aloong-planet/justsnap run test"]
 
+# Theming stays off: it is a repository-wide claim about the product interface, and apps/home has one appearance.
+# AGENTS.md holds apps/agentshed and apps/justsnap to their light and dark tokens, and their tests check both.
 [theming]
 enabled = false
 

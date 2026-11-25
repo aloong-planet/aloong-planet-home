@@ -29,34 +29,39 @@ test('client stops after setup failure and propagates aborted requests',async()=
  await assert.rejects(getVisitorTotal(async(_url,options)=>{options.signal.throwIfAborted();},controller.signal),{name:'AbortError'});
 });
 const settle = () => new Promise(resolve=>setImmediate(resolve));
-function pageFixture(counter = true) {
+// `lang` is the page's document language. `locale` stands for the browser's own number format, which no test may leave to the
+// machine it runs on: it is written into every fixture, English-US unless a test sets another.
+function pageFixture(counter = true, lang = 'zh-CN', locale = 'en-US') {
  const element={textContent:''};
- const page=Object.assign(new EventTarget(),{visibilityState:'visible',querySelector:()=>counter?element:null});
+ const page=Object.assign(new EventTarget(),{visibilityState:'visible',querySelector:()=>counter?element:null,documentElement:{lang}});
  const lifecycle=new EventTarget();
  const visibility = state => {page.visibilityState=state;page.dispatchEvent(new Event('visibilitychange'));};
  const history = type => lifecycle.dispatchEvent(Object.assign(new Event(type),{persisted:true}));
- return {element,page,lifecycle,visibility,history};
+ return {element,page,lifecycle,visibility,history,locale};
 }
-test('the visible homepage refreshes its shared total without registering again',async(t)=>{
- t.mock.timers.enable({apis:['setTimeout']});
- const fixture=pageFixture();
- let total=1024, registrations=0;
- const fetcher=async(url,options)=>{
-  if(options.method==='POST'){registrations++;return Response.json({ordinal:1,total});}
-  return Response.json(url.includes('?')?{total}:{ready:true});
- };
- const stop=startVisitorCounter({...fixture,browser:{},fetcher});
- try{
-  await settle();
-  assert.equal(fixture.element.textContent,'本站累计访客 1,024 人');
-  total=1025;
-  t.mock.timers.tick(29999);await settle();
-  assert.equal(fixture.element.textContent,'本站累计访客 1,024 人');
-  t.mock.timers.tick(1);await settle();
-  assert.equal(fixture.element.textContent,'本站累计访客 1,025 人');
-  assert.equal(registrations,1);
- }finally{stop();}
-});
+// The refresh shows the new total in the line of the page's own language (visitor-counter::REQ-007/AC-01, visitor-counter::REQ-001/AC-02).
+for(const [lang,first,second] of [['zh-CN','本站累计访客 1,024 人','本站累计访客 1,025 人'],['en','1,024 visitors so far','1,025 visitors so far']]){
+ test(`the visible ${lang} homepage refreshes its shared total without registering again`,async(t)=>{
+  t.mock.timers.enable({apis:['setTimeout']});
+  const fixture=pageFixture(true,lang);
+  let total=1024, registrations=0;
+  const fetcher=async(url,options)=>{
+   if(options.method==='POST'){registrations++;return Response.json({ordinal:1,total});}
+   return Response.json(url.includes('?')?{total}:{ready:true});
+  };
+  const stop=startVisitorCounter({...fixture,browser:{},fetcher});
+  try{
+   await settle();
+   assert.equal(fixture.element.textContent,first);
+   total=1025;
+   t.mock.timers.tick(29999);await settle();
+   assert.equal(fixture.element.textContent,first);
+   t.mock.timers.tick(1);await settle();
+   assert.equal(fixture.element.textContent,second);
+   assert.equal(registrations,1);
+  }finally{stop();}
+ });
+}
 
 test('hidden and departed pages pause reads, and visibility or history restoration refresh immediately',async(t)=>{
  t.mock.timers.enable({apis:['setTimeout']});
@@ -117,9 +122,10 @@ test('failed refreshes hide the total and recover without registering again',asy
  }finally{stop();}
 });
 
-test('pages without a display register once and do not poll',async(t)=>{
+for(const lang of ['zh-CN','en']){
+test(`a ${lang} page without a display registers once and does not poll`,async(t)=>{
  t.mock.timers.enable({apis:['setTimeout']});
- const fixture=pageFixture(false);
+ const fixture=pageFixture(false,lang);
  let registrations=0,reads=0;
  const stop=startVisitorCounter({...fixture,browser:{},fetcher:async(url,options)=>{
   if(url.includes('?'))reads++;
@@ -132,6 +138,7 @@ test('pages without a display register once and do not poll',async(t)=>{
   assert.equal(registrations,1);assert.equal(reads,0);
  }finally{stop();}
 });
+}
 
 test('total reads accept zero, reject corrupt numbers and never bootstrap an identity',async()=>{
  for(const total of [0,42,-1,0.5,'42',null,Number.MAX_SAFE_INTEGER+1]){
@@ -196,3 +203,28 @@ test('a request times out after five seconds and leaves the counter hidden',asyn
   assert.equal(timeoutReason?.name,'TimeoutError');assert.equal(fixture.element.textContent,'');
  }finally{stop();}
 });
+
+// What the line reads for a total, on each language's homepage (visitor-counter::REQ-001/AC-02). The English plural is the platform's
+// rule for English, measured on this runtime: 1 is `one`, and 0, 2, 5, 21 and 1000 are all `other`.
+const LINES = [
+ ['zh-CN',1,'本站累计访客 1 人'],['zh-CN',2,'本站累计访客 2 人'],['zh-CN',1000,'本站累计访客 1,000 人'],
+ ['en',1,'1 visitor so far'],['en',2,'2 visitors so far'],['en',5,'5 visitors so far'],['en',21,'21 visitors so far'],['en',1000,'1,000 visitors so far'],
+];
+for(const [lang,total,expected] of LINES){
+ test(`a page in ${lang} shows "${expected}" for a total of ${total}`,async()=>{
+  const fixture=pageFixture(true,lang);
+  const stop=startVisitorCounter({...fixture,browser:{},fetcher:async(_url,options)=>Response.json(options.method==='POST'?{total}:{ready:true})});
+  try{await settle();assert.equal(fixture.element.textContent,expected);}finally{stop();}
+ });
+}
+
+// The number is written in the browser's own format, whatever the page's language: a German browser reads 1.234 on the English page
+// and on the Chinese one alike. A Chinese or English browser writes 1,234 on both, so only a browser that differs from both pages shows
+// which of the two the number follows.
+for(const [lang,expected] of [['zh-CN','本站累计访客 1.234 人'],['en','1.234 visitors so far']]){
+ test(`a German browser reads the total in its own number format on a page in ${lang}`,async()=>{
+  const fixture=pageFixture(true,lang,'de-DE');
+  const stop=startVisitorCounter({...fixture,browser:{},fetcher:async(_url,options)=>Response.json(options.method==='POST'?{total:1234}:{ready:true})});
+  try{await settle();assert.equal(fixture.element.textContent,expected);}finally{stop();}
+ });
+}

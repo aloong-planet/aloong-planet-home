@@ -5,6 +5,8 @@ const base='../../../assets/golden-wag/';
 const button=document.getElementById('goldenTrigger'),mascot=document.getElementById('goldenMascot');
 const canvas=document.getElementById('goldenCanvas'),idle=document.getElementById('goldenIdle');
 const status=document.getElementById('goldenStatus'),ctx=canvas.getContext('2d');
+// What the dog says about itself comes from the page, which words it in the page's language.
+const lines=status.dataset;
 const snapshot=document.createElement('canvas');snapshot.width=snapshot.height=goldenConfig.frameSize;
 const snapshotCtx=snapshot.getContext('2d');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -39,7 +41,7 @@ function transition(next,nextFrame,ms=0){
 }
 function stopIdle(){
  cancelAnimationFrame(raf);raf=0;lastTime=0;mode='idle';frame=goldenConfig.first;
- fadeDuration=fadeElapsed=0;mascot.dataset.drawing='false';stamp();say('静静陪着你');
+ fadeDuration=fadeElapsed=0;mascot.dataset.drawing='false';stamp();say(lines.resting);
 }
 function beginIdleFade(){
  frame=goldenConfig.last;render();capture();mode='idle-fade';fadeElapsed=0;fadeDuration=goldenConfig.returnToIdleMs;
@@ -66,16 +68,16 @@ function respond(next,force=false){
  if(!ready)return;
  if(reduced.matches){
   cancelAnimationFrame(raf);raf=0;
-  if(next){mode='reduced';frame=72;fadeDuration=0;mascot.dataset.drawing='true';render();say('很高兴见到你');}
+  if(next){mode='reduced';frame=72;fadeDuration=0;mascot.dataset.drawing='true';render();say(lines.greeting);}
   else stopIdle();return;
  }
  if(next){
-  say('见到你，就忍不住摇尾巴');
+  say(lines.wagging);
   if(mode==='return'&&frame<124)transition('loop',goldenConfig.resumeEntry[Math.floor(frame)],goldenConfig.blendMs);
   else if(mode==='reverse')transition('entry',Math.max(goldenConfig.first,frame));
   else transition('entry',goldenConfig.first,goldenConfig.blendMs);
  }else{
-  say('好啦，乖乖坐好');
+  say(lines.paused);
   if(mode==='idle'){stopIdle();return;}
   if(mode==='entry'&&frame<=18)transition('reverse',frame);
   else transition('return',goldenConfig.returnEntry[Math.floor(frame)]??108,goldenConfig.blendMs);
@@ -91,6 +93,6 @@ reduced.addEventListener('change',()=>{if(ready){stopIdle();if(!document.hidden)
 function loadMotion(){
  Promise.all([idle.decode(),...goldenConfig.sheets.map(async(sheet,index)=>{const image=new Image();images[index]=image;image.src=base+sheet.file;await image.decode();})])
   .then(()=>{ready=true;stopIdle();if(!document.hidden)respond(wanted,true);})
-  .catch(()=>{canvas.dataset.mode='unavailable';say('小狗先静静陪着你，刷新后再试试');});
+  .catch(()=>{canvas.dataset.mode='unavailable';say(lines.unavailable);});
 }
 if(document.readyState==='complete')loadMotion();else window.addEventListener('load',loadMotion,{once:true});

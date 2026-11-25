@@ -1,6 +1,6 @@
 # Aloong Planet
 
-A personal homepage with Apps, Agents, a Blog, an interactive golden retriever, and a site-wide anonymous visitor total. The supplied seated portrait and interactive dog sit together on the right, with the introduction beneath them and the newest posts beside them. Small screens use a centered, full-width group followed by the posts. See [publishing a post](docs/ops/publishing-posts.md).
+A personal homepage with Apps, Agents, a Blog, an interactive golden retriever, and a site-wide anonymous visitor total. The homepage, the Blog page and the not-found page come in Chinese and English, the English ones under `/en/`, with their interface copy in the dictionary `apps/home/public/ui.js`; posts stay Chinese. The supplied seated portrait and interactive dog sit together on the right, with the introduction beneath them and the newest posts beside them. Small screens use a centered, full-width group followed by the posts. See [publishing a post](docs/ops/publishing-posts.md).
 
 ## Develop and verify
 
@@ -23,7 +23,7 @@ node scripts/verify-local-api.mjs
 
 Run from `apps/home/`.
 
-The HTTP check is hardcoded to the local server and creates local disposable test visitors. It never targets production. Mutation testing is explicitly disabled in capabilities.toml, and the homepage has no linter; lint covers Agentshed's site only. The automated browser suites are the one in `packages/site-check`, described below (the width check of every site and a test of where keyboard focus lands under the pinned header), and the browser cases of Agentshed's site. Native browser checks supplement request-level tests.
+The HTTP check is hardcoded to the local server and creates local disposable test visitors. It never targets production. Mutation testing is explicitly disabled in capabilities.toml, and the homepage has no linter; lint covers Agentshed's site only. The automated browser suites are the one in `packages/site-check`, described below (the width check of every site, the focus test under the pinned header, and the homepage tests listed below), and the browser cases of Agentshed's site. Native browser checks supplement request-level tests.
 
 The width check opens every page of every site under `apps/` in a browser, at every whole window width from 320px to 1440px, and fails when a page is wider than the window, or when its style sheets hold a width condition that changes above 1440px, such as a `min-width` of 1500px (raise `WIDEST` in `packages/site-check/src/widths.mjs` when a site needs a breakpoint wider than that). It builds each site, finds the pages in the build output, and never leaves the local machine. Run it from the repository root; the browser is installed once:
 
@@ -34,7 +34,7 @@ pnpm --filter @aloong-planet/site-check run check
 
 A site needs `packages/site-check/sites/<its folder under apps/>.json`, which names its origin, the answers for requests to its own backend, and any link that only a rewrite answers; without it the check fails. What the check does not cover is listed at the top of `packages/site-check/src/check-sites.mjs`. In CI it is the job `Site width check`, one of the jobs `CI gate` waits on.
 
-The same job runs the package's tests (`pnpm --filter @aloong-planet/site-check run test`), among them a browser test of the homepage, `packages/site-check/tests/nav-menus.test.mjs` (nav-menus::US-004/AC-03). It builds `apps/home`, moves keyboard focus to a page element at 1280px and at 390px, and fails when the element ends up under the pinned header. The header's height is the custom property `--ap-header-height` in `apps/home/public/site.css`, set once for the wide layout and once for windows 700px wide or narrower; the boxes that must clear the header read it, so changing the height there changes them together, and the test fails when the page's scroll padding is smaller than the header.
+The same job runs the package's tests (`pnpm --filter @aloong-planet/site-check run test`), among them four browser tests of the homepage in `packages/site-check/tests/`: `nav-menus.test.mjs` (nav-menus::US-004/AC-03 and the two-line limit of a menu description, nav-menus::US-001/AC-05), `site-languages.test.mjs` (the language switch inside the header at four widths, and where it leads on each kind of page), `visitor-counter.test.mjs` (the visitor line under a German number format) and `homepage-dog.test.mjs` (the dog's five lines in each language). Each builds `apps/home`, so the package runs its files one at a time. The first moves keyboard focus to a page element at 1280px and at 390px, and fails when the element ends up under the pinned header. The header's height is the custom property `--ap-header-height` in `apps/home/public/site.css`, set once for the wide layout and once for windows 700px wide or narrower; the boxes that must clear the header read it, so changing the height there changes them together, and the test fails when the page's scroll padding falls more than a pixel short of the header. It also opens each menu by hovering its tab on both homepages at 1440px and fails when a description takes more than two lines.
 
 ## Cloudflare Pages
 
@@ -53,7 +53,7 @@ No paid subscription is enabled. Free-plan exhaustion causes the counter to disa
 | Directory | Contents |
 |---|---|
 | apps/home/ | The homepage, the package `@aloong-planet/home`, with its own `package.json` and Cloudflare Pages configuration |
-| apps/home/public/ | Production pages and browser code |
+| apps/home/public/ | Stylesheets, browser code and the interface dictionary `ui.js`; the pages are rendered from it by `apps/home/scripts/pages.mjs` |
 | apps/home/content/ | Blog post list, post bodies and covers |
 | apps/home/assets/ | Shipping portrait, dog animation, not-found dog and app screenshots, plus the supplied illustration, the generated dog image and the full-size JustSnap screenshot they are reduced from |
 | apps/home/functions/, apps/home/migrations/ | Visitor API and D1 schema |
@@ -62,7 +62,7 @@ No paid subscription is enabled. Free-plan exhaustion causes the counter to disa
 | apps/home/tools/screenshots/ | Synthetic Transfer screenshot fixture |
 | apps/agentshed/ | Agentshed's website, the package `@aloong-planet/agentshed`: an Astro site in Chinese and English with its own unit tests, built-site check and browser cases. It is built, checked and deployed from here, to its own Cloudflare Pages project (see [deployment and CI](docs/ops/deployment.md)) |
 | apps/justsnap/ | JustSnap's website, the package `@aloong-planet/justsnap`: an Astro site in Chinese and English with its own unit tests and built-site checks. It is built and checked from here; it is not deployed from here yet, and its screenshots and icon arrive by pull request from JustSnap's repository (see [deployment and CI](docs/ops/deployment.md)) |
-| packages/site-check/ | The project's browser suite: the width check of every site and the homepage's focus test, with the tests of the check and each site's check settings |
+| packages/site-check/ | The project's browser suite: the width check of every site and the homepage's browser tests listed in the Develop and verify section, with the tests of the check and each site's check settings |
 | packages/site-kit/ | What Agentshed's and JustSnap's sites share and what changes nothing a visitor sees: the icon component, the palette reader their tests use, and the base TypeScript and Vitest configuration. Source only, with its own type check and tests |
 | packages/ | Other parts shared between apps; none yet |
 | .github/workflows/, .github/ci/ | Pull-request checks, the rules that choose which checks a change runs, and main deployment |

@@ -8,6 +8,12 @@ To publish or republish a post, follow `docs/ops/publishing-posts.md`.
 
 A workflow job that needs more than read access to the repository declares its own `permissions` (`docs/ops/deployment.md`).
 
+## The homepage site (`apps/home`)
+
+Constraints on anyone changing `apps/home`, one line each; the reason lives where the line points.
+
+- New visible copy goes into the site's dictionary, `apps/home/public/ui.js`, in both Chinese and English, never into markup, a page template or a script; a post's own body and the labels of a post page (`postUi` in that file) are Chinese only.
+
 ## Agentshed's site (`apps/agentshed`)
 
 Constraints on anyone changing `apps/agentshed`, one line each; the reason lives where the line points.
