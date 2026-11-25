@@ -74,8 +74,6 @@ The menus and the Agents section list these works, in this order. On Chinese pag
 | Skills | media-studio | `https://github.com/aloong-planet/media-studio` | `https://github.com/aloong-planet/media-studio` |
 | Plugins | cc-session-pool | `https://github.com/aloong-planet/claudecode-session-dispatcher` | `https://github.com/aloong-planet/claudecode-session-dispatcher` |
 
-> Pending: Agentshed opens `https://agentshed.aloongplanet.com/zh/` from Chinese pages and post pages.
-
 Each work's description:
 
 | Name | On Chinese pages and post pages | On English pages |

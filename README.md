@@ -1,6 +1,6 @@
 # Aloong Planet
 
-A personal homepage with Apps, Agents, a Blog, an interactive golden retriever, and a site-wide anonymous visitor total. The supplied seated portrait and interactive dog sit together on the right, with the introduction beneath them and the newest posts beside them. Small screens use a centered, full-width group followed by the posts. See [publishing a post](docs/ops/publishing-posts.md).
+A personal homepage with Apps, Agents, a Blog, an interactive golden retriever, and a site-wide anonymous visitor total. The homepage, the Blog page and the not-found page come in Chinese and English, the English ones under `/en/`, with their interface copy in the dictionary `apps/home/public/ui.js`; posts stay Chinese. The supplied seated portrait and interactive dog sit together on the right, with the introduction beneath them and the newest posts beside them. Small screens use a centered, full-width group followed by the posts. See [publishing a post](docs/ops/publishing-posts.md).
 
 ## Develop and verify
 
@@ -34,7 +34,7 @@ pnpm --filter @aloong-planet/site-check run check
 
 A site needs `packages/site-check/sites/<its folder under apps/>.json`, which names its origin, the answers for requests to its own backend, and any link that only a rewrite answers; without it the check fails. What the check does not cover is listed at the top of `packages/site-check/src/check-sites.mjs`. In CI it is the job `Site width check`, one of the jobs `CI gate` waits on.
 
-The same job runs the package's tests (`pnpm --filter @aloong-planet/site-check run test`), among them a browser test of the homepage, `packages/site-check/tests/nav-menus.test.mjs` (nav-menus::US-004/AC-03). It builds `apps/home`, moves keyboard focus to a page element at 1280px and at 390px, and fails when the element ends up under the pinned header. The header's height is the custom property `--ap-header-height` in `apps/home/public/site.css`, set once for the wide layout and once for windows 700px wide or narrower; the boxes that must clear the header read it, so changing the height there changes them together, and the test fails when the page's scroll padding is smaller than the header.
+The same job runs the package's tests (`pnpm --filter @aloong-planet/site-check run test`), among them two browser tests of the homepage, `packages/site-check/tests/nav-menus.test.mjs` (nav-menus::US-004/AC-03) and `packages/site-check/tests/site-languages.test.mjs` (the language switch inside the header at four widths, the visitor line under two number formats, the dog's lines in each language). It builds `apps/home`, moves keyboard focus to a page element at 1280px and at 390px, and fails when the element ends up under the pinned header. The header's height is the custom property `--ap-header-height` in `apps/home/public/site.css`, set once for the wide layout and once for windows 700px wide or narrower; the boxes that must clear the header read it, so changing the height there changes them together, and the test fails when the page's scroll padding is smaller than the header.
 
 ## Cloudflare Pages
 
@@ -53,7 +53,7 @@ No paid subscription is enabled. Free-plan exhaustion causes the counter to disa
 | Directory | Contents |
 |---|---|
 | apps/home/ | The homepage, the package `@aloong-planet/home`, with its own `package.json` and Cloudflare Pages configuration |
-| apps/home/public/ | Production pages and browser code |
+| apps/home/public/ | Stylesheets, browser code and the interface dictionary `ui.js`; the pages are rendered from it by `apps/home/scripts/pages.mjs` |
 | apps/home/content/ | Blog post list, post bodies and covers |
 | apps/home/assets/ | Shipping portrait, dog animation, not-found dog and app screenshots, plus the supplied illustration, the generated dog image and the full-size JustSnap screenshot they are reduced from |
 | apps/home/functions/, apps/home/migrations/ | Visitor API and D1 schema |

@@ -8,8 +8,6 @@ A visitor who reads English but not Chinese cannot use the site: its homepage, B
 ## Solution
 The homepage, the Blog page and the not-found page each have a Chinese and an English version at their own addresses. A switch at the right end of the top navigation moves between them, and the address alone decides the language. Posts stay in Chinese, and the English lists say so.
 
-> Pending: the site serves the English pages of site-languages::REQ-001.
-
 ## Functional Requirements
 
 ### site-languages::REQ-001 Pages in each language

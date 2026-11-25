@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import {readdir, readFile} from 'node:fs/promises';
 import {join, relative} from 'node:path';
 import {navigationMarkup} from '../public/navigation.js';
+import {ui} from '../public/ui.js';
 import {realSite} from './helpers/built-site.mjs';
 
 /** Every built page, as a path under the built site, in a stable order. */
@@ -144,4 +145,28 @@ for (const [page, lines] of Object.entries(DOG_LINES)) {
 test('the scripts the pages load hold no interface copy of their own: no Chinese character in any of them', async () => {
   const scripts = ['public/navigation.js', 'public/visitor.js', 'public/article.js', 'assets/golden-interaction.js'];
   for (const script of scripts) assert.doesNotMatch(await readFile(new URL(`../${script}`, import.meta.url), 'utf8'), /\p{Script=Han}/u, script);
+});
+
+// The dictionary. That the two languages have the same keys and list lengths is the typechecker's work (`pnpm typecheck`), proved by
+// leaving a key out of the English copy and adding one to it; what it cannot see is a string that is there but blank, or
+// Chinese left in the English copy, and these two tests look for those. Functions of the copy are called with sample values.
+/** Every string of a copy, with where it sits. */
+function strings(value, path = []) {
+  if (typeof value === 'string') return [[path.join('.'), value]];
+  if (typeof value === 'function') return [[`${path.join('.')}()`, value(2, '2').toString()], [`${path.join('.')}(date)`, value('2026-11-05', '2').toString()]];
+  return Object.entries(value).flatMap(([key, inner]) => strings(inner, [...path, key]));
+}
+
+test('no string of either language\'s copy is blank', () => {
+  for (const lang of ['zh', 'en']) {
+    const copy = strings(ui[lang]);
+    // 88 strings and function results each, counted on this copy: a floor that tells a walk that found the copy from one that found nothing.
+    assert.ok(copy.length >= 80, `the ${lang} copy has its strings`);
+    for (const [where, text] of copy) assert.notEqual(text.trim(), '', `${lang} ${where} is blank`);
+  }
+});
+
+test('the English copy holds no Chinese, except the language switch\'s name for Chinese', () => {
+  const chinese = strings(ui.en).filter(([, text]) => /\p{Script=Han}/u.test(text)).map(([where]) => where);
+  assert.deepEqual(chinese, ['language.zh']);
 });
