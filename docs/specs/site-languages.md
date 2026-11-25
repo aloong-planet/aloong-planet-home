@@ -3,7 +3,7 @@
 > Related: [homepage](homepage.md) · [blog](blog.md) · [not-found page](not-found.md) · [Apps and Agents menus](nav-menus.md) · [visitor total](visitor-counter.md) · [homepage dog](homepage-dog.md) · [site appearance](site-appearance.md)
 
 ## Problem Statement
-A visitor who reads English but not Chinese cannot use the site: its homepage, Blog page, menus and not-found page are written in Chinese only, while each app site it links to also has an English version.
+A visitor who reads English but not Chinese needs the homepage, Blog page, menus and not-found page in English, as each app site the site links to already offers its own English version.
 
 ## Solution
 The homepage, the Blog page and the not-found page each have a Chinese and an English version at their own addresses. A switch at the right end of the top navigation moves between them, and the address alone decides the language. Posts stay in Chinese, and the English lists say so.
