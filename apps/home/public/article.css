@@ -105,12 +105,16 @@ html { scroll-behavior:auto; }
    (the post's own diagram colours are built from them) and the light text colour, so the drawing, and any text inside its area,
    is exactly what it is in the light appearance. The selectors are article.js's drawing area: a figure's .ground, or, in a figure
    with none, its block of drawings or the drawing itself; a .ground holding only an image gets no sheet, since images stay as they are.
+   The selectors sit in :where(), which adds no specificity: a block that already has a ground and a frame of its own (a post's grid
+   of cells with hairlines between them, say) keeps them, in the same light colours, and only a drawing area with none gets the sheet.
    The page's colours are tokens, and a token added in site.css or here must also be pinned here; the palette test fails until it is. */
 @media (prefers-color-scheme: dark) {
-  .ap-article .fig > .ground:has(svg),
-  .ap-article .fig:not(:has(> .ground)) > :not(figcaption):has(svg),
-  .ap-article .fig:not(:has(> .ground)) > svg,
-  .ap-article .lb-sheet {
+  :where(
+    .ap-article .fig > .ground:has(svg),
+    .ap-article .fig:not(:has(> .ground)) > :not(figcaption):has(svg),
+    .ap-article .fig:not(:has(> .ground)) > svg,
+    .ap-article .lb-sheet
+  ) {
     color-scheme:light; background:var(--panel); color:var(--ink-soft); border-radius:8px;
     --paper:#fafaf9; --ink:#20211f; --muted:#62645d; --line:#e1e2dc; --accent:#335bc7; --tag:#efefeb; --card:#fff; --shadow:#20211f1a; --floor:#28261c14; --shot-ground:#868892;
     --ink-soft:#3a3d38; --bg:var(--paper); --panel:#fff; --band:var(--tag); --lit:#e7e7e1; --edge:#787a72; --mark:#b4b7b0;

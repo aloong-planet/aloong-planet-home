@@ -1,5 +1,7 @@
 /* Figures and interaction unique to this post. The shared look is in public/article.css. */
-.post-super-agent-architecture{--fast:#007A87;--slow:#B35900;--watch:#6A3FC9;--ok:#1E7B4C;--warn:#8A6100;--diff:#B3261E;--ext-fill:#EDF4FE;--ext-line:#7FA8E6;--ext-ink:#174A97;--ext-lit:#CFE1FB;--ext-in:#FFFFFF;--prog-fill:#E6F6F6;--prog-line:#57B5BD;--prog-ink:#005F6B;--prog-lit:#BFE8EA;--prog-in:#FFFFFF;--router-fill:#FEF3E2;--router-line:#DFA355;--router-ink:#8A4500;--router-lit:#FADFB4;--router-in:#FFFDF9;--worker-fill:#EAF7EE;--worker-line:#74BE8F;--worker-ink:#17653A;--worker-lit:#C6EBD2;--worker-in:#FFFFFF;--ctrl-fill:#F3EEFD;--ctrl-line:#A78FE3;--ctrl-ink:#5330A8;--ctrl-lit:#E2D7FA;--ctrl-in:#FFFFFF;--store-fill:#FDEEF4;--store-line:#E08FB0;--store-ink:#9C1F54;--store-lit:#F8D0E0;--store-in:#FFFFFF;--drop-fill:#F1F3F5;--drop-line:#C3CCD5;--drop-ink:#535F6C;--drop-lit:#D9E4EC;--drop-in:#F1F3F5;--thread-pr:#1857C2;--thread-im:#B81E72;--thread-mail:#5C5F00;--on-hue:#FFFFFF}
+.post-super-agent-architecture{--fast:#007A87;--slow:#B35900;--watch:#6A3FC9;--ok:#1E7B4C;--warn:#8A6100;--diff:#B3261E;--diff-text:#B3261E;--ext-fill:#EDF4FE;--ext-line:#7FA8E6;--ext-ink:#174A97;--ext-lit:#CFE1FB;--ext-in:#FFFFFF;--prog-fill:#E6F6F6;--prog-line:#57B5BD;--prog-ink:#005F6B;--prog-lit:#BFE8EA;--prog-in:#FFFFFF;--router-fill:#FEF3E2;--router-line:#DFA355;--router-ink:#8A4500;--router-lit:#FADFB4;--router-in:#FFFDF9;--worker-fill:#EAF7EE;--worker-line:#74BE8F;--worker-ink:#17653A;--worker-lit:#C6EBD2;--worker-in:#FFFFFF;--ctrl-fill:#F3EEFD;--ctrl-line:#A78FE3;--ctrl-ink:#5330A8;--ctrl-lit:#E2D7FA;--ctrl-in:#FFFFFF;--store-fill:#FDEEF4;--store-line:#E08FB0;--store-ink:#9C1F54;--store-lit:#F8D0E0;--store-in:#FFFFFF;--drop-fill:#F1F3F5;--drop-line:#C3CCD5;--drop-ink:#535F6C;--drop-lit:#D9E4EC;--drop-in:#F1F3F5;--thread-pr:#1857C2;--thread-im:#B81E72;--thread-mail:#5C5F00;--on-hue:#FFFFFF}
+/* The status pills are text on the page, so they have dark values: --ok, --warn and --diff-text, the pill's own copy of --diff. Every other colour here is drawn inside a diagram, which keeps its light colours on a light sheet in the dark appearance. */
+@media (prefers-color-scheme: dark){.post-super-agent-architecture{--ok:#4FC58A;--warn:#D9A63A;--diff-text:#F08A82}}
 .post-super-agent-architecture .hero{display:grid;gap:18px}
 .post-super-agent-architecture .traits{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden;margin-top:8px}
 .post-super-agent-architecture .trait{background:var(--panel);padding:14px 16px;display:grid;gap:4px;align-content:start}
@@ -140,7 +142,7 @@
 .post-super-agent-architecture .pill.df::before{width:.8em;height:.8em;border:0;border-radius:0;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M5 9h14M5 15h14M19 5 5 19'/%3E%3C/svg%3E") center/contain no-repeat;vertical-align:-.08em}
 .post-super-agent-architecture .pill.ok{color:var(--ok)}
 .post-super-agent-architecture .pill.pt{color:var(--warn)}
-.post-super-agent-architecture .pill.df{color:var(--diff)}
+.post-super-agent-architecture .pill.df{color:var(--diff-text)}
 .post-super-agent-architecture .pill.no{color:var(--muted)}
 .post-super-agent-architecture dl.mech{margin:0;display:grid;gap:12px}
 .post-super-agent-architecture dl.mech div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:4px 14px}
