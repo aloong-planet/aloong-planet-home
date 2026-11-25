@@ -219,6 +219,21 @@ test('site-kit-checks runs the type check and the tests of @aloong-planet/site-k
   ])
 })
 
+// pages-deploy-checks runs no browser and builds no site: the package's tests replace the process boundary of the deploy
+// command, so its limit is JustSnap's
+test('pages-deploy-checks ends at a time limit of 10 minutes', () => {
+  assert.match(jobs(ci).get('pages-deploy-checks').join('\n'), /^ {4}timeout-minutes: 10\s*$/m)
+})
+
+// The type check is the only check of the command's own code: each site's tests reach it through a spawned process
+test('pages-deploy-checks runs the type check and the tests of @aloong-planet/pages-deploy', () => {
+  assert.deepEqual(runCommands('pages-deploy-checks'), [
+    'pnpm install --frozen-lockfile',
+    'pnpm --filter @aloong-planet/pages-deploy run check',
+    'pnpm --filter @aloong-planet/pages-deploy run test'
+  ])
+})
+
 // The gate fails a selected job that was skipped, so a job whose condition leaves out a scope that lists it fails every
 // run that selects only that scope; and the gate reads a scope's output that the `changes` job does not export as invalid.
 // Both fail loudly, but only after a pull request has been opened, so they are pinned here.

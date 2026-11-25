@@ -27,6 +27,7 @@ jobs:
       justsnap: ${{ steps.scope.outputs.justsnap }}
       transfer: ${{ steps.scope.outputs.transfer }}
       site_kit: ${{ steps.scope.outputs.site_kit }}
+      pages_deploy: ${{ steps.scope.outputs.pages_deploy }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -163,6 +164,29 @@ jobs:
       - run: pnpm --filter @aloong-planet/site-kit run check
       - run: pnpm --filter @aloong-planet/site-kit run test
 
+  # The command every site's `cf:deploy` script runs, packages/pages-deploy: listed under the `pages_deploy` scope in
+  # routing.json, which only a change that selects every scope selects (see site-kit-checks above), so every site's checks
+  # run beside this job and test the site's own wiring to the command. The type check and the package's own tests are its
+  # scripts. The tests replace the command's process boundary (git, pnpm, Wrangler), so no browser is installed, no site is
+  # built and no Cloudflare credential is used.
+  pages-deploy-checks:
+    name: Pages deploy checks
+    needs: changes
+    if: needs.changes.outputs.pages_deploy == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # pnpm must come before setup-node: setup-node's cache: 'pnpm' calls pnpm to find the store path
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.7.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @aloong-planet/pages-deploy run check
+      - run: pnpm --filter @aloong-planet/pages-deploy run test
+
   # The width check of every site: opens each page of each site's build in a browser at every window width from
   # 320px to 1440px and fails when a page is wider than the window (app-sites::QR-001/AC-01). The check builds every
   # site under apps/ itself, so a site added later is covered without a change here. Listed under the scope of every
@@ -195,7 +219,7 @@ jobs:
   # failure or a skip upstream, which the default `success()` would not: a skipped required check counts as passing.
   ci-gate:
     name: CI gate
-    needs: [changes, repo-policy, home-checks, agentshed-checks, justsnap-checks, transfer-checks, site-kit-checks, width-check]
+    needs: [changes, repo-policy, home-checks, agentshed-checks, justsnap-checks, transfer-checks, site-kit-checks, pages-deploy-checks, width-check]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
