@@ -188,6 +188,21 @@ test('justsnap-checks runs the type check and the tests of @aloong-planet/justsn
   ])
 })
 
+// site-kit-checks runs no browser either: the package's tests render the icon component and read stylesheets as files, so
+// its limit is JustSnap's
+test('site-kit-checks ends at a time limit of 10 minutes', () => {
+  assert.match(jobs(ci).get('site-kit-checks').join('\n'), /^ {4}timeout-minutes: 10\s*$/m)
+})
+
+// The type check is the only check of the shared component's own code: each site's type check stops at the import
+test('site-kit-checks runs the type check and the tests of @aloong-planet/site-kit', () => {
+  assert.deepEqual(runCommands('site-kit-checks'), [
+    'pnpm install --frozen-lockfile',
+    'pnpm --filter @aloong-planet/site-kit run check',
+    'pnpm --filter @aloong-planet/site-kit run test'
+  ])
+})
+
 // The gate fails a selected job that was skipped, so a job whose condition leaves out a scope that lists it fails every
 // run that selects only that scope; and the gate reads a scope's output that the `changes` job does not export as invalid.
 // Both fail loudly, but only after a pull request has been opened, so they are pinned here.
