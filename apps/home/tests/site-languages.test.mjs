@@ -126,9 +126,32 @@ for (const [lang, page, destination] of SWITCH) {
   });
 }
 
+const SCRIPTS = ['public/navigation.js', 'public/visitor.js', 'public/article.js', 'assets/golden-interaction.js'];
+const readScript = script => readFile(new URL(`../${script}`, import.meta.url), 'utf8');
+
 test('the scripts the pages load hold no interface copy of their own: no Chinese character in any of them', async () => {
-  const scripts = ['public/navigation.js', 'public/visitor.js', 'public/article.js', 'assets/golden-interaction.js'];
-  for (const script of scripts) assert.doesNotMatch(await readFile(new URL(`../${script}`, import.meta.url), 'utf8'), /\p{Script=Han}/u, script);
+  for (const script of SCRIPTS) assert.doesNotMatch(await readScript(script), /\p{Script=Han}/u, script);
+});
+
+// The Han guard sees Chinese in a script, not English. A string of a script that has two words in it, or two words between the tags of
+// the markup it builds, is English copy, except a CSS selector, the "use strict" directive, and the message of an Error that is thrown
+// and caught, never shown (visitor.js). Comments are not code.
+test('the scripts the pages load hold no English sentence of their own', async () => {
+  let literals = 0;
+  for (const script of SCRIPTS) {
+    const code = (await readScript(script))
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1')
+      .replace(/new Error\((['"`])(?:(?!\1)[^\\]|\\.)*\1\)/g, 'new Error()');
+    const strings = [...code.matchAll(/'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\.)*)`/g)].map(match => match[1] ?? match[2] ?? match[3]);
+    literals += strings.length;
+    const sentences = strings
+      .flatMap(text => [...text.replace(/\$\{[^}]*\}/g, ' ').matchAll(/(?:^|>)([^<>]*)(?=<|$)/g)].map(match => match[1].trim()))
+      .filter(text => /\p{L}{2,}\s+\p{L}{2,}/u.test(text) && !/^[.#[]/.test(text) && text !== 'use strict');
+    assert.deepEqual(sentences, [], script);
+  }
+  // 513 strings on these scripts: a floor that tells a scan that read them from one that found nothing.
+  assert.ok(literals >= 400, `the scan found ${literals} strings in the scripts`);
 });
 
 // The dictionary. That the two languages have the same keys and list lengths is the typechecker's work (`pnpm typecheck`), proved by
@@ -159,7 +182,7 @@ test('the English copy holds no Chinese, except the language switch\'s name for 
 // Chinese pages and pass every other test here, as the English pages would read it as their own. So what a delivered Chinese page shows
 // (its text, its text alternatives, its description) without a Chinese character in it must be in the Chinese copy, as the English names
 // the Chinese pages keep are (「Apps.」, the works' names), or be a lowercase identifier such as the value of data-page. It does not see
-// text a script writes into the page, which the browser tests read in each language, nor one lowercase word written into an attribute.
+// one lowercase word written into an attribute, nor text a script writes into the page, which the test of the scripts looks for.
 test('the Chinese pages show no English text of their own: what they show without a Chinese character is in the Chinese copy', async () => {
   const copy = strings(ui.zh).map(([, text]) => text);
   let found = 0;
