@@ -141,8 +141,7 @@ alarm me.
 The copy is in Chinese and English only. The Chinese page calls the product “随译”: the brand and the page title read
 “随译 JustSnap”, and the hero's description puts “（JustSnap）” after it. The English page calls it JustSnap. Where the
 page names model providers it gives examples, not the complete set (“OpenAI, Gemini, DeepSeek and more”; Chinese:
-“OpenAI、Gemini、DeepSeek 等”). The page has a light and a dark palette that follow the visitor's system appearance.
-The features section's title is “From screen to text in one shortcut” (Chinese: “一个快捷键，从屏幕到文字”) and its
+“OpenAI、Gemini、DeepSeek 等”). The features section's title is “From screen to text in one shortcut” (Chinese: “一个快捷键，从屏幕到文字”) and its
 subtitle “No annotation tools, no classic OCR step: the original image goes straight to a vision model.” (Chinese:
 “不做标注，也不先过传统 OCR：原图直接交给视觉模型。”). The install steps' title is “Installed in three steps” (Chinese:
 “三步装好”).
@@ -177,6 +176,13 @@ its margin and drop shadow.
   height and the language toggle stays at the right.
 - justsnap-site::REQ-009/AC-04: The breadcrumb is a navigation landmark named “Breadcrumb” (Chinese: “面包屑”); “aloong
   planet” and the brand are the two items of an ordered list in it, and the brand is marked as the current page.
+
+### justsnap-site::REQ-010 The palette and the icons (direct acceptance)
+
+The page has a light and a dark palette that follow the visitor's system appearance. The page's ground and text take the
+light and dark values of the blue-grey palette of the app's history page, and its accent is that palette's “type” blue:
+`#1553B2` in the light appearance and `#9BC0FF` in the dark. The page's interface icons (download and so on) are
+Lucide's; the app icon is justsnap-site::REQ-008.
 
 ## Quality Requirements
 
@@ -224,6 +230,10 @@ Applies to: every read of the pointer and of GitHub (justsnap-site::CON-003).
 
 - justsnap-site::CON-005/AC-01: A read gives up after five seconds (Failure A2).
 - justsnap-site::CON-005/AC-02: A read sends no header that needs a CORS preflight.
+
+### justsnap-site::CON-006 The page's font (direct acceptance)
+
+Applies to: the page's text. It is set in the system font stack; the page loads no web font.
 
 ## Failure modes and boundaries
 
@@ -277,20 +287,15 @@ Applies to: every read of the pointer and of GitHub (justsnap-site::CON-003).
 - **The pointer** is `latest.json` at the download host's root, shaped `{ version, files: [{ name, arch, size, url }] }`.
   The page takes it only when `version` is a formal version (`major.minor.patch`, no suffix), `files` has an entry whose
   `arch` is `arm64`, whose `name` is `JustSnap-<version>-mac-arm64.dmg` and whose `url` is exactly
-  `https://dl.justsnap.aloongplanet.com/releases/v<version>/<name>`. Anything else is unreadable; a 404 means there is
-  no pointer yet. Entries for other architectures are ignored.
+  `https://dl.justsnap.aloongplanet.com/releases/v<version>/<name>`. A 404 means there is no pointer yet. Entries for
+  other architectures are ignored.
 - **The GitHub read** uses the unauthenticated public REST API for `aloong-planet/justsnap`, one request for the first
-  hundred releases. A release counts when it is published (drafts are ignored), is not a pre-release, and its tag is
-  `v` followed by a formal version. The newest by publication date is taken; the answer's order is not relied on. A
-  release's DMG counts only once its upload has finished.
-- **The palette** comes from the blue-grey palette of the app's history page: the page's ground and text take its light
-  and dark values, and the accent is its “type” blue (light `#1553B2`, dark `#9BC0FF`). The text is set in the system
-  font stack; the page loads no web font. Interface icons are Lucide's (download and so on); the app icon is
-  justsnap-site::REQ-008.
-- **The language toggle** is a link to the other language's page, so it works without scripts. Before leaving, a script
-  notes the element in view, its distance from the top of the window and the current step; the other page puts the
-  same element back at the same distance and makes the same step current (justsnap-site::REQ-004/AC-04). The element is
-  never the pinned showcase.
+  hundred releases. A release counts when its tag is `v` followed by a formal version. “Latest” in
+  justsnap-site::REQ-001/AC-02 goes by publication date; the answer's order is not relied on. A release's DMG counts
+  only once its upload has finished.
+- **The language toggle** carries a script that, before leaving, notes the element in view, its distance from the top of
+  the window and the current step; the other page puts the same element back at the same distance and makes the same
+  step current (justsnap-site::REQ-004/AC-04). The element is never the pinned showcase.
 
 ## Out of Scope
 

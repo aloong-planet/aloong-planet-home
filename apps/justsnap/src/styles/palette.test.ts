@@ -1,6 +1,9 @@
 // The page's palette (justsnap-site::QR-002, failure D1): every colour token is declared for the light appearance
 // and again for the dark one, every text colour keeps at least 4.5:1 against the surface it sits on, and the text the
-// page is read in takes the body colour.
+// page is read in takes the body colour. The accent is the blue the spec gives (justsnap-site::REQ-010).
+//
+// Not covered: that the page's ground and text colours are the values of the app's history page (justsnap-site::REQ-010),
+// which the app's code holds, and that the interface icons are Lucide's: both were checked by comparing with the source.
 import { readFileSync } from 'node:fs'
 import postcss, { type Root } from 'postcss'
 import { describe, expect, test } from 'vitest'
@@ -41,6 +44,16 @@ describe('the tokens', () => {
   test('every token is declared in light and again in dark, equal values or not', () => {
     expect(light.size).toBeGreaterThan(10)
     expect([...dark.keys()].sort()).toEqual([...light.keys()].sort())
+  })
+})
+
+// justsnap-site::REQ-010: the spec's values, written out here as literals
+describe('the accent is the "type" blue of the app', () => {
+  test.each([
+    { name: 'light', scheme: light, blue: '#1553b2' },
+    { name: 'dark', scheme: dark, blue: '#9bc0ff' }
+  ])('$name: $blue', ({ scheme, blue }) => {
+    expect(scheme.get('--accent')).toBe(blue)
   })
 })
 

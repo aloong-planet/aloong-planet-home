@@ -81,7 +81,8 @@ into this repository with those sixteen files and nothing else. Its runbook is `
   stylesheet. `test/features-sync.test.ts` checks which measurements turn the scroll into a step;
   `test/check-shots.test.ts` checks the screenshot check the production build runs.
 - `src/styles/palette.test.ts` checks that the stylesheet declares every colour token in both the light and the dark
-  appearance, and the contrast of text on its surface.
+  appearance, the contrast of text on its surface, and the accent's two values. `test/font.test.ts` checks the built
+  site: its text is set in the system font stack, and no stylesheet or page loads a web font.
 - `test/shots.test.ts` checks the fourteen screenshots: every one exists, each is 1840×1035 by its PNG header, and no
   two are the same file. What they show is checked by looking at them.
 - `test/apply-download.test.ts` and `test/init-download.test.ts` apply the download states to that build's pages, the
