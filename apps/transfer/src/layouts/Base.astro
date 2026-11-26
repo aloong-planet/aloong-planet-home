@@ -20,7 +20,8 @@ const otherHref = localizedPath(otherLocale, '/')
 const otherLabel = otherLocale === 'zh' ? '中文' : 'EN'
 
 const GITHUB = 'https://github.com/aloong-planet/transfer'
-const PLANET_HOME = 'https://aloongplanet.com/'
+// transfer-site::REQ-001/AC-01: the homepage in the page's language
+const PLANET_HOME: Record<Locale, string> = { zh: 'https://aloongplanet.com/', en: 'https://aloongplanet.com/en/' }
 
 // 备案号只有国内那份构建会注入;未设置时为 null,页脚整项不渲染。
 // 设置了但格式非法会在这里抛错,让构建失败 —— 见 src/beian.ts 的说明。
@@ -46,7 +47,7 @@ const home = localizedPath(locale, '/')
         {/* transfer-site::REQ-001 */}
         <div class="crumbs">
           <span class="crumbs-up">
-            <a href={PLANET_HOME} class="crumbs-home">{t('nav.planet')}</a>
+            <a href={PLANET_HOME[locale]} class="crumbs-home">{t('nav.planet')}</a>
             <span class="crumbs-sep" aria-hidden="true">/</span>
           </span>
           <a href={home} class="brand">

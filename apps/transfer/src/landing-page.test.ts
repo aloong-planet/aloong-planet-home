@@ -77,18 +77,18 @@ async function renderHeader(page: Parameters<AstroContainer['renderToString']>[0
 
 describe('site header', () => {
   test.each([
-    { page: 'Chinese landing page', component: ZhLanding, ownHome: '/' },
-    { page: 'Chinese privacy page', component: ZhPrivacy, ownHome: '/' },
-    { page: 'English landing page', component: EnLanding, ownHome: '/en' },
-    { page: 'English privacy page', component: EnPrivacy, ownHome: '/en' },
+    { page: 'Chinese landing page', component: ZhLanding, ownHome: '/', planetHome: 'https://aloongplanet.com/' },
+    { page: 'Chinese privacy page', component: ZhPrivacy, ownHome: '/', planetHome: 'https://aloongplanet.com/' },
+    { page: 'English landing page', component: EnLanding, ownHome: '/en', planetHome: 'https://aloongplanet.com/en/' },
+    { page: 'English privacy page', component: EnPrivacy, ownHome: '/en', planetHome: 'https://aloongplanet.com/en/' },
   ])(
-    'the $page starts with the aloong planet link, a separator hidden from assistive technology, then the brand',
-    async ({ component, ownHome }) => {
+    'the $page starts with the aloong planet link to the homepage in its language, a separator hidden from assistive technology, then the brand',
+    async ({ component, ownHome, planetHome }) => {
       const header = await renderHeader(component)
       const [homepage, brand] = header.querySelectorAll('a')
 
       expect(homepage.textContent?.trim()).toBe('aloong planet')
-      expect(homepage.getAttribute('href')).toBe('https://aloongplanet.com/')
+      expect(homepage.getAttribute('href')).toBe(planetHome)
       // Opens in the current tab, unlike the header's GitHub link.
       expect(homepage.hasAttribute('target')).toBe(false)
 
