@@ -41,8 +41,6 @@ The project's Cloudflare Git builds are turned off in the infrastructure reposit
 
 ## The download count's Worker
 
-> Pending: `aloong-planet/infra` pins a commit of this repository that holds `workers/download-count/`. Until it does, infra deploys the Worker from the commit of `aloong-planet/agentshed` that it pins, and that copy is the Worker that runs.
-
 The download count's Worker is the workspace package `@aloong-planet/download-count` in `workers/download-count/`. Nothing in this repository deploys it. `aloong-planet/infra` deploys its main module and the core beside it from the commit of this repository that it pins, each checked against its pinned SHA-256, so a change merged here reaches the Worker only when infra pins a commit that holds it. This repository's Deploy workflow has no job for the Worker; it publishes the sites, and a push to main that changes only the Worker publishes every site all the same (see the Deploy workflow below). The runbook is `docs/ops/download-count.md` in Agentshed's repository.
 
 ## GitHub automation
