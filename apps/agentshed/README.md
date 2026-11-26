@@ -49,8 +49,9 @@ anything under `apps/agentshed/` (see [deployment and CI](../../docs/ops/deploym
 - `src/releases.ts`: the two things the page reads in the visitor's browser to decide the download, the R2 latest
   pointer and GitHub's releases for the Agentshed repository, each answer validated before anything of it is used.
 - `src/download-count.ts`: the page's one other read, the download count's statistics file on the download host,
-  of which only a validated total reaches the page. The file is written by an hourly workflow of Agentshed's
-  repository (its `docs/ops/download-count.md`). The download host answers CORS for the landing page's own origin
+  of which only a validated total reaches the page. The file is written every hour by the Worker in
+  `workers/download-count/` of this repository (see its [README](../../workers/download-count/README.md); the runbook
+  is `docs/ops/download-count.md` in Agentshed's repository). The download host answers CORS for the landing page's own origin
   only, so `pnpm dev`, `pnpm preview` and a Pages preview show no count, as they show no formal release from R2.
 - `src/download.ts`: the download state the two reads decide (formal from R2, formal from GitHub, test, or the
   list), and what each state's buttons say and where they lead. The page is served in the list state, which

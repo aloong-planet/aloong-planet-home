@@ -1,6 +1,6 @@
 // The download count's read (agentshed-site::REQ-011/AC-01, AC-05, Failure E3, agentshed-site::CON-004/AC-01,
 // agentshed-site::CON-004/AC-02), through an injected fetch: no case reaches the network. The file is shaped as the
-// collection writes it (scripts/download-count.mjs in Agentshed's repository); the page reads its schemaVersion and
+// collection writes it (the Worker in workers/download-count/ of this repository); the page reads its schemaVersion and
 // summary only.
 //
 // Not covered here: what a browser does with CORS (Failure G7). A rejected fetch stands for it; the download host's
