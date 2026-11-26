@@ -365,17 +365,16 @@ Applies to: the page's text. It is set in the system font stack; the page loads 
 - **The pointer read** takes a pointer only when its version is a formal version and its files name the
   arm64 DMG, by its packaged name, at exactly the URL the mirror's layout gives that version. A 404 means
   there is no pointer yet.
-- **The GitHub read** uses the unauthenticated public REST API for this repository's releases, one request
+- **The GitHub read** uses the unauthenticated public REST API for the releases of `aloong-planet/agentshed`, one request
   for the first hundred. A release counts when it is published (drafts are ignored) and its tag is `v`
   followed by a version of its kind: a suffix exactly when GitHub marks it a pre-release
   ([mac-distribution][ag-mac-distribution] Failure A2); any other entry is passed over. "Latest" and "newest" in
   agentshed-site::REQ-001/AC-02 go by publication date; the answer's order is not relied on. A release's DMG
   counts only once its upload has finished.
 - **Every link** is built from the validated version, never taken from an answer (Failure E1).
-- **The language toggle** carries a script that, before leaving, notes the element in view, its distance from
-  the top of the window and the current step; the other page puts the same element back at the same distance
-  and makes the same step current (agentshed-site::REQ-004/AC-07). The pinned showcase is never that element
-  (Failure C5).
+- **The language toggle** (agentshed-site::REQ-004/AC-07): the scroll position it keeps is the element in view
+  and its distance from the top of the window; the other page puts that element back at that distance. The
+  pinned showcase is never that element (Failure C5).
 - **The statistics file** is JSON at `stats/downloads.json` on the download host. The page reads these fields of it
   and no other:
 
