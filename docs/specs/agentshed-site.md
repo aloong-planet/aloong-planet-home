@@ -208,9 +208,10 @@ In both languages, the footer's copyright line links the author name "aloongplan
 ### agentshed-site::REQ-012 Back to the aloong planet homepage
 
 - agentshed-site::REQ-012/AC-01: The header's left end shows, in order, "aloong planet", the separator "/"
-  and the brand. "aloong planet" is a link that opens `https://aloongplanet.com/` in the current tab; the
-  "/" is not a link and assistive technology does not read it; the brand keeps its link. Both languages
-  show "aloong planet", untranslated.
+  and the brand. "aloong planet" is a link that opens the homepage in the page's language, in the current
+  tab: `https://aloongplanet.com/en/` from the English page and `https://aloongplanet.com/` from the Chinese
+  page. The "/" is not a link and assistive technology does not read it; the brand keeps its link. Both
+  languages show "aloong planet", untranslated.
 - agentshed-site::REQ-012/AC-02: "aloong planet" and "/" take the size and grey of the header's navigation
   links, with 10px between each of the three ("aloong planet", "/", the brand); in the narrow window of
   agentshed-site::REQ-012/AC-03, "aloong planet" and "/" are 4px apart. Hovering "aloong planet" turns it the
