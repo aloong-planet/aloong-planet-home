@@ -1,0 +1,21 @@
+{
+  "name": "@aloong-planet/download-count",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The download count's Cloudflare Worker: the main module and the core that aloong-planet/infra deploys from the commit of this repository it pins (source only, nothing to build)",
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "test": "node --test scripts/*.test.mjs scripts/testing/*.test.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.1"
+  },
+  "engines": {
+    "node": ">=26.7.0"
+  }
+}

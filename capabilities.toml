@@ -18,8 +18,8 @@ enforced-by = ["pnpm --filter @aloong-planet/home run test", "pnpm --filter @alo
 
 [lint]
 enabled = true
-source = "apps/agentshed/eslint.config.js"
-enforced-by = ["pnpm --filter @aloong-planet/agentshed run lint", "pnpm --filter @aloong-planet/agentshed run test:lint-rule"]
+source = ["apps/agentshed/eslint.config.js", "workers/download-count/eslint.config.js"]
+enforced-by = ["pnpm --filter @aloong-planet/agentshed run lint", "pnpm --filter @aloong-planet/agentshed run test:lint-rule", "pnpm --filter @aloong-planet/download-count run lint"]
 
 [e2e-suite]
 enabled = true
