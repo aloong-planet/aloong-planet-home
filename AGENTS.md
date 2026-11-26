@@ -41,6 +41,12 @@ Constraints on anyone changing `apps/transfer`, one line each; the reason lives 
 - Every colour token of `apps/transfer/src/styles/global.css` is declared in both the light and the dark block (`apps/transfer/src/styles/palette.test.ts`).
 - The screenshot and the icon under `apps/transfer/public/` change only through the pull request that `pnpm site:assets` of Transfer's repository opens (`docs/specs/app-sites.md`, app-sites::REQ-004/AC-01).
 
+## The download count's Worker (`workers/download-count`)
+
+Constraints on anyone changing `workers/download-count`, one line each; the reason lives where the line points.
+
+- The Worker's main module, `workers/download-count/scripts/download-count-worker.mjs`, exports only its handlers object and functions and imports only the core beside it (`workers/download-count/scripts/download-count-worker.test.mjs`, the cases "the Worker's main module exports its handlers and functions only" and "the Worker imports the core and nothing else"; the reason is in `workers/download-count/README.md`, "The main module").
+
 ## Agent skills
 
 ### Issue tracker

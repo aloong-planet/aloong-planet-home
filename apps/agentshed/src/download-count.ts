@@ -1,5 +1,5 @@
 // The page's read of the download count (agentshed-site::REQ-011/AC-01, AC-05, CON-003): the statistics file the
-// hourly collection publishes on the download host (scripts/download-count.mjs in Agentshed's repository). It is outside data (Failure E3):
+// hourly collection publishes on the download host (the Worker in workers/download-count/ of this repository). It is outside data (Failure E3):
 // only a validated total comes out of it, floored to a whole number; nothing else it holds reaches the page.
 import { HTML_LANG, ui, type Locale } from './i18n/ui'
 import { DOWNLOAD_HOST, get, isObject, TIMEOUT_MS, type Fetch } from './releases'

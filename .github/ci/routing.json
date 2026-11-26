@@ -5,7 +5,8 @@
     "justsnap": ["justsnap-checks", "width-check"],
     "transfer": ["transfer-checks", "width-check"],
     "site_kit": ["site-kit-checks"],
-    "pages_deploy": ["pages-deploy-checks"]
+    "pages_deploy": ["pages-deploy-checks"],
+    "download_count": ["download-count-checks"]
   },
   "rules": [
     {
@@ -46,6 +47,11 @@
       "reason": "Transfer's site",
       "select": ["transfer"],
       "paths": ["apps/transfer/**"]
+    },
+    {
+      "reason": "The download count's Worker",
+      "select": ["download_count"],
+      "paths": ["workers/download-count/**"]
     }
   ]
 }

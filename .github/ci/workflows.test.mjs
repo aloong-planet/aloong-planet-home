@@ -7,7 +7,8 @@
 // branch of a guard, so a guard that is gone would not show there.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { existsSync, globSync, readFileSync, readdirSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { readConfig } from './ci-scope.mjs'
 
 const read = (name) => readFileSync(new URL(`../workflows/${name}`, import.meta.url), 'utf8')
@@ -44,10 +45,11 @@ test('Deploy is triggered by the CI workflow, by its name', () => {
   assert.deepEqual(triggers[1].split(',').map((n) => n.trim()), [name])
 })
 
-// The workspace packages under apps/ and packages/, by the name pnpm --filter takes, with their scripts
+// The workspace packages under apps/, packages/ and workers/ (pnpm-workspace.yaml), by the name pnpm --filter takes, with
+// their scripts
 function workspacePackages() {
   const found = new Map()
-  for (const group of ['apps', 'packages']) {
+  for (const group of ['apps', 'packages', 'workers']) {
     const dir = new URL(`../../${group}/`, import.meta.url)
     for (const entry of existsSync(dir) ? readdirSync(dir) : []) {
       const manifest = new URL(`${entry}/package.json`, dir)
@@ -84,7 +86,7 @@ test('the pnpm --filter commands of the workflows name a workspace package and a
     assert.ok(release.some(([name, script]) => name === `@aloong-planet/${site}` && script === 'cf:deploy'), `Deploy runs cf:deploy of @aloong-planet/${site}`)
   }
   for (const [name, script] of [...filterCommands(ci), ...release]) {
-    assert.ok(packages.has(name), `${name} is no package of apps/ or packages/`)
+    assert.ok(packages.has(name), `${name} is no package of apps/, packages/ or workers/`)
     assert.ok(packages.get(name).includes(script), `${name} has no script ${script}`)
   }
 })
@@ -232,6 +234,42 @@ test('pages-deploy-checks runs the type check and the tests of @aloong-planet/pa
     'pnpm --filter @aloong-planet/pages-deploy run check',
     'pnpm --filter @aloong-planet/pages-deploy run test'
   ])
+})
+
+// download-count-checks runs no browser and builds no site: the Worker's tests call its handlers in the test process, with
+// stand-ins for GitHub, the analytics and the bucket, so its limit is JustSnap's
+test('download-count-checks ends at a time limit of 10 minutes', () => {
+  assert.match(jobs(ci).get('download-count-checks').join('\n'), /^ {4}timeout-minutes: 10\s*$/m)
+})
+
+// The lint is the only static check of the Worker's code: its modules are JavaScript, which no type check reads
+test('download-count-checks runs the lint and the tests of @aloong-planet/download-count', () => {
+  assert.deepEqual(runCommands('download-count-checks'), [
+    'pnpm install --frozen-lockfile',
+    'pnpm --filter @aloong-planet/download-count run lint',
+    'pnpm --filter @aloong-planet/download-count run test'
+  ])
+})
+
+// Every *.test.mjs file under a directory, as paths relative to it, without descending into node_modules
+function testFiles(dir, prefix = '') {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (entry.name === 'node_modules') return []
+    if (entry.isDirectory()) return testFiles(new URL(`${entry.name}/`, dir), `${prefix}${entry.name}/`)
+    return entry.name.endsWith('.test.mjs') ? [`${prefix}${entry.name}`] : []
+  })
+}
+
+// Which files `run test` runs is decided by the package's own test script, not by the workflow, and node answers a
+// pattern that matches nothing with success: a script narrowed to one file, or a pattern that no longer reaches a
+// directory, would drop the guard cases of the Worker's main module and keep every check green
+test("the test script of @aloong-planet/download-count selects every test file of the package, the Worker's guard cases among them", () => {
+  const dir = new URL('../../workers/download-count/', import.meta.url)
+  const words = JSON.parse(readFileSync(new URL('package.json', dir), 'utf8')).scripts.test.split(/\s+/)
+  assert.deepEqual(words.slice(0, 2), ['node', '--test'], 'the script runs node --test on patterns')
+  const held = testFiles(dir).sort()
+  assert.ok(held.includes('scripts/download-count-worker.test.mjs'), 'the file of the two guard cases is where this test looks for it')
+  assert.deepEqual(globSync(words.slice(2), { cwd: fileURLToPath(dir) }).sort(), held)
 })
 
 // The gate fails a selected job that was skipped, so a job whose condition leaves out a scope that lists it fails every

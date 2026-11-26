@@ -23,7 +23,7 @@ The initial production table was created through the dashboard using apps/home/m
 
 ## Source layout
 
-The repository is a pnpm workspace (`pnpm-workspace.yaml`): `apps/home/` is the homepage, the package `@aloong-planet/home`; `apps/agentshed/`, `apps/justsnap/` and `apps/transfer/` are the app sites (the repository map in the [README](../../README.md) describes them); and `packages/` holds parts shared between apps. The directories below are under `apps/home/`, except those that start with `docs/`.
+The repository is a pnpm workspace (`pnpm-workspace.yaml`): `apps/home/` is the homepage, the package `@aloong-planet/home`; `apps/agentshed/`, `apps/justsnap/` and `apps/transfer/` are the app sites (the repository map in the [README](../../README.md) describes them); `workers/download-count/` is the download count's Worker, the package `@aloong-planet/download-count` (see its [README](../../workers/download-count/README.md)); and `packages/` holds parts shared between apps. The directories below are under `apps/home/`, except those that start with `docs/`.
 
 - public/: shipping styles, navigation, the shared article look, the interface dictionary ui.js and the visitor client. The homepage, Blog page and not-found page of each language are rendered from ui.js by scripts/pages.mjs, and the posts by scripts/blog.mjs.
 - content/: the blog's post list, post bodies and covers, with any post's own stylesheet and script. See [publishing a post](publishing-posts.md).

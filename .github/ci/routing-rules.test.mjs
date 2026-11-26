@@ -11,13 +11,13 @@ test('each pattern of routing.json routes a real path to the scopes written here
   // [a tracked path, the scopes it must select]. Take each path from the repository's tracked tree, and write
   // the scopes as literals: computing them from routing.json would only repeat it.
   const cases = [
-    ['package.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
-    ['pnpm-lock.yaml', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
-    ['pnpm-workspace.yaml', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
-    ['packages/.gitkeep', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
-    ['packages/site-check/sites/agentshed.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
-    ['packages/site-kit/src/Icon.astro', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
-    ['packages/pages-deploy/src/deploy.mjs', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
+    ['package.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy', 'download_count']],
+    ['pnpm-lock.yaml', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy', 'download_count']],
+    ['pnpm-workspace.yaml', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy', 'download_count']],
+    ['packages/.gitkeep', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy', 'download_count']],
+    ['packages/site-check/sites/agentshed.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy', 'download_count']],
+    ['packages/site-kit/src/Icon.astro', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy', 'download_count']],
+    ['packages/pages-deploy/src/deploy.mjs', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy', 'download_count']],
     ['README.md', []],
     ['AGENTS.md', []],
     ['docs/agents/docs-layout.md', []],
@@ -57,7 +57,10 @@ test('each pattern of routing.json routes a real path to the scopes written here
     ['apps/transfer/src/pages/index.astro', ['transfer']],
     ['apps/transfer/public/screenshots/main.png', ['transfer']],
     ['apps/transfer/README.md', ['transfer']],
-    ['packages/site-check/sites/transfer.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy']],
+    ['workers/download-count/package.json', ['download_count']],
+    ['workers/download-count/scripts/download-count-core.mjs', ['download_count']],
+    ['workers/download-count/README.md', ['download_count']],
+    ['packages/site-check/sites/transfer.json', ['home', 'agentshed', 'justsnap', 'transfer', 'site_kit', 'pages_deploy', 'download_count']],
     ['docs/specs/transfer-site.md', []]
   ]
   const hit = new Set()
@@ -91,6 +94,7 @@ const gateVerdict = (paths, tried, triedResult) => {
     'transfer-checks': siteChecks('transfer'),
     'site-kit-checks': siteChecks('site_kit'),
     'pages-deploy-checks': siteChecks('pages_deploy'),
+    'download-count-checks': siteChecks('download_count'),
     'width-check': { result: 'success' }
   }
   needs[tried] = { result: triedResult }
@@ -176,5 +180,18 @@ test('a change to the shared deploy command requires pages-deploy-checks beside 
   assert.deepEqual(gateVerdict([command], 'transfer-checks', 'skipped'), ['transfer-checks: skipped (selected)'])
   for (const path of ['apps/agentshed/deployment.config.json', 'apps/justsnap/src/pages/index.astro', 'apps/transfer/src/pages/index.astro', 'apps/home/public/index.html', 'docs/ops/deployment.md']) {
     assert.deepEqual(gateVerdict([path], 'pages-deploy-checks', 'skipped'), [], path)
+  }
+})
+
+test('a change to only the download count\'s Worker requires download-count-checks and no site\'s checks, a change to the shared input requires it, and a change to a site, the homepage or a document does not', () => {
+  const worker = 'workers/download-count/scripts/download-count-core.mjs'
+  assert.deepEqual(gateVerdict([worker], 'download-count-checks', 'failure'), ['download-count-checks: failure (selected)'])
+  assert.deepEqual(gateVerdict([worker], 'download-count-checks', 'skipped'), ['download-count-checks: skipped (selected)'])
+  for (const job of ['home-checks', 'agentshed-checks', 'justsnap-checks', 'transfer-checks', 'site-kit-checks', 'pages-deploy-checks', 'width-check']) {
+    assert.deepEqual(gateVerdict([worker], job, 'skipped'), [], job)
+  }
+  assert.deepEqual(gateVerdict(['pnpm-lock.yaml'], 'download-count-checks', 'skipped'), ['download-count-checks: skipped (selected)'])
+  for (const path of ['apps/agentshed/src/pages/index.astro', 'apps/home/public/index.html', 'docs/ops/deployment.md']) {
+    assert.deepEqual(gateVerdict([path], 'download-count-checks', 'skipped'), [], path)
   }
 })
