@@ -54,4 +54,4 @@ Every link from an English page to the homepage, a section of it, or the Blog pa
 
 - English versions of posts: the posts are Aloong's own articles, republished word for word, so a translation would be new writing rather than the same post.
 - Languages other than Chinese and English.
-- Making the app sites' interfaces match this site's: [app-sites](app-sites.md) keeps that out of its scope until every site has moved.
+- Making the app sites' interfaces match this site's: [app-sites](app-sites.md) keeps that out of its scope.

@@ -365,7 +365,7 @@ Applies to: the page's text. It is set in the system font stack; the page loads 
 - **The pointer read** takes a pointer only when its version is a formal version and its files name the
   arm64 DMG, by its packaged name, at exactly the URL the mirror's layout gives that version. A 404 means
   there is no pointer yet.
-- **The GitHub read** uses the unauthenticated public REST API for this repository's releases, one request
+- **The GitHub read** uses the unauthenticated public REST API for the releases of `aloong-planet/agentshed`, one request
   for the first hundred. A release counts when it is published (drafts are ignored) and its tag is `v`
   followed by a version of its kind: a suffix exactly when GitHub marks it a pre-release
   ([mac-distribution][ag-mac-distribution] Failure A2); any other entry is passed over. "Latest" and "newest" in

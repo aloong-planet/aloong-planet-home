@@ -23,7 +23,7 @@ The initial production table was created through the dashboard using apps/home/m
 
 ## Source layout
 
-The repository is a pnpm workspace (`pnpm-workspace.yaml`): `apps/home/` is the homepage, the package `@aloong-planet/home`, and `packages/` holds parts shared between apps. The directories below are under `apps/home/`, except those that start with `docs/`.
+The repository is a pnpm workspace (`pnpm-workspace.yaml`): `apps/home/` is the homepage, the package `@aloong-planet/home`; `apps/agentshed/`, `apps/justsnap/` and `apps/transfer/` are the app sites (the repository map in the [README](../../README.md) describes them); and `packages/` holds parts shared between apps. The directories below are under `apps/home/`, except those that start with `docs/`.
 
 - public/: shipping styles, navigation, the shared article look, the interface dictionary ui.js and the visitor client. The homepage, Blog page and not-found page of each language are rendered from ui.js by scripts/pages.mjs, and the posts by scripts/blog.mjs.
 - content/: the blog's post list, post bodies and covers, with any post's own stylesheet and script. See [publishing a post](publishing-posts.md).
@@ -39,7 +39,7 @@ The repository is a pnpm workspace (`pnpm-workspace.yaml`): `apps/home/` is the 
 
 ## Related projects
 
-Transfer (https://transfer.aloongplanet.com), Agentshed (https://agentshed.aloongplanet.com) and JustSnap, named 随译 on this site (https://justsnap.aloongplanet.com), are links/cards only. The skills and plugins in the Agents menu and section are links to their GitHub repositories. Their repositories, deployments and Transfer download statistics are outside this site's deployment.
+On the homepage, Transfer (https://transfer.aloongplanet.com), Agentshed (https://agentshed.aloongplanet.com) and JustSnap, named 随译 on this site (https://justsnap.aloongplanet.com), are links/cards only; each app's own website is the package under `apps/` that the Pages projects above are deployed from. The skills and plugins in the Agents menu and section are links to their GitHub repositories. The apps' repositories and Transfer download statistics are outside this repository.
 
 ## Retained local material
 

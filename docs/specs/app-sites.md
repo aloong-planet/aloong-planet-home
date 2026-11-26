@@ -53,8 +53,8 @@ Applies to: this repository. The repository is public, and its default branch ac
 
 ## Out of Scope
 
-- Transfer's mainland mirror (`transfer.aloongplanet.com.cn`): this feature does not deploy or update it; what to do about it is decided separately.
+- Transfer's mainland mirror (`transfer.aloongplanet.com.cn`): this feature does not build, deploy or update it, and nothing in this repository does.
 - Keeping a site's colours in step with its app's theme: each site owns its palette (ADR-0001).
 - Rewriting the homepage in Astro: ADR-0001.
-- Unifying the sites' interfaces, such as the Apps and Agents menus on the app sites or Agentshed's root language: decided once every site has moved, because moving a site changes nothing a visitor sees (app-sites::REQ-002).
+- Unifying the sites' interfaces, such as the Apps and Agents menus on the app sites or Agentshed's root language: moving a site changes nothing a visitor sees (app-sites::REQ-002), so a change to a site's interface is a separate decision.
 - Moving a site from Cloudflare Pages to Workers: a separate change per site (ADR-0001).
