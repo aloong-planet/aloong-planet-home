@@ -1,6 +1,7 @@
 // The download count's sources standing in at the system boundary (download-count::REQ-011, Implementation Decisions
-// "The collection"), shared by the core's and the Worker's cases and the watchdog's: GitHub's releases, answered 100 to
-// a page, and Cloudflare's analytics, answering the dataset's settings and, for a range, the rows of each hour in it.
+// "The collection"), shared by the core's and the Worker's cases: GitHub's releases, answered 100 to a page, and
+// Cloudflare's analytics, answering the dataset's settings and, for a range, the rows of each hour in it. The
+// watchdog's cases stay in aloong-planet/agentshed, which keeps a copy of this file for them.
 //
 // GitHub's answer is the repository's real one (../fixtures/github-releases.json: `gh api
 // 'repos/aloong-planet/agentshed/releases?per_page=100'`, 2026-11-22, nine pre-releases, trimmed to the fields a

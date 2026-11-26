@@ -7,7 +7,8 @@
 // branch of a guard, so a guard that is gone would not show there.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { existsSync, globSync, readFileSync, readdirSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { readConfig } from './ci-scope.mjs'
 
 const read = (name) => readFileSync(new URL(`../workflows/${name}`, import.meta.url), 'utf8')
@@ -248,6 +249,27 @@ test('download-count-checks runs the lint and the tests of @aloong-planet/downlo
     'pnpm --filter @aloong-planet/download-count run lint',
     'pnpm --filter @aloong-planet/download-count run test'
   ])
+})
+
+// Every *.test.mjs file under a directory, as paths relative to it, without descending into node_modules
+function testFiles(dir, prefix = '') {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (entry.name === 'node_modules') return []
+    if (entry.isDirectory()) return testFiles(new URL(`${entry.name}/`, dir), `${prefix}${entry.name}/`)
+    return entry.name.endsWith('.test.mjs') ? [`${prefix}${entry.name}`] : []
+  })
+}
+
+// Which files `run test` runs is decided by the package's own test script, not by the workflow, and node answers a
+// pattern that matches nothing with success: a script narrowed to one file, or a pattern that no longer reaches a
+// directory, would drop the guard cases of the Worker's main module and keep every check green
+test("the test script of @aloong-planet/download-count selects every test file of the package, the Worker's guard cases among them", () => {
+  const dir = new URL('../../workers/download-count/', import.meta.url)
+  const words = JSON.parse(readFileSync(new URL('package.json', dir), 'utf8')).scripts.test.split(/\s+/)
+  assert.deepEqual(words.slice(0, 2), ['node', '--test'], 'the script runs node --test on patterns')
+  const held = testFiles(dir).sort()
+  assert.ok(held.includes('scripts/download-count-worker.test.mjs'), 'the file of the two guard cases is where this test looks for it')
+  assert.deepEqual(globSync(words.slice(2), { cwd: fileURLToPath(dir) }).sort(), held)
 })
 
 // The gate fails a selected job that was skipped, so a job whose condition leaves out a scope that lists it fails every
