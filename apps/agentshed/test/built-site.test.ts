@@ -80,7 +80,7 @@ describe('page structure', () => {
   })
 
   // agentshed-site::REQ-012/AC-01 and agentshed-site::REQ-012/AC-04. The expected names are literals rather than the dictionary's text.
-  test.each(LOCALES)('%s: the header opens with the trail back to the aloong planet homepage, then the brand', (locale) => {
+  test.each(LOCALES)('%s: the header opens with the trail back to the aloong planet homepage in the page’s language, then the brand', (locale) => {
     const trail = pages[locale].querySelector('header .bar')?.firstElementChild
     expect(trail?.tagName).toBe('NAV')
     expect(trail?.getAttribute('aria-label')).toBe(locale === 'zh' ? '面包屑' : 'Breadcrumb')
@@ -88,7 +88,7 @@ describe('page structure', () => {
     expect(items.map((li) => text(li.querySelector('a')))).toEqual(['aloong planet', 'Agentshed'])
 
     const [home, brand] = items.map((li) => li.querySelector('a'))
-    expect(home?.getAttribute('href')).toBe('https://aloongplanet.com/')
+    expect(home?.getAttribute('href')).toBe(locale === 'zh' ? 'https://aloongplanet.com/' : 'https://aloongplanet.com/en/')
     expect(home?.hasAttribute('target')).toBe(false)
     expect(brand?.classList.contains('brand')).toBe(true)
     expect(brand?.getAttribute('href')).toBe('#top')

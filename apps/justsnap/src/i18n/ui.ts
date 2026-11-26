@@ -98,5 +98,8 @@ export const ui: Record<Locale, typeof zh> = { zh, en }
 export const PAGE_PATH: Record<Locale, string> = { zh: '/', en: '/en/' }
 export const LANGUAGE_NAME: Record<Locale, string> = { zh: '中文', en: 'EN' }
 /** The author's homepage, which lists the other apps and tools; the header's breadcrumb leads back to it, under the
- * same name on both pages (justsnap-site::REQ-009/AC-01) */
-export const HOMEPAGE = { name: 'aloong planet', url: 'https://aloongplanet.com/' }
+ * same name on both pages and to the homepage in the page's own language (justsnap-site::REQ-009/AC-01) */
+export const HOMEPAGE: { name: string; url: Record<Locale, string> } = {
+  name: 'aloong planet',
+  url: { zh: 'https://aloongplanet.com/', en: 'https://aloongplanet.com/en/' }
+}

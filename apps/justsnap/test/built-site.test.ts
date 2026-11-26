@@ -37,6 +37,8 @@ beforeAll(() => {
 
 const REPOSITORY = 'https://github.com/aloong-planet/justsnap'
 const LOCALES = ['zh', 'en'] as const
+/** The homepage in each page's language, written out rather than read from the dictionary (justsnap-site::REQ-009/AC-01) */
+const HOMEPAGE_URL = { zh: 'https://aloongplanet.com/', en: 'https://aloongplanet.com/en/' } as const
 
 const text = (el: Element | null | undefined): string => (el?.textContent ?? '').replace(/\s+/g, ' ').trim()
 /** A PNG's pixel size, from its header */
@@ -100,12 +102,12 @@ describe('page structure (REQ-003)', () => {
     const items = [...(trail?.querySelectorAll(':scope > ol > li') ?? [])]
     expect(items).toHaveLength(2)
 
-    // Opens in the current tab, and is written the same in both languages
+    // Opens in the current tab, is named the same in both languages and leads to the homepage in the page's language
     const home = items[0]?.firstElementChild
     expect([home?.tagName.toLowerCase(), text(home), home?.getAttribute('href'), home?.hasAttribute('target')]).toEqual([
       'a',
       'aloong planet',
-      'https://aloongplanet.com/',
+      HOMEPAGE_URL[locale],
       false
     ])
     // The separator is seen, not read, and leads nowhere
@@ -255,8 +257,8 @@ describe('what the page may say and link to', () => {
   })
 
   test.each(LOCALES)('%s: every link out of the page but the way back to aloong planet goes to github.com or the download host, and opens in a new tab (CON-003)', (locale) => {
-    // The homepage link is the one exception (justsnap-site::REQ-009/AC-01)
-    const outbound = [...pages[locale].querySelectorAll('a[href^="http"]')].filter((a) => a.getAttribute('href') !== 'https://aloongplanet.com/')
+    // The homepage link, to the page's own language's homepage, is the one exception (justsnap-site::REQ-009/AC-01)
+    const outbound = [...pages[locale].querySelectorAll('a[href^="http"]')].filter((a) => a.getAttribute('href') !== HOMEPAGE_URL[locale])
     expect(outbound.length).toBeGreaterThan(3)
     for (const a of outbound) {
       expect(new URL(a.getAttribute('href')!).hostname, a.getAttribute('href')!).toBe('github.com')

@@ -14,6 +14,9 @@ export const HTML_LANG: Record<Locale, string> = { zh: 'zh-CN', en: 'en' }
 /** Each page's path: English is the default language at the root */
 export const PAGE_PATH: Record<Locale, string> = { zh: '/zh/', en: '/' }
 
+/** The author's homepage in each page's language, which the header's trail leads back to (agentshed-site::REQ-012/AC-01) */
+export const HOMEPAGE_URL: Record<Locale, string> = { zh: 'https://aloongplanet.com/', en: 'https://aloongplanet.com/en/' }
+
 /** The language toggle names each language in its own script, the same on both pages */
 export const LANGUAGE_NAME: Record<Locale, string> = { zh: '中文', en: 'EN' }
 
