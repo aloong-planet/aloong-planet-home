@@ -35,6 +35,8 @@ anything under `workers/download-count/` (see [deployment and CI](../../docs/ops
 
 ## Deploying
 
+> Pending: `aloong-planet/infra` pins a commit of this repository that holds `workers/download-count/`. Until it does, infra deploys the Worker from the commit of `aloong-planet/agentshed` that it pins, and that copy is the Worker that runs.
+
 Nothing in this repository deploys the Worker. aloong-planet/infra's `workers` stack deploys the two modules, the main
 module and the core beside it, from the commit of this repository that it pins, each checked against its pinned SHA-256,
 and binds the core's hash to the Worker as `CORE_SHA256`, which each run records. A change here reaches the Worker
