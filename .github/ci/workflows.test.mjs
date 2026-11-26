@@ -44,10 +44,11 @@ test('Deploy is triggered by the CI workflow, by its name', () => {
   assert.deepEqual(triggers[1].split(',').map((n) => n.trim()), [name])
 })
 
-// The workspace packages under apps/ and packages/, by the name pnpm --filter takes, with their scripts
+// The workspace packages under apps/, packages/ and workers/ (pnpm-workspace.yaml), by the name pnpm --filter takes, with
+// their scripts
 function workspacePackages() {
   const found = new Map()
-  for (const group of ['apps', 'packages']) {
+  for (const group of ['apps', 'packages', 'workers']) {
     const dir = new URL(`../../${group}/`, import.meta.url)
     for (const entry of existsSync(dir) ? readdirSync(dir) : []) {
       const manifest = new URL(`${entry}/package.json`, dir)
@@ -84,7 +85,7 @@ test('the pnpm --filter commands of the workflows name a workspace package and a
     assert.ok(release.some(([name, script]) => name === `@aloong-planet/${site}` && script === 'cf:deploy'), `Deploy runs cf:deploy of @aloong-planet/${site}`)
   }
   for (const [name, script] of [...filterCommands(ci), ...release]) {
-    assert.ok(packages.has(name), `${name} is no package of apps/ or packages/`)
+    assert.ok(packages.has(name), `${name} is no package of apps/, packages/ or workers/`)
     assert.ok(packages.get(name).includes(script), `${name} has no script ${script}`)
   }
 })
@@ -231,6 +232,21 @@ test('pages-deploy-checks runs the type check and the tests of @aloong-planet/pa
     'pnpm install --frozen-lockfile',
     'pnpm --filter @aloong-planet/pages-deploy run check',
     'pnpm --filter @aloong-planet/pages-deploy run test'
+  ])
+})
+
+// download-count-checks runs no browser and builds no site: the Worker's tests call its handlers in the test process, with
+// stand-ins for GitHub, the analytics and the bucket, so its limit is JustSnap's
+test('download-count-checks ends at a time limit of 10 minutes', () => {
+  assert.match(jobs(ci).get('download-count-checks').join('\n'), /^ {4}timeout-minutes: 10\s*$/m)
+})
+
+// The lint is the only static check of the Worker's code: its modules are JavaScript, which no type check reads
+test('download-count-checks runs the lint and the tests of @aloong-planet/download-count', () => {
+  assert.deepEqual(runCommands('download-count-checks'), [
+    'pnpm install --frozen-lockfile',
+    'pnpm --filter @aloong-planet/download-count run lint',
+    'pnpm --filter @aloong-planet/download-count run test'
   ])
 })
 
