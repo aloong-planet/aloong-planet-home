@@ -109,8 +109,8 @@ function languageSwitch(markup) {
 for (const [lang, page, destination] of SWITCH) {
   test(`the ${lang} ${page} page shows 中文 and EN as the last item of its header, its own language as marked text and the other as a link to ${destination} (site-languages::REQ-003)`, () => {
     const markup = navigationMarkup({lang, page});
-    // The last item of the header, after the GitHub link (nav-menus::REQ-004).
-    assert.match(markup, /<div class="ap-header-end"><a\b[^>]*>GitHub<\/a><div class="ap-lang"[^>]*>.*<\/div><\/div>\s*<\/header>$/s);
+    // The last item of the header, after the social links (nav-menus::REQ-004).
+    assert.match(markup, /<div class="ap-lang"[^>]*>.*<\/div>\s*<\/div>\s*<\/header>$/s);
     const {group, items} = languageSwitch(markup);
     assert.equal(group['aria-label'], GROUP_NAMES[lang]);
     assert.equal(group.role, 'group');

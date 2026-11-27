@@ -41,7 +41,7 @@ a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline
 }
 /* Set by navigation.js after Escape or a click on the tab, until the pointer and keyboard focus have both left the menu. */
 .ap-menu[data-dismissed] .ap-menu-panel { display:none; }
-/* The right end of the header: the GitHub link, then the language switch, which is the header's last item. The switch reads like the navigation's tabs: the page's own language is ink and bold, so it does not rest on colour alone, and the other is muted grey, a link that turns ink on hover. */
+/* The right end of the header: the GitHub and X links, then the language switch, which is the header's last item. The switch reads like the navigation's tabs: the page's own language is ink and bold, so it does not rest on colour alone, and the other is muted grey, a link that turns ink on hover. */
 .ap-header-end { justify-self:end; display:flex; align-items:center; gap:18px; }
 .ap-social { font-size:12px; border-bottom:1px solid var(--ink); padding:7px 0; }
 .ap-lang { display:flex; align-items:center; gap:14px; font-size:12px; }
