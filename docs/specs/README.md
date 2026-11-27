@@ -9,7 +9,7 @@ Each spec is the current requirement picture for one feature, for people changin
 | [Site-wide anonymous visitor total](visitor-counter.md) | Deduplicated visitors across pages and a homepage total that updates automatically. |
 | [Not-found page](not-found.md) | What an address the site does not have shows, and its status. |
 | [Homepage dog](homepage-dog.md) | Automatic tail wagging and pause/resume controls. |
-| [Apps and Agents menus](nav-menus.md) | Top-navigation menus that open each app, skill and plugin, the homepage's Agents section and its three app cards. |
+| [Apps and Agents menus](nav-menus.md) | Top-navigation menus that open each app, skill and plugin, header profile links, the homepage's Agents section and its three app cards. |
 | [Site languages](site-languages.md) | The site's Chinese and English pages, their addresses, and the switch between them. |
 | [Site appearance](site-appearance.md) | Every page follows the system's light or dark appearance, and diagrams and pictures keep their light colours. |
 | [App sites](app-sites.md) | Where the homepage and the JustSnap, Agentshed and Transfer sites are built and deployed, and how app screenshots and icons reach them. |

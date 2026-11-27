@@ -117,13 +117,14 @@ for (const lang of LANGUAGES) {
     assert.equal(nav.match(/\saria-label="([^"]*)"/)?.[1], NAVIGATION_NAMES[lang]);
   });
 
-  test(`the ${lang} header ends with a GitHub link that opens the profile in a new tab, just before the language switch (nav-menus::REQ-004)`, () => {
-    // The link is not one of the navigation's tabs, so tabs() does not see it: it opens the group at the right end of the header.
-    const link = markup(lang).match(/<div class="ap-header-end">(<a\b[^>]*>)([^<]*)<\/a><div class="ap-lang"/);
-    assert.ok(link, 'the right end of the header holds a link, and the language switch after it');
-    assert.equal(link[2], 'GitHub');
-    assert.equal(link[1].match(/\shref="([^"]*)"/)?.[1], 'https://github.com/aloong-planet');
-    assert.equal(linkTarget(link[1])[0], '_blank');
+  test(`the ${lang} header offers GitHub and X profiles in new tabs (nav-menus::REQ-004)`, () => {
+    const end = markup(lang).split('<div class="ap-header-end">')[1].split('<div class="ap-lang"')[0];
+    const links = [...end.matchAll(/(<a\b[^>]*>)([^<]*)<\/a>/g)];
+    assert.deepEqual(links.map(([, tag, name]) => [name, tag.match(/\shref="([^"]*)"/)?.[1], linkTarget(tag)[0]]), [
+      ['GitHub', 'https://github.com/aloong-planet', '_blank'],
+      ['X', 'https://x.com/aloong666', '_blank'],
+    ]);
+    assert.equal(links[1][1].match(/aria-label="([^"]*)"/)?.[1], lang === 'zh' ? '在 X 上关注 @aloong666' : 'Follow @aloong666 on X');
   });
 
   test(`the ${lang} menus list the works with their descriptions, in order, each opening the address for this language (nav-menus::REQ-002)`, () => {

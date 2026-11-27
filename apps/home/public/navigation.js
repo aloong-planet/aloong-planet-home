@@ -50,7 +50,11 @@ export function navigationMarkup({lang, page}) {
   return `<header class="ap-header">
     <a class="ap-brand" href="${home}">${escapeHtml(brand.name)} <small>${escapeHtml(brand.tag)}</small></a>
     <nav class="ap-nav" aria-label="${escapeHtml(nav.label)}">${appsMenu(lang)}${agentsMenu(lang)}<a href="${blog}"${blogMark}>${escapeHtml(nav.blog)}</a><a href="${home}#about">${escapeHtml(nav.about)}</a></nav>
-    <div class="ap-header-end"><a class="ap-social" href="https://github.com/aloong-planet" target="_blank" rel="noreferrer">${escapeHtml(nav.github)}</a>${languageSwitch(lang, page)}</div>
+    <div class="ap-header-end">
+      <a class="ap-social" href="https://github.com/aloong-planet" target="_blank" rel="noreferrer">${escapeHtml(nav.github)}</a>
+      <a class="ap-social" href="https://x.com/aloong666" target="_blank" rel="noreferrer" aria-label="${escapeHtml(nav.xLabel)}">${escapeHtml(nav.x)}</a>
+      ${languageSwitch(lang, page)}
+    </div>
   </header>`;
 }
 

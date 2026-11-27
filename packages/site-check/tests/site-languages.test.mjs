@@ -36,7 +36,8 @@ function measureHeader() {
     header: rect('.ap-header'),
     brand: rect('.ap-brand'),
     nav: rect('.ap-nav'),
-    social: rect('.ap-social'),
+    github: rect('a[href="https://github.com/aloong-planet"]'),
+    x: rect('a[href="https://x.com/aloong666"]'),
     lang: rect('.ap-lang'),
     items,
     focusable,
@@ -81,16 +82,16 @@ describe('site-languages in a real browser on the built homepage site', { timeou
           assert.equal(seen.items.length, 2, `${where}: the switch has two items`)
           assert.ok(inside(seen.lang, seen.header), `${where}: the switch ${JSON.stringify(seen.lang)} is not inside the header ${JSON.stringify(seen.header)}`)
           assert.ok(seen.lang.left >= 0 && seen.lang.right <= seen.width, `${where}: the switch ${JSON.stringify(seen.lang)} is not inside the window`)
-          for (const [name, other] of [['the site name', seen.brand], ['the navigation', seen.nav], ['the GitHub link', seen.social]]) {
+          for (const [name, other] of [['the site name', seen.brand], ['the navigation', seen.nav], ['the GitHub link', seen.github], ['the X link', seen.x]]) {
             assert.equal(overlap(seen.lang, other), false, `${where}: the switch overlaps ${name}`)
           }
           // The two items sit side by side and neither is clipped by the other.
           assert.equal(overlap(seen.items[0], seen.items[1]), false, `${where}: the two items of the switch overlap`)
           for (const item of seen.items) assert.ok(item.right > item.left && item.bottom > item.top, `${where}: ${item.text} has no size`)
           // The switch is the last item of the header, after the GitHub link: reading and Tab order agree with the eye (site-languages::REQ-003/AC-01).
-          assert.ok(seen.social.right <= seen.lang.left, `${where}: the switch does not follow the GitHub link`)
+          assert.ok(seen.github.right <= seen.x.left && seen.x.right <= seen.lang.left && seen.github.top === seen.x.top, `${where}: the switch does not follow the GitHub link`)
           // The page's own language is not a link, so the last link of the header is the other language's.
-          assert.deepEqual(seen.focusable.slice(-2), ['GitHub', path.startsWith('/en') ? '中文' : 'EN'], `${where}: the header's links do not end with GitHub and the switch`)
+          assert.deepEqual(seen.focusable.slice(-3), ['GitHub', 'X', path.startsWith('/en') ? '中文' : 'EN'], `${where}: the header's links do not end with GitHub, X and the switch`)
           checked.push(path)
         } finally {
           await page.close()

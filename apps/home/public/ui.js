@@ -32,7 +32,7 @@ export const languageOf = tag => (tag === LANGUAGES.en.tag ? 'en' : 'zh');
 
 const zh = /** @type {const} */ ({
   brand: {name: 'aloong planet', tag: 'Build & Share'},
-  nav: {label: '主要', apps: 'Apps', agents: 'Agents', blog: 'Blog', about: 'About', github: 'GitHub'},
+  nav: {label: '主要', apps: 'Apps', agents: 'Agents', blog: 'Blog', about: 'About', github: 'GitHub', x: 'X', xLabel: '在 X 上关注 @aloong666'},
   // Each language's name for itself, so a visitor who cannot read the page's language still finds the switch (site-languages::REQ-003).
   language: {label: '语言', zh: '中文', en: 'EN', enName: 'English'},
   // The works the menus list and the homepage shows, in order (nav-menus::REQ-002); an app also carries its homepage card.
@@ -122,7 +122,7 @@ const zh = /** @type {const} */ ({
 /** @type {Copy} */
 const en = {
   brand: {name: 'aloong planet', tag: 'Build & Share'},
-  nav: {label: 'Main', apps: 'Apps', agents: 'Agents', blog: 'Blog', about: 'About', github: 'GitHub'},
+  nav: {label: 'Main', apps: 'Apps', agents: 'Agents', blog: 'Blog', about: 'About', github: 'GitHub', x: 'X', xLabel: 'Follow @aloong666 on X'},
   language: {label: 'Language', zh: '中文', en: 'EN', enName: 'English'},
   works: {
     apps: [

@@ -89,9 +89,9 @@ Each work's description:
 
 The top navigation's accessible name is 「主要」 on Chinese pages and post pages, and "Main" on English pages.
 
-### nav-menus::REQ-004 GitHub link (direct acceptance)
+### nav-menus::REQ-004 Social links (direct acceptance)
 
-Every page that shows the top navigation also shows a link 「GitHub」 at the right end of its header, just before the language switch of site-languages::REQ-003. It opens `https://github.com/aloong-planet` in a new tab.
+Every page that shows the top navigation shows 「GitHub」 and 「X」 side by side at the right end of its header, in that order, before the language switch of [site-languages::REQ-003](site-languages.md). They open `https://github.com/aloong-planet` and `https://x.com/aloong666` respectively in a new tab. The accessible name of the X link is “在 X 上关注 @aloong666” in Chinese and “Follow @aloong666 on X” in English.
 
 ## Constraints
 
